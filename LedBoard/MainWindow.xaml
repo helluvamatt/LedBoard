@@ -164,6 +164,12 @@
 										</UniformGrid>
 									</StackPanel>
 								</DataTemplate>
+								<DataTemplate DataType="{x:Type vmc:DropdownPropertyViewModel}">
+									<StackPanel Orientation="Vertical">
+										<Label Content="{Binding Label}" />
+										<ComboBox ItemsSource="{Binding Options}" SelectedValue="{Binding SelectedItem}" SelectedValuePath="Value" DisplayMemberPath="Description" />
+									</StackPanel>
+								</DataTemplate>
 								<DataTemplate DataType="{x:Type vmc:TimeSpanPropertyViewModel}">
 									<StackPanel Orientation="Vertical">
 										<Label Content="{Binding Label}" />

@@ -38,6 +38,7 @@ namespace LedBoard.ViewModels
 								propVm = new ColorPropertyViewModel(prop, editorForAttr.Label, (int)prop.GetValue(_CurrentConfiguration));
 								break;
 							case Editors.Dropdown:
+								propVm = new DropdownPropertyViewModel(prop, editorForAttr.Label, prop.GetValue(_CurrentConfiguration));
 								break;
 							case Editors.Alignment:
 								propVm = new AlignmentPropertyViewModel(prop, editorForAttr.Label, (Alignment)prop.GetValue(_CurrentConfiguration));
