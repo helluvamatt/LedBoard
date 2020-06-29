@@ -5,8 +5,11 @@
 					xmlns:ms="clr-namespace:LedBoard.Models.Steps">
 	<m:StepDescriptor x:Key="ScrollingText" SortOrder="0" DisplayName="Scrolling Text"
 					  Type="{x:Type ms:ScrollingTextSequenceStep}"
-					  Icon="{ic:FontAwesomeImage Kind=FontSolid, Brush=Black}" />
+					  Icon="{ic:FontAwesomeImage Kind=FontSolid, Brush={StaticResource MahApps.Brushes.AccentBase}}" />
 	<m:StepDescriptor x:Key="StaticText" SortOrder="1" DisplayName="Static Text"
 					  Type="{x:Type ms:StaticTextSequenceStep}"
-					  Icon="{ic:FontAwesomeImage Kind=FontSolid, Brush=Black}" />
+					  Icon="{ic:FontAwesomeImage Kind=FontSolid, Brush={StaticResource MahApps.Brushes.AccentBase}}" />
+	<m:StepDescriptor x:Key="Clock" SortOrder="2" DisplayName="Clock"
+					  Type="{x:Type ms:ClockSequenceStep}"
+					  Icon="{ic:FontAwesomeImage Kind=ClockRegular, Brush={StaticResource MahApps.Brushes.AccentBase}}" />
 </ResourceDictionary>
