@@ -66,6 +66,7 @@
     <Compile Include="Converters\LengthMultiplyConverter.cs" />
     <Compile Include="Converters\PureHueConverter.cs" />
     <Compile Include="Converters\TimelineWidthConverter.cs" />
+    <Compile Include="Models\FrameRateOption.cs" />
     <Compile Include="Models\StepDescriptor.cs" />
     <Compile Include="Models\Steps\ClockSequenceStep.cs" />
     <Compile Include="Models\Steps\StaticTextSequenceStep.cs" />

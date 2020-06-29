@@ -19,13 +19,13 @@ namespace LedBoard.ViewModels
 		private CancellationTokenSource _CancelController;
 		private bool _Loop;
 
-		public SequencerViewModel(IDialogService dialogService, int boardWidth, int boardHeight)
+		public SequencerViewModel(IDialogService dialogService, int boardWidth, int boardHeight, int frameDelay)
 		{
 			_DialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 			CurrentBoard = new MemoryBoard(boardWidth, boardHeight);
-			Sequence = new Sequence(Dispatcher, boardWidth, boardHeight);
+			Sequence = new Sequence(Dispatcher, boardWidth, boardHeight, frameDelay);
 			Sequence.CurrentFrameChanged += OnSequenceCurrentFrameChanged;
-			StopCommand = new DelegateCommand(OnStop, () => IsPlaying);
+			StopCommand = new DelegateCommand(OnStop);
 			PlayPauseCommand = new DelegateCommand(OnPlayPause);
 			StepForwardCommand = new DelegateCommand(OnStepForward, () => !IsPlaying);
 			StepBackwardCommand = new DelegateCommand(OnStepBackward, () => !IsPlaying);
@@ -118,7 +118,7 @@ namespace LedBoard.ViewModels
 		private void OnStop()
 		{
 			if (IsPlaying) PauseSequence();
-			Sequence.CurrentStep = 0;
+			Sequence.CurrentTime = 0;
 		}
 
 		#endregion
@@ -148,10 +148,7 @@ namespace LedBoard.ViewModels
 		private void OnStepForward()
 		{
 			if (IsPlaying) return;
-			if (Sequence.CurrentStep < Sequence.StepCount - 1)
-			{
-				Sequence.CurrentStep++;
-			}
+			Sequence.StepForward();
 		}
 
 		#endregion
@@ -163,10 +160,7 @@ namespace LedBoard.ViewModels
 		private void OnStepBackward()
 		{
 			if (IsPlaying) return;
-			if (Sequence.CurrentStep > 0)
-			{
-				Sequence.CurrentStep--;
-			}
+			Sequence.StepBackward();
 		}
 
 		#endregion
@@ -237,15 +231,15 @@ namespace LedBoard.ViewModels
 			bool hasMore;
 			while (_CancelController != null && !_CancelController.IsCancellationRequested)
 			{
-				hasMore = Sequence.Advance(CurrentBoard, out TimeSpan nextDelay);
+				hasMore = Sequence.Advance(CurrentBoard);
 				if (hasMore || _Loop)
 				{
 					try
 					{
-						await Task.Delay(nextDelay, _CancelController.Token);
+						await Task.Delay(Sequence.FrameDelay, _CancelController.Token);
 					}
 					catch (OperationCanceledException) { } // Eat, we are pausing
-					if (!hasMore && _Loop) Sequence.CurrentStep = 0;
+					if (!hasMore && _Loop) Sequence.CurrentTime = 0;
 				}
 				else break;
 			}

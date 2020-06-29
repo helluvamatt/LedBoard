@@ -11,13 +11,11 @@ namespace LedBoard.Models.Steps
 		private int _TextOffsetX;
 		private int _TextOffsetY;
 
-		public override string DisplayName => TypedConfiguration != null && !string.IsNullOrWhiteSpace(TypedConfiguration.Text) ? $"Scrolling Text: {Utils.TrimText(TypedConfiguration.Text, 16)}" : "Scrolling Text";
+		public override string DisplayName => TypedConfiguration != null && !string.IsNullOrWhiteSpace(TypedConfiguration.Text) ? $"Text: {Utils.TrimText(TypedConfiguration.Text, 16)}" : "Text";
 
 		public override TimeSpan Length => TypedConfiguration.Duration;
 
-		public override int StepCount => 1;
-
-		public override bool OnInit(int width, int height)
+		protected override bool OnInit(int width, int height, TimeSpan frameDelay)
 		{
 			_FontRendering.Layout(TypedConfiguration?.Font ?? FontService.GetDefault(), TypedConfiguration.Text);
 
@@ -54,10 +52,9 @@ namespace LedBoard.Models.Steps
 			_FontRendering.RenderText(previewBoard, 1, 4, TypedConfiguration.BackgroundColor, TypedConfiguration.ForegroundColor);
 		}
 
-		public override void AnimateFrame(IBoard board, int step, out TimeSpan afterDelay)
+		public override void AnimateFrame(IBoard board, int step)
 		{
 			_FontRendering.RenderText(board, _TextOffsetX, _TextOffsetY, TypedConfiguration.BackgroundColor, TypedConfiguration.ForegroundColor);
-			afterDelay = TypedConfiguration.Duration;
 		}
 	}
 

@@ -94,6 +94,18 @@ namespace LedBoard
 
 		#endregion
 
+		#region NewFrameRate
+
+		public static readonly DependencyProperty NewFrameRateProperty = DependencyProperty.Register(nameof(NewFrameRate), typeof(int), typeof(MainWindow), new PropertyMetadata(50));
+
+		public int NewFrameRate
+		{
+			get => (int)GetValue(NewFrameRateProperty);
+			set => SetValue(NewFrameRateProperty, value);
+		}
+
+		#endregion
+
 		#region IsProjectSettingsOpen
 
 		public static readonly DependencyProperty IsProjectSettingsOpenProperty = DependencyProperty.Register(nameof(IsProjectSettingsOpen), typeof(bool), typeof(MainWindow), new PropertyMetadata(true));
@@ -108,10 +120,10 @@ namespace LedBoard
 
 		#region Zoom
 
-		public double MinZoom => 1;
-		public double MaxZoom => 10;
+		public double MinZoom => 0.05;
+		public double MaxZoom => 1;
 
-		public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(MainWindow), new PropertyMetadata(4.0));
+		public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(MainWindow), new PropertyMetadata(0.2));
 
 		public double Zoom
 		{
@@ -156,7 +168,7 @@ namespace LedBoard
 
 		private void OnNewProjectClick(object sender, RoutedEventArgs e)
 		{
-			Sequencer = new SequencerViewModel(this, NewBoardWidth, NewBoardHeight);
+			Sequencer = new SequencerViewModel(this, NewBoardWidth, NewBoardHeight, NewFrameRate);
 			IsProjectSettingsOpen = false;
 		}
 
@@ -168,12 +180,12 @@ namespace LedBoard
 
 		private void OnZoomOut()
 		{
-			Zoom = Math.Max(MinZoom, Zoom - 1);
+			Zoom = Math.Max(MinZoom, Zoom - 0.05);
 		}
 
 		private void OnZoomIn()
 		{
-			Zoom = Math.Min(MaxZoom, Zoom + 1);
+			Zoom = Math.Min(MaxZoom, Zoom + 0.05);
 		}
 
 		private void OnSelectedItemChanged(object sender, EventArgs e)
@@ -191,13 +203,13 @@ namespace LedBoard
 
 		private void OnSequencePropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			if (e.PropertyName == nameof(Sequence.CurrentStep))
+			if (e.PropertyName == nameof(Sequence.CurrentTime))
 			{
 				Dispatcher.Invoke(() =>
 				{
 					// Compute the scroll offset
 					var widthConverter = (TimelineWidthConverter)Resources["timelineWidthConverter"];
-					double positionOfCaret = (double)widthConverter.Convert(new object[] { Sequencer.Sequence.CurrentStep, Zoom, }, typeof(double), null, null);
+					double positionOfCaret = (double)widthConverter.Convert(new object[] { Sequencer.Sequence.CurrentTime, Zoom, }, typeof(double), null, null);
 					double leftOffsetThreshold = positionOfCaret - timelineScroller.ViewportWidth * 0.9;
 					double rightOffsetThreshold = positionOfCaret - timelineScroller.ViewportWidth * 0.1;
 					if (timelineScroller.HorizontalOffset < leftOffsetThreshold) timelineScroller.ScrollToHorizontalOffset(leftOffsetThreshold);

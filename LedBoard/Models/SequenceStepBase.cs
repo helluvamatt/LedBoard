@@ -21,11 +21,6 @@ namespace LedBoard.Models
 		TimeSpan Length { get; }
 
 		/// <summary>
-		/// Number of frame steps for this step
-		/// </summary>
-		int StepCount { get; }
-
-		/// <summary>
 		/// Type of the configuration object (if present)
 		/// </summary>
 		Type ConfigurationType { get; }
@@ -40,8 +35,9 @@ namespace LedBoard.Models
 		/// </summary>
 		/// <param name="width">Board width</param>
 		/// <param name="height">Board height</param>
+		/// <param name="frameDelay">Frame length</param>
 		/// <returns>True if initialization was successful, false otherwise</returns>
-		bool Init(int width, int height);
+		bool Init(int width, int height, TimeSpan frameDelay);
 
 		/// <summary>
 		/// (Re)configure the step
@@ -54,8 +50,7 @@ namespace LedBoard.Models
 		/// </summary>
 		/// <param name="board">Board to update</param>
 		/// <param name="step">Frame index local to this step</param>
-		/// <param name="afterDelay">Set to the delay to wait until the next frame</param>
-		void AnimateFrame(IBoard board, int step, out TimeSpan afterDelay);
+		void AnimateFrame(IBoard board, int step);
 	}
 
 	/// <summary>
@@ -91,9 +86,6 @@ namespace LedBoard.Models
 		/// <inheritdoc />
 		public abstract TimeSpan Length { get; }
 
-		/// <inheritdoc />
-		public abstract int StepCount { get; }
-
 		/// <summary>
 		/// When overridden in a derived class, creates a default strongly-typed configuration object
 		/// </summary>
@@ -105,16 +97,12 @@ namespace LedBoard.Models
 		/// </summary>
 		/// <param name="width">Board width</param>
 		/// <param name="height">Board height</param>
-		/// <returns></returns>
-		public virtual bool OnInit(int width, int height) => true;
+		/// <param name="frameDelay">Frame length</param>
+		/// <returns>True if initialization was successful, false otherwise</returns>
+		protected virtual bool OnInit(int width, int height, TimeSpan frameDelay) => true;
 
-		/// <summary>
-		/// When overridden in a derived class, renders the given step offset to the given board, and returns the frame hold delay
-		/// </summary>
-		/// <param name="board">Render target</param>
-		/// <param name="step">Local step offset index</param>
-		/// <param name="afterDelay">Frame hold delay</param>
-		public abstract void AnimateFrame(IBoard board, int step, out TimeSpan afterDelay);
+		/// <inheritdoc />
+		public abstract void AnimateFrame(IBoard board, int step);
 
 		/// <summary>
 		/// When overridden in a derived class, renders a preview to the target board
@@ -141,16 +129,15 @@ namespace LedBoard.Models
 		#endregion
 
 		/// <inheritdoc />
-		public bool Init(int width, int height)
+		public bool Init(int width, int height, TimeSpan frameDelay)
 		{
-			bool result = OnInit(width, height);
+			bool result = OnInit(width, height, frameDelay);
 			if (result)
 			{
 				Preview.BeginEdit();
 				RenderPreview(Preview);
 				Preview.Commit(this);
 				OnPropertyChanged(nameof(Preview));
-				OnPropertyChanged(nameof(StepCount));
 				OnPropertyChanged(nameof(Length));
 				OnPropertyChanged(nameof(DisplayName));
 			}

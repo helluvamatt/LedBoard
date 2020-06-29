@@ -17,6 +17,13 @@
 		<c:TimelineWidthConverter x:Key="timelineWidthConverter" />
 		<c:TimelineWidthConverter x:Key="timelineOffsetConverter" ReturnThickness="True" />
 		<c:EnumBoolConverter x:Key="enumBoolConverter" />
+		<x:Array x:Key="FrameRateOptions" Type="{x:Type m:FrameRateOption}">
+			<m:FrameRateOption Value="20" Text="Very Fast (50 fps)" />
+			<m:FrameRateOption Value="40" Text="Fast (25 fps)" />
+			<m:FrameRateOption Value="50" Text="Normal (20 fps)" />
+			<m:FrameRateOption Value="100" Text="Slow (10 fps)" />
+			<m:FrameRateOption Value="200" Text="Very Slow (5 fps)" />
+		</x:Array>
 	</mah:MetroWindow.Resources>
 	<mah:MetroWindow.RightWindowCommands>
 		<mah:WindowCommands>
@@ -41,6 +48,8 @@
 						<mah:NumericUpDown Value="{Binding NewBoardWidth}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" />
 						<Label>Board Height</Label>
 						<mah:NumericUpDown Value="{Binding NewBoardHeight}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" />
+						<Label>Frame Rate</Label>
+						<ComboBox ItemsSource="{StaticResource FrameRateOptions}" SelectedValue="{Binding NewFrameRate}" SelectedValuePath="Value" DisplayMemberPath="Text" />
 						<Button Click="OnNewProjectClick" Style="{StaticResource MahApps.Styles.Button}" Margin="0,8,0,0">New Project</Button>
 					</StackPanel>
 				</DockPanel>
@@ -317,13 +326,13 @@
 							<RowDefinition Height="*" />
 						</Grid.RowDefinitions>
 						<Slider Grid.Row="0" TickPlacement="TopLeft" HorizontalAlignment="Left" VerticalAlignment="Top"
-								TickFrequency="10"
+								TickFrequency="250"
 								Minimum="0"
-								Maximum="{Binding Sequencer.Sequence.StepCount}"
-								Value="{Binding Sequencer.Sequence.CurrentStep}">
+								Maximum="{Binding Sequencer.Sequence.Length.TotalMilliseconds}"
+								Value="{Binding Sequencer.Sequence.CurrentTime}">
 							<Slider.Width>
 								<MultiBinding Converter="{StaticResource timelineWidthConverter}">
-									<Binding Path="Sequencer.Sequence.StepCount" />
+									<Binding Path="Sequencer.Sequence.Length.TotalMilliseconds" />
 									<Binding Path="Zoom" />
 								</MultiBinding>
 							</Slider.Width>
@@ -354,7 +363,7 @@
 									<Canvas HorizontalAlignment="Left">
 										<Canvas.Width>
 											<MultiBinding Mode="OneWay" Converter="{StaticResource timelineWidthConverter}">
-												<Binding Path="Sequencer.Sequence.StepCount" />
+												<Binding Path="Sequencer.Sequence.Length.TotalMilliseconds" />
 												<Binding Path="Zoom" />
 											</MultiBinding>
 										</Canvas.Width>
@@ -366,7 +375,7 @@
 									<Setter Property="Canvas.Left">
 										<Setter.Value>
 											<MultiBinding Mode="OneWay" Converter="{StaticResource timelineWidthConverter}">
-												<Binding Path="Start" />
+												<Binding Path="StartTime.TotalMilliseconds" />
 												<Binding Path="DataContext.Zoom" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}" />
 											</MultiBinding>
 										</Setter.Value>
@@ -389,7 +398,7 @@
 													</Border.Style>
 													<Border.Width>
 														<MultiBinding Mode="OneWay" Converter="{StaticResource timelineWidthConverter}">
-															<Binding Path="StepCount" />
+															<Binding Path="Length.TotalMilliseconds" />
 															<Binding Path="DataContext.Zoom" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}" />
 														</MultiBinding>
 													</Border.Width>

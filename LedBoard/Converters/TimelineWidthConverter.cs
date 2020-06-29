@@ -11,9 +11,9 @@ namespace LedBoard.Converters
 
 		public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
 		{
-			if (values[0] is int step && values[1] is double zoomFactor)
+			if (values[0] is double time && values[1] is double zoomFactor)
 			{
-				double value = step * zoomFactor;
+				double value = time * zoomFactor;
 				if (ReturnThickness) return new Thickness(value, 0, 0, 0);
 				return value;
 			}

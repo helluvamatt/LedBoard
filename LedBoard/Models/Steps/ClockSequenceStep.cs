@@ -11,13 +11,11 @@ namespace LedBoard.Models.Steps
 {
 	public class ClockSequenceStep : SequenceStepBase<ClockConfig>
 	{
-		private const double FrameDelay = 100.0;
 		private const string Format12Hour = "h:mm:ss tt";
 		private const string Format24Hour = "HH:mm:ss";
 
 		public override string DisplayName => "Clock";
 		public override TimeSpan Length => TypedConfiguration.Duration;
-		public override int StepCount => (int)(TypedConfiguration.Duration.TotalMilliseconds / FrameDelay);
 
 		protected override ClockConfig CreateDefaultConfiguration()
 		{
@@ -39,7 +37,7 @@ namespace LedBoard.Models.Steps
 			fontRendering.RenderText(previewBoard, 1, 4, TypedConfiguration.BackgroundColor, TypedConfiguration.ForegroundColor);
 		}
 
-		public override void AnimateFrame(IBoard board, int step, out TimeSpan afterDelay)
+		public override void AnimateFrame(IBoard board, int step)
 		{
 			string text;
 
@@ -74,7 +72,6 @@ namespace LedBoard.Models.Steps
 			else offsetX = (board.Width - textWidth) / 2;
 
 			fontRendering.RenderText(board, offsetX, offsetY, TypedConfiguration.BackgroundColor, TypedConfiguration.ForegroundColor);
-			afterDelay = TimeSpan.FromMilliseconds(FrameDelay);
 		}
 
 		private LedFont GetFont() => TypedConfiguration?.Font ?? FontService.GetDefault();

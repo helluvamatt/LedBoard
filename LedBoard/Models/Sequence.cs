@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Security.Policy;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace LedBoard.Models
@@ -17,55 +13,54 @@ namespace LedBoard.Models
 		private readonly int _BoardWidth;
 		private readonly int _BoardHeight;
 
-		private int _CurrentStepIndex;
+		private TimeSpan _CurrentTime;
 		private SequenceEntry _CurrentEntry;
 
-		public Sequence(Dispatcher dispatcher, int boardWidth, int boardHeight)
+		public Sequence(Dispatcher dispatcher, int boardWidth, int boardHeight, int frameDelay)
 		{
 			_Dispatcher = dispatcher;
 			_BoardWidth = boardWidth;
 			_BoardHeight = boardHeight;
+			FrameDelay = TimeSpan.FromMilliseconds(frameDelay);
 			Steps = new ObservableCollection<SequenceEntry>();
 			Steps.CollectionChanged += OnStepsCollectionChanged;
 		}
 
+		public TimeSpan FrameDelay { get; }
 		public TimeSpan Length => TimeSpan.FromMilliseconds(Steps.Sum(step => step.Length.TotalMilliseconds));
-		public int StepCount => Steps.Sum(step => step.StepCount);
-		public int Count => Steps.Count;
 
 		public ObservableCollection<SequenceEntry> Steps { get; }
 
-		#region CurrentStep property
+		#region CurrentTime property
 
-		public int CurrentStep
+		public double CurrentTime
 		{
-			get => _CurrentStepIndex;
+			get => _CurrentTime.TotalMilliseconds;
 			set
 			{
-				if (_CurrentStepIndex != value)
+				if (_CurrentTime.TotalMilliseconds != value)
 				{
-					SetCurrentStep(value, true);
-					CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
+					SetCurrentTime(TimeSpan.FromMilliseconds(value), true);
 				}
 			}
 		}
 
-		private void SetCurrentStep(int value, bool lookupStep)
+		private void SetCurrentTime(TimeSpan value, bool lookupStep)
 		{
-			_CurrentStepIndex = value;
-			if (lookupStep) _CurrentEntry = FindAtStep(_CurrentStepIndex);
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentStep)));
-			//PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTime)));
+			_CurrentTime = value;
+			if (lookupStep) _CurrentEntry = FindAtTime(_CurrentTime);
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTime)));
+			CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
 		}
 
-		private SequenceEntry FindAtStep(int step)
+		private SequenceEntry FindAtTime(TimeSpan time)
 		{
 			// Shortcut for the first step
-			if (step == 0) return Steps.FirstOrDefault();
+			if (time == TimeSpan.Zero) return Steps.FirstOrDefault();
 
 			foreach (SequenceEntry current in Steps.Reverse())
 			{
-				if (step >= current.Start) return current;
+				if (time >= current.StartTime) return current;
 			}
 
 			return Steps.FirstOrDefault();
@@ -73,60 +68,33 @@ namespace LedBoard.Models
 
 		#endregion
 
-		//#region CurrentTime property
-
-		//private TimeSpan _CurrentTime;
-		//public double CurrentTime
-		//{
-		//	get => _CurrentTime.TotalMilliseconds;
-		//	set
-		//	{
-		//		if (_CurrentTime.TotalMilliseconds != value)
-		//		{
-		//			SetCurrentTime(TimeSpan.FromMilliseconds(value), true);
-		//			CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
-		//		}
-		//	}
-		//}
-
-		//private void SetCurrentTime(TimeSpan value, bool lookupStep)
-		//{
-		//	_CurrentTime = value;
-		//	if (lookupStep) _CurrentEntry = FindAtTime(_CurrentTime);
-		//	PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentStep)));
-		//	PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTime)));
-		//}
-
-		//private SequenceEntry FindAtTime(TimeSpan time)
-		//{
-		//	// Shortcut for the first step
-		//	if (time == TimeSpan.Zero) return Steps.FirstOrDefault();
-
-		//	foreach (SequenceEntry current in Steps.Reverse())
-		//	{
-		//		if (time >= current.StartTime) return current;
-		//	}
-
-		//	return Steps.FirstOrDefault();
-		//}
-
-		//#endregion
-
-		public bool Advance(IBoard board, out TimeSpan nextDelay)
+		public bool Advance(IBoard board)
 		{
-			int stepOffset = CurrentStep - _CurrentEntry.Start;
 			board.BeginEdit();
-			_CurrentEntry.Step.AnimateFrame(board, stepOffset, out nextDelay);
+			_CurrentEntry.Step.AnimateFrame(board, GetCurrentStepOffset(out TimeSpan stepOffsetTime));
 			board.Commit(this);
-			SetCurrentStep(CurrentStep + 1, stepOffset + 1 >= _CurrentEntry.StepCount);
-			return CurrentStep < StepCount;
+			SetCurrentTime(_CurrentTime + FrameDelay, stepOffsetTime + FrameDelay >= _CurrentEntry.Length);
+			return _CurrentTime < Length;
 		}
 
 		public void GetCurrentFrame(IBoard board)
 		{
 			board.BeginEdit();
-			_CurrentEntry.Step.AnimateFrame(board, CurrentStep - _CurrentEntry.Start, out _);
+			_CurrentEntry.Step.AnimateFrame(board, GetCurrentStepOffset(out _));
 			board.Commit(this);
+		}
+
+		public void StepForward()
+		{
+			TimeSpan newTime = _CurrentTime + FrameDelay;
+			if (newTime < Length) SetCurrentTime(newTime, true);
+		}
+
+		public void StepBackward()
+		{
+			TimeSpan newTime = _CurrentTime - FrameDelay;
+			if (newTime < TimeSpan.Zero) newTime = TimeSpan.Zero;
+			SetCurrentTime(newTime, true);
 		}
 
 		#region Events
@@ -136,7 +104,7 @@ namespace LedBoard.Models
 
 		private void OnStepsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
-			if (_CurrentEntry == null) SetCurrentStep(CurrentStep, true);
+			if (_CurrentEntry == null) SetCurrentTime(_CurrentTime, true);
 
 			if (e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Replace)
 			{
@@ -151,13 +119,12 @@ namespace LedBoard.Models
 			{
 				foreach (SequenceEntry entry in e.NewItems)
 				{
-					entry.Init(_Dispatcher, _BoardWidth, _BoardHeight);
+					entry.Init(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay);
 					entry.PropertyChanged += OnSequenceEntryPropertyChanged;
 				}
 			}
 
 			RecomputeTimeline();
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
 		}
 
 		private void OnSequenceEntryPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -166,12 +133,12 @@ namespace LedBoard.Models
 			if (e.PropertyName == nameof(ISequenceStep.CurrentConfiguration))
 			{
 				// Reinitialize on configuration changes
-				entry.Init(_Dispatcher, _BoardWidth, _BoardHeight);
+				entry.Init(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay);
 
 				// Tell the sequencer to update the current frame
 				CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
 			}
-			else if (e.PropertyName == nameof(ISequenceStep.StepCount))
+			else if (e.PropertyName == nameof(ISequenceStep.Length))
 			{
 				RecomputeTimeline();
 			}
@@ -181,18 +148,20 @@ namespace LedBoard.Models
 
 		private void RecomputeTimeline()
 		{
-			int currentStart = 0;
 			TimeSpan currentStartTime = TimeSpan.Zero;
 			foreach (SequenceEntry entry in Steps)
 			{
-				entry.Start = currentStart;
 				entry.StartTime = currentStartTime;
-				currentStart += entry.StepCount;
 				currentStartTime += entry.Length;
 			}
 
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Length)));
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StepCount)));
+		}
+
+		private int GetCurrentStepOffset(out TimeSpan stepOffsetTime)
+		{
+			stepOffsetTime = _CurrentTime - _CurrentEntry.StartTime;
+			return (int)(stepOffsetTime.TotalMilliseconds / FrameDelay.TotalMilliseconds);
 		}
 	}
 
@@ -218,20 +187,6 @@ namespace LedBoard.Models
 			}
 		}
 
-		private int _Start = 0;
-		public int Start
-		{
-			get => _Start;
-			set
-			{
-				if (_Start != value)
-				{
-					_Start = value;
-					PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Start)));
-				}
-			}
-		}
-
 		private TimeSpan _StartTime;
 		public TimeSpan StartTime
 		{
@@ -247,16 +202,15 @@ namespace LedBoard.Models
 		}
 
 		public ISequenceStep Step { get; }
-		public int StepCount => Step.StepCount;
+
 		public TimeSpan Length => Step.Length;
 
-		public void Init(Dispatcher dispatcher, int boardWidth, int boardHeight)
+		public void Init(Dispatcher dispatcher, int boardWidth, int boardHeight, TimeSpan frameDelay)
 		{
-			Step.Init(boardWidth, boardHeight);
+			Step.Init(boardWidth, boardHeight, frameDelay);
 			dispatcher.Invoke(() =>
 			{
 				IsReady = true;
-				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StepCount)));
 				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Length)));
 			});
 		}
