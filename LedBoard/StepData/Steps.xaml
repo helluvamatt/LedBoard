@@ -1,0 +1,12 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+					xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
+                    xmlns:m="clr-namespace:LedBoard.Models"
+					xmlns:ms="clr-namespace:LedBoard.Models.Steps">
+	<m:StepDescriptor x:Key="ScrollingText" SortOrder="0" DisplayName="Scrolling Text"
+					  Type="{x:Type ms:ScrollingTextSequenceStep}"
+					  Icon="{ic:FontAwesomeImage Kind=FontSolid, Brush=Black}" />
+	<m:StepDescriptor x:Key="StaticText" SortOrder="1" DisplayName="Static Text"
+					  Type="{x:Type ms:StaticTextSequenceStep}"
+					  Icon="{ic:FontAwesomeImage Kind=FontSolid, Brush=Black}" />
+</ResourceDictionary>
