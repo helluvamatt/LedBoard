@@ -84,6 +84,17 @@ namespace LedBoard.Models
 			board.Commit(this);
 		}
 
+		public void RenderFrameAt(IBoard board, TimeSpan ts)
+		{
+			var entry = FindAtTime(ts);
+			if (entry != null)
+			{
+				board.BeginEdit();
+				entry.Step.AnimateFrame(board, GetStepOffset(entry, ts, out _));
+				board.Commit(this);
+			}
+		}
+
 		public void StepForward()
 		{
 			TimeSpan newTime = _CurrentTime + FrameDelay;
@@ -160,7 +171,12 @@ namespace LedBoard.Models
 
 		private int GetCurrentStepOffset(out TimeSpan stepOffsetTime)
 		{
-			stepOffsetTime = _CurrentTime - _CurrentEntry.StartTime;
+			return GetStepOffset(_CurrentEntry, _CurrentTime, out stepOffsetTime);
+		}
+
+		private int GetStepOffset(SequenceEntry entry, TimeSpan ts, out TimeSpan stepOffsetTime)
+		{
+			stepOffsetTime = ts - entry.StartTime;
 			return (int)(stepOffsetTime.TotalMilliseconds / FrameDelay.TotalMilliseconds);
 		}
 	}

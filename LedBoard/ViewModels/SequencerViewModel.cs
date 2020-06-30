@@ -2,9 +2,6 @@
 using LedBoard.Services;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -245,5 +242,28 @@ namespace LedBoard.ViewModels
 			}
 			Dispatcher.Invoke(PauseSequence);
 		}
+
+		#region Export
+
+		public void Export(IProgress<double> progress, IExportService exporter, CancellationToken cancelToken)
+		{
+			try
+			{
+				var board = new MemoryBoard(CurrentBoard.Width, CurrentBoard.Height);
+				for (TimeSpan ts = TimeSpan.Zero; ts < Sequence.Length; ts += Sequence.FrameDelay)
+				{
+					progress.Report(ts.TotalMilliseconds / Sequence.Length.TotalMilliseconds);
+					if (cancelToken.IsCancellationRequested) return;
+					Sequence.RenderFrameAt(board, ts);
+					if (cancelToken.IsCancellationRequested) return;
+					exporter.AddFrame(board);
+				}
+				if (cancelToken.IsCancellationRequested) return;
+				exporter.FinalizeImage();
+			}
+			catch (OperationCanceledException) { } // Eat, we are canceling
+		}
+
+		#endregion
 	}
 }

@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
 	xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
+	xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:local="clr-namespace:LedBoard"
 	xmlns:c="clr-namespace:LedBoard.Converters"
 	xmlns:m="clr-namespace:LedBoard.Models"
@@ -24,6 +25,46 @@
 			<m:FrameRateOption Value="100" Text="Slow (10 fps)" />
 			<m:FrameRateOption Value="200" Text="Very Slow (5 fps)" />
 		</x:Array>
+		<x:Array x:Key="ExportFormatOptions" Type="{x:Type m:ExportFormatDescriptor}">
+			<m:ExportFormatDescriptor Value="GIF" Text="Animated GIF" DefaultExt="gif" Filters="GIF images|*.gif|All files|*.*" />
+			<m:ExportFormatDescriptor Value="PNGSeries" Text="Multiple PNG files" DefaultExt="png" Filters="PNG images|*.png|All files|*.*" />
+		</x:Array>
+		<x:Array x:Key="ExportZoomOptions" Type="{x:Type m:IntDescriptor}">
+			<m:IntDescriptor Value="1" Text="Normal (1x)" />
+			<m:IntDescriptor Value="2" Text="Large (2x)" />
+			<m:IntDescriptor Value="4" Text="Very Large (4x)" />
+			<m:IntDescriptor Value="8" Text="Huge (8x)" />
+		</x:Array>
+		<sys:String x:Key="DefaultExportFileText">Please select a file...</sys:String>
+		<mah:CustomDialog x:Key="exportDialog" Title="Export">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="auto" />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+				</Grid.RowDefinitions>
+				<Label Grid.Row="0" Grid.Column="0" Margin="8">Format</Label>
+				<ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportFormatOptions}" SelectedItem="{Binding ExportFormat}" DisplayMemberPath="Text" />
+				<Label Grid.Row="1" Grid.Column="0" Margin="8">Scaling</Label>
+				<ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportZoomOptions}" SelectedValue="{Binding ExportZoom}" SelectedValuePath="Value" DisplayMemberPath="Text" />
+				<Label Grid.Row="2" Grid.Column="0" Margin="8">File</Label>
+				<TextBox Grid.Row="2" Grid.Column="1" Margin="0,8,8,8" Text="{Binding ExportPath, TargetNullValue={StaticResource DefaultExportFileText}}" IsReadOnly="True" />
+				<Button Grid.Row="2" Grid.Column="2" Margin="0,8,8,8" Click="OnExportBrowseClick">
+					<ic:PackIconFontAwesome Kind="FolderOpenRegular" />
+				</Button>
+				<StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Right" Orientation="Horizontal">
+					<Button Style="{StaticResource MahApps.Styles.Button.Dialogs.Accent}" Margin="8" Command="{Binding ExportRenderCommand}">Render</Button>
+					<Button Style="{StaticResource MahApps.Styles.Button.Dialogs}" Margin="8" Command="{Binding ExportCancelCommand}">Cancel</Button>
+				</StackPanel>
+			</Grid>
+		</mah:CustomDialog>
 	</mah:MetroWindow.Resources>
 	<mah:MetroWindow.RightWindowCommands>
 		<mah:WindowCommands>
@@ -259,6 +300,7 @@
 			<local:LedBoardControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
 								   Stretch="Uniform" StretchDirection="Both"
 								   RenderOptions.BitmapScalingMode="NearestNeighbor"
+								   DotPitch="{Binding DotPitch}" PixelSize="{Binding PixelSize}"
 								   CurrentBoard="{Binding Sequencer.CurrentBoard}" />
 		</Border>
 		<GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Height="5" ResizeDirection="Rows" />
@@ -313,7 +355,7 @@
 				<Button Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource MahApps.Styles.Button}" Command="{Binding ZoomOutCommand}">
 					<ic:PackIconFontAwesome Width="16" Height="16" Kind="SearchMinusSolid" />
 				</Button>
-				<Slider Grid.Column="1" Minimum="{Binding MinZoom}" Maximum="{Binding MaxZoom}" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="1" Value="{Binding Zoom}" Margin="4" />
+				<Slider Grid.Column="1" Minimum="{Binding MinZoom}" Maximum="{Binding MaxZoom}" IsSnapToTickEnabled="False" SmallChange="0.05" LargeChange="0.1" Value="{Binding Zoom}" Margin="4" />
 				<Button Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource MahApps.Styles.Button}" Command="{Binding ZoomInCommand}">
 					<ic:PackIconFontAwesome Width="16" Height="16" Kind="SearchPlusSolid" />
 				</Button>

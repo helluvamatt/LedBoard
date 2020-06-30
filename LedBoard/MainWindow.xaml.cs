@@ -2,6 +2,7 @@
 using LedBoard.Models;
 using LedBoard.Models.Steps;
 using LedBoard.Services;
+using LedBoard.Services.Export;
 using LedBoard.ViewModels;
 using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,12 +36,17 @@ namespace LedBoard
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Zoom < MaxZoom);
 			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Zoom > MinZoom);
 			ExportCommand = new DelegateCommand(OnExport, () => Sequencer != null);
+			ExportRenderCommand = new DelegateCommand(OnExportRender, () => Sequencer != null && ExportFormat != null && !string.IsNullOrWhiteSpace(ExportPath));
+			ExportCancelCommand = new DelegateCommand(OnExportCancel);
 			InitializeComponent();
+			ExportFormat = ((ExportFormatDescriptor[])Resources["ExportFormatOptions"]).FirstOrDefault();
 		}
 
 		public ICommand ZoomInCommand { get; }
 		public ICommand ZoomOutCommand { get; }
 		public ICommand ExportCommand { get; }
+		public ICommand ExportRenderCommand { get; }
+		public ICommand ExportCancelCommand { get; }
 
 		#region Dependency properties
 
@@ -133,6 +140,30 @@ namespace LedBoard
 
 		#endregion
 
+		#region DotPitch
+
+		public static readonly DependencyProperty DotPitchProperty = DependencyProperty.Register(nameof(DotPitch), typeof(int), typeof(MainWindow), new PropertyMetadata(2));
+
+		public int DotPitch
+		{
+			get => (int)GetValue(DotPitchProperty);
+			set => SetValue(DotPitchProperty, value);
+		}
+
+		#endregion
+
+		#region PixelSize
+
+		public static readonly DependencyProperty PixelSizeProperty = DependencyProperty.Register(nameof(PixelSize), typeof(int), typeof(MainWindow), new PropertyMetadata(5));
+
+		public int PixelSize
+		{
+			get => (int)GetValue(PixelSizeProperty);
+			set => SetValue(PixelSizeProperty, value);
+		}
+
+		#endregion
+
 		#region ToolboxTabPage
 
 		public static readonly DependencyProperty ToolboxTabPageProperty = DependencyProperty.Register(nameof(ToolboxTabPage), typeof(int), typeof(MainWindow), new PropertyMetadata(0));
@@ -153,6 +184,42 @@ namespace LedBoard
 		{
 			get => (SequenceStepConfigViewModel)GetValue(ConfigurationModelProperty);
 			set => SetValue(ConfigurationModelProperty, value);
+		}
+
+		#endregion
+
+		#region ExportFormat
+
+		public static readonly DependencyProperty ExportFormatProperty = DependencyProperty.Register(nameof(ExportFormat), typeof(ExportFormatDescriptor), typeof(MainWindow), new PropertyMetadata(null));
+
+		public ExportFormatDescriptor ExportFormat
+		{
+			get => (ExportFormatDescriptor)GetValue(ExportFormatProperty);
+			set => SetValue(ExportFormatProperty, value);
+		}
+
+		#endregion
+
+		#region ExportZoom
+
+		public static readonly DependencyProperty ExportZoomProperty = DependencyProperty.Register(nameof(ExportZoom), typeof(int), typeof(MainWindow), new PropertyMetadata(1));
+
+		public int ExportZoom
+		{
+			get => (int)GetValue(ExportZoomProperty);
+			set => SetValue(ExportZoomProperty, value);
+		}
+
+		#endregion
+
+		#region ExportPath
+
+		public static readonly DependencyProperty ExportPathProperty = DependencyProperty.Register(nameof(ExportPath), typeof(string), typeof(MainWindow), new PropertyMetadata(null));
+
+		public string ExportPath
+		{
+			get => (string)GetValue(ExportPathProperty);
+			set => SetValue(ExportPathProperty, value);
 		}
 
 		#endregion
@@ -218,14 +285,99 @@ namespace LedBoard
 			}
 		}
 
-		private void OnExport()
+		private async void OnExport()
 		{
+			await this.ShowMetroDialogAsync((BaseMetroDialog)Resources["exportDialog"], DialogSettings);
+		}
 
+		private void OnExportBrowseClick(object sender, RoutedEventArgs e)
+		{
+			var sfd = new SaveFileDialog()
+			{
+				Title = "Export image(s)...",
+				DefaultExt = ExportFormat?.DefaultExt,
+				Filter = ExportFormat?.Filters,
+				OverwritePrompt = true,
+			};
+			if (sfd.ShowDialog(this) ?? false) ExportPath = sfd.FileName;
+		}
+
+		private async void OnExportRender()
+		{
+			// Validation
+			if (Sequencer == null || ExportFormat == null || string.IsNullOrWhiteSpace(ExportPath)) return;
+
+			// Close export dialog
+			OnExportCancel();
+
+			// Open progress dialog
+			var settings = DialogSettings;
+			settings.NegativeButtonText = "Cancel";
+			var controller = await this.ShowProgressAsync("Please wait...", "Exporting image...", true, settings);
+
+			// Extract properties to locals
+			var exportPath = ExportPath;
+			var exportZoom = ExportZoom;
+			var dotPitch = DotPitch;
+			var pixelSize = PixelSize;
+			var frameDelay = Sequencer.Sequence.FrameDelay;
+			var exportFormat = ExportFormat.Value;
+
+			// Begin export
+			using (var tokenSource = new CancellationTokenSource())
+			{
+				controller.SetIndeterminate();
+				controller.Canceled += (sender, e) => tokenSource.Cancel();
+				var progress = new ProgressHandler(controller);
+				var sequencer = Sequencer;
+				await Task.Run(async () =>
+				{
+					try
+					{
+						// Determine exporter
+						IExportService exporter;
+						switch (exportFormat)
+						{
+							case Models.ExportFormat.GIF:
+								exporter = new GifExporter(exportPath, exportZoom, dotPitch, pixelSize, frameDelay);
+								break;
+							case Models.ExportFormat.PNGSeries:
+								exporter = new PngExporter(exportPath, exportZoom, dotPitch, pixelSize);
+								break;
+							default:
+								throw new NotImplementedException($"Unsupported export format: {exportFormat}");
+						}
+
+						// Run exporter
+						sequencer.Export(progress, exporter, tokenSource.Token);
+					}
+					catch (Exception ex)
+					{
+						Dispatcher.Invoke(() =>
+						{
+							ShowMessageDialog("Error", $"Failed to export image(s): {ex.Message}");
+						});
+					}
+					await controller.CloseAsync();
+				});
+			}
+		}
+
+		private async void OnExportCancel()
+		{
+			await this.HideMetroDialogAsync((BaseMetroDialog)Resources["exportDialog"], DialogSettings);
 		}
 
 		#endregion
 
-		#region IDialogService imple
+		#region IDialogService impl
+
+		public async void ShowMessageDialog(string title, string message)
+		{
+			var settings = DialogSettings;
+			settings.AffirmativeButtonText = "OK";
+			await this.ShowMessageAsync(title, message, MessageDialogStyle.Affirmative, settings);
+		}
 
 		public string OpenFileDialog(string title, string filters, string initialDirectory = null)
 		{
@@ -241,16 +393,33 @@ namespace LedBoard
 
 		public async void ConfirmDialog(string title, string message, Action<bool> callback, string affirmativeBtnText = null, string negativeBtnText = null)
 		{
-			var settings = new MetroDialogSettings
-			{
-				AffirmativeButtonText = affirmativeBtnText ?? "Yes",
-				NegativeButtonText = negativeBtnText ?? "No",
-				AnimateShow = false,
-				AnimateHide = false,
-				DefaultButtonFocus = MessageDialogResult.Negative,
-			};
+			var settings = DialogSettings;
+			settings.AffirmativeButtonText = affirmativeBtnText ?? "Yes";
+			settings.NegativeButtonText = negativeBtnText ?? "No";
+			settings.DefaultButtonFocus = MessageDialogResult.Negative;
 			var result = await this.ShowMessageAsync(title, message, MessageDialogStyle.AffirmativeAndNegative, settings);
 			callback.Invoke(result == MessageDialogResult.Affirmative);
+		}
+
+		#endregion
+
+		private MetroDialogSettings DialogSettings => new MetroDialogSettings { AnimateHide = false, AnimateShow = false };
+
+		#region Export handler
+
+		private class ProgressHandler : IProgress<double>
+		{
+			private readonly ProgressDialogController _Controller;
+
+			public ProgressHandler(ProgressDialogController controller)
+			{
+				_Controller = controller;
+			}
+
+			public void Report(double value)
+			{
+				_Controller.SetProgress(value);
+			}
 		}
 
 		#endregion

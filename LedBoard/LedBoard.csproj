@@ -66,6 +66,11 @@
     <Compile Include="Converters\LengthMultiplyConverter.cs" />
     <Compile Include="Converters\PureHueConverter.cs" />
     <Compile Include="Converters\TimelineWidthConverter.cs" />
+    <Compile Include="Models\ExportFormatDescriptor.cs" />
+    <Compile Include="Models\IntDescriptor.cs" />
+    <Compile Include="Services\Export\GifExporter.cs" />
+    <Compile Include="Services\Export\PngExporter.cs" />
+    <Compile Include="Services\IExportService.cs" />
     <Compile Include="Models\FrameRateOption.cs" />
     <Compile Include="Models\StepDescriptor.cs" />
     <Compile Include="Models\Steps\ClockSequenceStep.cs" />
@@ -75,6 +80,7 @@
     <Compile Include="Models\Resource.cs" />
     <Compile Include="Models\Text\LedFont.cs" />
     <Compile Include="Services\IDialogService.cs" />
+    <Compile Include="Services\Rendering\BoardRenderer.cs" />
     <Compile Include="Services\StepService.cs" />
     <Compile Include="TimelineControl.cs" />
     <Compile Include="Utils.cs" />
