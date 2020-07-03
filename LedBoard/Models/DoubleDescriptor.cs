@@ -1,8 +1,8 @@
 ﻿namespace LedBoard.Models
 {
-	public class FrameRateOption
+	public class DoubleDescriptor
 	{
-		public int Value { get; set; }
+		public double Value { get; set; }
 		public string Text { get; set; }
 	}
 }

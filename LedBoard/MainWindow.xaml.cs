@@ -23,6 +23,8 @@ namespace LedBoard
 	/// </summary>
 	public partial class MainWindow : MetroWindow, IDialogService
 	{
+		private readonly double[] _ZoomValues;
+
 		public MainWindow()
 		{
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Zoom < MaxZoom);
@@ -32,6 +34,7 @@ namespace LedBoard
 			ExportCancelCommand = new DelegateCommand(() => IsExportOpen = false);
 			InitializeComponent();
 			ExportFormat = ((ExportFormatDescriptor[])Resources["ExportFormatOptions"]).FirstOrDefault();
+			_ZoomValues = ((DoubleDescriptor[])Resources["BoardZoomOptions"]).Select(dd => dd.Value).ToArray();
 		}
 
 		public ICommand ZoomInCommand { get; }
@@ -128,6 +131,18 @@ namespace LedBoard
 		{
 			get => (double)GetValue(ZoomProperty);
 			set => SetValue(ZoomProperty, value);
+		}
+
+		#endregion
+
+		#region BoardZoom
+
+		public static readonly DependencyProperty BoardZoomProperty = DependencyProperty.Register(nameof(BoardZoom), typeof(double), typeof(MainWindow), new PropertyMetadata(1.0));
+
+		public double BoardZoom
+		{
+			get => (double)GetValue(BoardZoomProperty);
+			set => SetValue(BoardZoomProperty, value);
 		}
 
 		#endregion
@@ -262,6 +277,23 @@ namespace LedBoard
 		private void OnZoomIn()
 		{
 			Zoom = Math.Min(MaxZoom, Zoom + 0.05);
+		}
+
+		private void OnBoardContainerMouseWheel(object sender, MouseWheelEventArgs e)
+		{
+			int index = Array.IndexOf(_ZoomValues, BoardZoom);
+			if (e.Delta > 0)
+			{
+				index++;
+				if (index >= _ZoomValues.Length) index = _ZoomValues.Length - 1;
+			}
+			else
+			{
+				index--;
+				if (index < 0) index = 0;
+			}
+			BoardZoom = _ZoomValues[index];
+			e.Handled = true;
 		}
 
 		private void OnSelectedItemChanged(object sender, EventArgs e)

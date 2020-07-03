@@ -19,12 +19,12 @@
 		<c:TimelineWidthConverter x:Key="timelineWidthConverter" />
 		<c:TimelineWidthConverter x:Key="timelineOffsetConverter" ReturnThickness="True" />
 		<c:EnumBoolConverter x:Key="enumBoolConverter" />
-		<x:Array x:Key="FrameRateOptions" Type="{x:Type m:FrameRateOption}">
-			<m:FrameRateOption Value="20" Text="Very Fast (50 fps)" />
-			<m:FrameRateOption Value="40" Text="Fast (25 fps)" />
-			<m:FrameRateOption Value="50" Text="Normal (20 fps)" />
-			<m:FrameRateOption Value="100" Text="Slow (10 fps)" />
-			<m:FrameRateOption Value="200" Text="Very Slow (5 fps)" />
+		<x:Array x:Key="FrameRateOptions" Type="{x:Type m:IntDescriptor}">
+			<m:IntDescriptor Value="20" Text="Very Fast (50 fps)" />
+			<m:IntDescriptor Value="40" Text="Fast (25 fps)" />
+			<m:IntDescriptor Value="50" Text="Normal (20 fps)" />
+			<m:IntDescriptor Value="100" Text="Slow (10 fps)" />
+			<m:IntDescriptor Value="200" Text="Very Slow (5 fps)" />
 		</x:Array>
 		<x:Array x:Key="ExportFormatOptions" Type="{x:Type m:ExportFormatDescriptor}">
 			<m:ExportFormatDescriptor Value="GIF" Text="Animated GIF" DefaultExt="gif" Filters="GIF images|*.gif|All files|*.*" />
@@ -35,6 +35,15 @@
 			<m:IntDescriptor Value="2" Text="Large (2x)" />
 			<m:IntDescriptor Value="4" Text="Very Large (4x)" />
 			<m:IntDescriptor Value="8" Text="Huge (8x)" />
+		</x:Array>
+		<x:Array x:Key="BoardZoomOptions" Type="{x:Type m:DoubleDescriptor}">
+			<m:DoubleDescriptor Value="0.25" Text="25%" />
+			<m:DoubleDescriptor Value="0.5" Text="50%" />
+			<m:DoubleDescriptor Value="1" Text="100%" />
+			<m:DoubleDescriptor Value="1.25" Text="125%" />
+			<m:DoubleDescriptor Value="1.5" Text="150%" />
+			<m:DoubleDescriptor Value="2" Text="200%" />
+			<m:DoubleDescriptor Value="4" Text="400%" />
 		</x:Array>
 		<sys:String x:Key="DefaultExportFileText">Please select a file...</sys:String>
 	</mah:MetroWindow.Resources>
@@ -303,12 +312,23 @@
 			</mah:MetroTabItem>
 		</mah:MetroTabControl>
 		<GridSplitter Grid.Row="0" Grid.Column="1" Width="5" ResizeDirection="Columns" />
-		<Border Grid.Row="0" Grid.Column="2" Background="Black">
-			<controls:LedBoardControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-									  Stretch="Uniform" StretchDirection="Both"
-									  RenderOptions.BitmapScalingMode="NearestNeighbor"
-									  DotPitch="{Binding DotPitch}" PixelSize="{Binding PixelSize}"
-									  CurrentBoard="{Binding Sequencer.CurrentBoard}" />
+		<Border Grid.Row="0" Grid.Column="2" Background="DarkGray">
+			<DockPanel LastChildFill="True">
+				<Border DockPanel.Dock="Bottom" Background="LightGray" Padding="8">
+					<StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+						<ComboBox ItemsSource="{StaticResource BoardZoomOptions}" SelectedValue="{Binding BoardZoom}" SelectedValuePath="Value" DisplayMemberPath="Text" />
+					</StackPanel>
+				</Border>
+				<ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" PreviewMouseWheel="OnBoardContainerMouseWheel">
+					<Border Background="Black" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="6">
+						<controls:LedBoardControl Margin="8" Stretch="Uniform" StretchDirection="Both" ZoomMode="FitSizeToContent" Zoom="{Binding BoardZoom}"
+												  RenderOptions.BitmapScalingMode="NearestNeighbor"
+												  DotPitch="{Binding DotPitch}" PixelSize="{Binding PixelSize}"
+												  CurrentBoard="{Binding Sequencer.CurrentBoard}" />
+					</Border>
+				</ScrollViewer>
+				
+			</DockPanel>
 		</Border>
 		<GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Height="5" ResizeDirection="Rows" />
 		<Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">

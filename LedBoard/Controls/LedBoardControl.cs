@@ -19,6 +19,10 @@ namespace LedBoard.Controls
 			_Renderer = new BoardRenderer();
 		}
 
+		#region Dependency properties
+
+		#region IsReadOnlyMode
+
 		public static readonly DependencyProperty IsReadOnlyModeProperty = DependencyProperty.Register(nameof(IsReadOnlyMode), typeof(bool), typeof(LedBoardControl), new PropertyMetadata(true));
 
 		public bool IsReadOnlyMode
@@ -27,13 +31,21 @@ namespace LedBoard.Controls
 			set => SetValue(IsReadOnlyModeProperty, value);
 		}
 
-		public static readonly DependencyProperty CurrentBoardProperty = DependencyProperty.Register(nameof(CurrentBoard), typeof(IBoard), typeof(LedBoardControl), new PropertyMetadata(null, OnBoardChanged));
+		#endregion
+
+		#region CurrentBoard
+
+		public static readonly DependencyProperty CurrentBoardProperty = DependencyProperty.Register(nameof(CurrentBoard), typeof(IBoard), typeof(LedBoardControl), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsMeasure, OnBoardChanged));
 
 		public IBoard CurrentBoard
 		{
 			get => (IBoard)GetValue(CurrentBoardProperty);
 			set => SetValue(CurrentBoardProperty, value);
 		}
+
+		#endregion
+
+		#region DotPitch
 
 		public static readonly DependencyProperty DotPitchProperty = DependencyProperty.Register(nameof(DotPitch), typeof(int), typeof(LedBoardControl), new PropertyMetadata(2, OnPropertyChanged));
 
@@ -43,12 +55,62 @@ namespace LedBoard.Controls
 			set => SetValue(DotPitchProperty, value);
 		}
 
+		#endregion
+
+		#region PixelSize
+
 		public static readonly DependencyProperty PixelSizeProperty = DependencyProperty.Register(nameof(PixelSize), typeof(int), typeof(LedBoardControl), new PropertyMetadata(5, OnPropertyChanged));
 
 		public int PixelSize
 		{
 			get => (int)GetValue(PixelSizeProperty);
 			set => SetValue(PixelSizeProperty, value);
+		}
+
+		#endregion
+
+		#region Zoom
+
+		public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(LedBoardControl), new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+		public double Zoom
+		{
+			get => (double)GetValue(ZoomProperty);
+			set => SetValue(ZoomProperty, value);
+		}
+
+		#endregion
+
+		#region ZoomMode
+
+		public static readonly DependencyProperty ZoomModeProperty = DependencyProperty.Register(nameof(ZoomMode), typeof(LedBoardZoomMode), typeof(LedBoardControl), new FrameworkPropertyMetadata(LedBoardZoomMode.FitContentToSize, FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+		public LedBoardZoomMode ZoomMode
+		{
+			get => (LedBoardZoomMode)GetValue(ZoomModeProperty);
+			set => SetValue(ZoomModeProperty, value);
+		}
+
+		#endregion
+
+		#endregion
+
+		protected override Size MeasureOverride(Size constraint)
+		{
+			if (ZoomMode == LedBoardZoomMode.FitSizeToContent)
+			{
+				return GetScaledSize();
+			}
+			return base.MeasureOverride(constraint);
+		}
+
+		protected override Size ArrangeOverride(Size arrangeSize)
+		{
+			if (ZoomMode == LedBoardZoomMode.FitSizeToContent)
+			{
+				arrangeSize = GetScaledSize();
+			}
+			return base.ArrangeOverride(arrangeSize);
 		}
 
 		protected override void OnMouseDown(MouseButtonEventArgs e)
@@ -120,5 +182,12 @@ namespace LedBoard.Controls
 				Source = null;
 			}
 		}
+
+		private Size GetScaledSize()
+		{
+			return new Size((Source?.Width ?? 0) * Zoom, (Source?.Height ?? 0) * Zoom);
+		}
 	}
+
+	public enum LedBoardZoomMode { FitContentToSize, FitSizeToContent }
 }
