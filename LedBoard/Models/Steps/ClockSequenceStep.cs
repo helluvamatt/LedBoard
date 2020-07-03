@@ -1,11 +1,7 @@
 ﻿using LedBoard.Models.Text;
 using LedBoard.Services;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LedBoard.Models.Steps
 {
@@ -15,7 +11,8 @@ namespace LedBoard.Models.Steps
 		private const string Format24Hour = "HH:mm:ss";
 
 		public override string DisplayName => "Clock";
-		public override TimeSpan Length => TypedConfiguration.Duration;
+
+		public override TimeSpan DefaultLength => TimeSpan.FromSeconds(5);
 
 		protected override ClockConfig CreateDefaultConfiguration()
 		{
@@ -23,7 +20,6 @@ namespace LedBoard.Models.Steps
 			{
 				TimeFormat = TimeFormat.Local12Hour,
 				Alignment = Alignment.MiddleCenter,
-				Duration = TimeSpan.FromSeconds(5),
 				Font = FontService.GetDefault(),
 				BackgroundColor = 0x222222,
 				ForegroundColor = 0xFFFFFF,
@@ -88,9 +84,6 @@ namespace LedBoard.Models.Steps
 		[EditorFor("Alignment", Editors.Alignment)]
 		public Alignment Alignment { get; set; }
 
-		[EditorFor("Duration", Editors.TimeSpanAdvanced)]
-		public TimeSpan Duration { get; set; }
-
 		[EditorFor("Background Color", Editors.Color)]
 		public int BackgroundColor { get; set; }
 
@@ -104,7 +97,6 @@ namespace LedBoard.Models.Steps
 				TimeFormat = TimeFormat,
 				Font = Font,
 				Alignment = Alignment,
-				Duration = Duration,
 				BackgroundColor = BackgroundColor,
 				ForegroundColor = ForegroundColor,
 			};

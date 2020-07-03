@@ -131,6 +131,7 @@ namespace LedBoard.Models
 				foreach (SequenceEntry entry in e.NewItems)
 				{
 					entry.Init(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay);
+					entry.Step.Length = entry.Step.DefaultLength;
 					entry.PropertyChanged += OnSequenceEntryPropertyChanged;
 				}
 			}
@@ -229,6 +230,11 @@ namespace LedBoard.Models
 				IsReady = true;
 				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Length)));
 			});
+		}
+
+		public void HandleResize(double deltaMs)
+		{
+			Step.Length = TimeSpan.FromMilliseconds(Step.Length.TotalMilliseconds + deltaMs);
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;

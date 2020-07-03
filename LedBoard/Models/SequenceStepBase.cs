@@ -18,7 +18,12 @@ namespace LedBoard.Models
 		/// <summary>
 		/// Total length of the animation
 		/// </summary>
-		TimeSpan Length { get; }
+		TimeSpan Length { get; set; }
+
+		/// <summary>
+		/// Get the default duration of the animation
+		/// </summary>
+		TimeSpan DefaultLength { get; }
 
 		/// <summary>
 		/// Type of the configuration object (if present)
@@ -59,6 +64,8 @@ namespace LedBoard.Models
 	/// <typeparam name="TConfig">Type of the configuration object</typeparam>
 	public abstract class SequenceStepBase<TConfig> : ISequenceStep where TConfig : class, ICloneable
 	{
+		private TimeSpan _Length;
+
 		protected SequenceStepBase()
 		{
 			TypedConfiguration = CreateDefaultConfiguration();
@@ -84,7 +91,21 @@ namespace LedBoard.Models
 		public abstract string DisplayName { get; }
 
 		/// <inheritdoc />
-		public abstract TimeSpan Length { get; }
+		public TimeSpan Length
+		{
+			get => _Length;
+			set
+			{
+				if (_Length != value)
+				{
+					_Length = value;
+					OnPropertyChanged(nameof(Length));
+				}
+			}
+		}
+
+		/// <inheritdoc />
+		public abstract TimeSpan DefaultLength { get; }
 
 		/// <summary>
 		/// When overridden in a derived class, creates a default strongly-typed configuration object

@@ -1,9 +1,6 @@
 ﻿using LedBoard.Services;
 using LedBoard.Models.Text;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.ComponentModel;
 
 namespace LedBoard.Models.Steps
 {
@@ -19,7 +16,7 @@ namespace LedBoard.Models.Steps
 
 		public override string DisplayName => TypedConfiguration != null && !string.IsNullOrWhiteSpace(TypedConfiguration.Text) ? $"Scrolling Text: {Utils.TrimText(TypedConfiguration.Text, 16)}" : "Scrolling Text";
 
-		public override TimeSpan Length => TimeSpan.FromMilliseconds(_FrameDelay.TotalMilliseconds * _StepCount);
+		public override TimeSpan DefaultLength => TimeSpan.FromMilliseconds(_FrameDelay.TotalMilliseconds * _StepCount);
 
 		protected override bool OnInit(int width, int height, TimeSpan frameDelay)
 		{

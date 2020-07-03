@@ -1,6 +1,6 @@
-﻿using LedBoard.Converters;
+﻿using LedBoard.Controls;
+using LedBoard.Converters;
 using LedBoard.Models;
-using LedBoard.Models.Steps;
 using LedBoard.Services;
 using LedBoard.Services.Export;
 using LedBoard.ViewModels;
@@ -8,21 +8,13 @@ using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace LedBoard
 {
@@ -35,9 +27,9 @@ namespace LedBoard
 		{
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Zoom < MaxZoom);
 			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Zoom > MinZoom);
-			ExportCommand = new DelegateCommand(OnExport, () => Sequencer != null);
-			ExportRenderCommand = new DelegateCommand(OnExportRender, () => Sequencer != null && ExportFormat != null && !string.IsNullOrWhiteSpace(ExportPath));
-			ExportCancelCommand = new DelegateCommand(OnExportCancel);
+			ExportCommand = new DelegateCommand(() => IsExportOpen = true, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
+			ExportRenderCommand = new DelegateCommand(OnExportRender, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero && ExportFormat != null && !string.IsNullOrWhiteSpace(ExportPath));
+			ExportCancelCommand = new DelegateCommand(() => IsExportOpen = false);
 			InitializeComponent();
 			ExportFormat = ((ExportFormatDescriptor[])Resources["ExportFormatOptions"]).FirstOrDefault();
 		}
@@ -178,12 +170,29 @@ namespace LedBoard
 
 		#region ConfigurationModel
 
-		public static readonly DependencyProperty ConfigurationModelProperty = DependencyProperty.Register(nameof(ConfigurationModel), typeof(SequenceStepConfigViewModel), typeof(MainWindow), new PropertyMetadata(null));
+		public static readonly DependencyProperty ConfigurationModelProperty = DependencyProperty.Register(nameof(ConfigurationModel), typeof(SequenceStepConfigViewModel), typeof(MainWindow), new PropertyMetadata(null, OnConfigurationModelChanged));
 
 		public SequenceStepConfigViewModel ConfigurationModel
 		{
 			get => (SequenceStepConfigViewModel)GetValue(ConfigurationModelProperty);
 			set => SetValue(ConfigurationModelProperty, value);
+		}
+
+		private static void OnConfigurationModelChanged(DependencyObject owner, DependencyPropertyChangedEventArgs e)
+		{
+			if (e.OldValue is SequenceStepConfigViewModel oldVm) oldVm.Unwire();
+		}
+
+		#endregion
+
+		#region IsExportOpen
+
+		public static readonly DependencyProperty IsExportOpenProperty = DependencyProperty.Register(nameof(IsExportOpen), typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
+
+		public bool IsExportOpen
+		{
+			get => (bool)GetValue(IsExportOpenProperty);
+			set => SetValue(IsExportOpenProperty, value);
 		}
 
 		#endregion
@@ -283,11 +292,33 @@ namespace LedBoard
 					else if (timelineScroller.HorizontalOffset > rightOffsetThreshold) timelineScroller.ScrollToHorizontalOffset(rightOffsetThreshold);
 				});
 			}
+
+			CommandManager.InvalidateRequerySuggested();
 		}
 
-		private async void OnExport()
+		private void OnToolboxMouseMove(object sender, MouseEventArgs e)
 		{
-			await this.ShowMetroDialogAsync((BaseMetroDialog)Resources["exportDialog"], DialogSettings);
+			if (sender is ListBox source && e.LeftButton == MouseButtonState.Pressed)
+			{
+				DragDrop.DoDragDrop(source, new DataObject(DataFormats.Serializable, source.SelectedItem), DragDropEffects.Copy);
+			}
+		}
+
+		private void OnTimelineKeyUp(object sender, KeyEventArgs e)
+		{
+			switch (e.Key)
+			{
+				case Key.Delete:
+					Sequencer?.OnDeleteSelectedItem();
+					e.Handled = true;
+					break;
+			}
+		}
+
+		private void OnTimelineControlRequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+		{
+			// Don't bother trying to scroll the timeline automatically
+			e.Handled = true;
 		}
 
 		private void OnExportBrowseClick(object sender, RoutedEventArgs e)
@@ -308,7 +339,7 @@ namespace LedBoard
 			if (Sequencer == null || ExportFormat == null || string.IsNullOrWhiteSpace(ExportPath)) return;
 
 			// Close export dialog
-			OnExportCancel();
+			IsExportOpen = false;
 
 			// Open progress dialog
 			var settings = DialogSettings;
@@ -361,11 +392,6 @@ namespace LedBoard
 					await controller.CloseAsync();
 				});
 			}
-		}
-
-		private async void OnExportCancel()
-		{
-			await this.HideMetroDialogAsync((BaseMetroDialog)Resources["exportDialog"], DialogSettings);
 		}
 
 		#endregion

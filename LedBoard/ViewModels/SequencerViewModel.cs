@@ -27,7 +27,7 @@ namespace LedBoard.ViewModels
 			StepForwardCommand = new DelegateCommand(OnStepForward, () => !IsPlaying);
 			StepBackwardCommand = new DelegateCommand(OnStepBackward, () => !IsPlaying);
 			AddItemCommand = new DelegateCommand(OnAddItem, () => !IsPlaying && SelectedStepType != null);
-			DeleteItemCommand = new DelegateCommand(OnDeleteItem, () => !IsPlaying && SelectedItem != null);
+			DeleteItemCommand = new DelegateCommand(OnDeleteSelectedItem, () => !IsPlaying && SelectedItem != null);
 		}
 
 		public IBoard CurrentBoard { get; }
@@ -186,7 +186,7 @@ namespace LedBoard.ViewModels
 
 		public ICommand DeleteItemCommand { get; }
 
-		private void OnDeleteItem()
+		public void OnDeleteSelectedItem()
 		{
 			if (SelectedItem == null) return;
 

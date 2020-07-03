@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Input;
 
 namespace LedBoard.ViewModels.Config
 {
@@ -10,20 +11,27 @@ namespace LedBoard.ViewModels.Config
 	{
 		private bool _Initializing;
 
-		public TimeSpanAdvancedPropertyViewModel(PropertyInfo property, string label, TimeSpan initialValue) : base(property, label)
+		public TimeSpanAdvancedPropertyViewModel(PropertyInfo property, string label, TimeSpan initialValue, bool showDefault) : base(property, label)
 		{
-			_Initializing = true;
-			Hours = initialValue.Hours;
-			Minutes = initialValue.Minutes;
-			Seconds = initialValue.Seconds;
-			Milliseconds = initialValue.Milliseconds;
-			_Initializing = false;
+			SetDuration(initialValue);
+			ShowDefault = showDefault;
+			SetDefaultCommand = new DelegateCommand(() => DefaultRequested?.Invoke(this, EventArgs.Empty));
 		}
 
 		public override object Value => new TimeSpan(0, Hours, Minutes, Seconds, Milliseconds);
 
 		public IEnumerable<int> Values12 => Enumerable.Range(0, 13);
 		public IEnumerable<int> Values60 => Enumerable.Range(0, 60);
+
+		#region Default value support
+
+		public bool ShowDefault { get; }
+
+		public ICommand SetDefaultCommand { get; }
+
+		public event EventHandler DefaultRequested;
+
+		#endregion
 
 		#region Hours
 
@@ -77,6 +85,16 @@ namespace LedBoard.ViewModels.Config
 		{
 			var vm = (TimeSpanAdvancedPropertyViewModel)owner;
 			if (!vm._Initializing) vm.OnValueChanged();
+		}
+
+		public void SetDuration(TimeSpan value)
+		{
+			_Initializing = true;
+			Hours = value.Hours;
+			Minutes = value.Minutes;
+			Seconds = value.Seconds;
+			Milliseconds = value.Milliseconds;
+			_Initializing = false;
 		}
 	}
 }

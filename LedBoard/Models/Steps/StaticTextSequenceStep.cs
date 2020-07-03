@@ -13,7 +13,7 @@ namespace LedBoard.Models.Steps
 
 		public override string DisplayName => TypedConfiguration != null && !string.IsNullOrWhiteSpace(TypedConfiguration.Text) ? $"Text: {Utils.TrimText(TypedConfiguration.Text, 16)}" : "Text";
 
-		public override TimeSpan Length => TypedConfiguration.Duration;
+		public override TimeSpan DefaultLength => TimeSpan.FromSeconds(5);
 
 		protected override bool OnInit(int width, int height, TimeSpan frameDelay)
 		{
@@ -39,7 +39,6 @@ namespace LedBoard.Models.Steps
 			return new StaticTextConfig
 			{
 				Text = string.Empty,
-				Duration = TimeSpan.FromMilliseconds(5000),
 				Alignment = Alignment.MiddleCenter,
 				BackgroundColor = 0x222222, // Dark gray
 				ForegroundColor = 0xFFFFFF, // White
@@ -69,9 +68,6 @@ namespace LedBoard.Models.Steps
 		[EditorFor("Alignment", Editors.Alignment)]
 		public Alignment Alignment { get; set; }
 
-		[EditorFor("Duration", Editors.TimeSpanAdvanced)]
-		public TimeSpan Duration { get; set; }
-
 		[EditorFor("Background Color", Editors.Color)]
 		public int BackgroundColor { get; set; }
 
@@ -85,7 +81,6 @@ namespace LedBoard.Models.Steps
 				Text = Text,
 				Font = Font,
 				Alignment = Alignment,
-				Duration = Duration,
 				BackgroundColor = BackgroundColor,
 				ForegroundColor = ForegroundColor,
 			};

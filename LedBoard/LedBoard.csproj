@@ -57,9 +57,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ColorPicker.xaml.cs">
+    <Compile Include="Controls\ColorPicker.xaml.cs">
       <DependentUpon>ColorPicker.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TimelineDropAdorner.cs" />
+    <Compile Include="Controls\TimelineItem.cs" />
+    <Compile Include="Controls\TimelineItemResizeAdorner.cs" />
     <Compile Include="Converters\ColorConverter.cs" />
     <Compile Include="Converters\EnumBoolConverter.cs" />
     <Compile Include="Converters\HexColorConverter.cs" />
@@ -82,7 +85,7 @@
     <Compile Include="Services\IDialogService.cs" />
     <Compile Include="Services\Rendering\BoardRenderer.cs" />
     <Compile Include="Services\StepService.cs" />
-    <Compile Include="TimelineControl.cs" />
+    <Compile Include="Controls\TimelineControl.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="ViewModels\Config\AlignmentPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\ColorPropertyViewModel.cs" />
@@ -95,7 +98,7 @@
     <Compile Include="ViewModels\DelegateCommand.cs" />
     <Compile Include="ViewModels\SequencerViewModel.cs" />
     <Compile Include="ViewModels\SequenceStepConfigViewModel.cs" />
-    <Page Include="ColorPicker.xaml">
+    <Page Include="Controls\ColorPicker.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -112,7 +115,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="E131Server.cs" />
-    <Compile Include="LedBoardControl.cs" />
+    <Compile Include="Controls\LedBoardControl.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

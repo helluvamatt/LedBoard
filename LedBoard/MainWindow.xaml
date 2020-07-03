@@ -8,6 +8,7 @@
 	xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
 	xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:local="clr-namespace:LedBoard"
+	xmlns:controls="clr-namespace:LedBoard.Controls"
 	xmlns:c="clr-namespace:LedBoard.Converters"
 	xmlns:m="clr-namespace:LedBoard.Models"
 	xmlns:vmc="clr-namespace:LedBoard.ViewModels.Config"
@@ -36,35 +37,6 @@
 			<m:IntDescriptor Value="8" Text="Huge (8x)" />
 		</x:Array>
 		<sys:String x:Key="DefaultExportFileText">Please select a file...</sys:String>
-		<mah:CustomDialog x:Key="exportDialog" Title="Export">
-			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="auto" />
-					<ColumnDefinition Width="*" />
-					<ColumnDefinition Width="auto" />
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="auto" />
-					<RowDefinition Height="auto" />
-					<RowDefinition Height="auto" />
-					<RowDefinition Height="auto" />
-					<RowDefinition Height="auto" />
-				</Grid.RowDefinitions>
-				<Label Grid.Row="0" Grid.Column="0" Margin="8">Format</Label>
-				<ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportFormatOptions}" SelectedItem="{Binding ExportFormat}" DisplayMemberPath="Text" />
-				<Label Grid.Row="1" Grid.Column="0" Margin="8">Scaling</Label>
-				<ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportZoomOptions}" SelectedValue="{Binding ExportZoom}" SelectedValuePath="Value" DisplayMemberPath="Text" />
-				<Label Grid.Row="2" Grid.Column="0" Margin="8">File</Label>
-				<TextBox Grid.Row="2" Grid.Column="1" Margin="0,8,8,8" Text="{Binding ExportPath, TargetNullValue={StaticResource DefaultExportFileText}}" IsReadOnly="True" />
-				<Button Grid.Row="2" Grid.Column="2" Margin="0,8,8,8" Click="OnExportBrowseClick">
-					<ic:PackIconFontAwesome Kind="FolderOpenRegular" />
-				</Button>
-				<StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Right" Orientation="Horizontal">
-					<Button Style="{StaticResource MahApps.Styles.Button.Dialogs.Accent}" Margin="8" Command="{Binding ExportRenderCommand}">Render</Button>
-					<Button Style="{StaticResource MahApps.Styles.Button.Dialogs}" Margin="8" Command="{Binding ExportCancelCommand}">Cancel</Button>
-				</StackPanel>
-			</Grid>
-		</mah:CustomDialog>
 	</mah:MetroWindow.Resources>
 	<mah:MetroWindow.RightWindowCommands>
 		<mah:WindowCommands>
@@ -81,8 +53,8 @@
 			<mah:Flyout Position="Right" Theme="Light" Header="Project Settings" IsModal="True" CloseButtonVisibility="Collapsed" IsPinned="True" IsOpen="{Binding IsProjectSettingsOpen}">
 				<DockPanel Margin="8">
 					<UniformGrid Columns="2" Rows="1" DockPanel.Dock="Bottom">
-						<Button Margin="8" Click="OnCancelClick" Style="{StaticResource MahApps.Styles.Button}">Cancel</Button>
 						<Button Margin="8" IsEnabled="False" Style="{StaticResource MahApps.Styles.Button}">Open Project</Button>
+						<Button Margin="8" Click="OnCancelClick" Style="{StaticResource MahApps.Styles.Button}">Cancel</Button>
 					</UniformGrid>
 					<StackPanel Orientation="Vertical">
 						<Label>Board Width</Label>
@@ -93,6 +65,35 @@
 						<ComboBox ItemsSource="{StaticResource FrameRateOptions}" SelectedValue="{Binding NewFrameRate}" SelectedValuePath="Value" DisplayMemberPath="Text" />
 						<Button Click="OnNewProjectClick" Style="{StaticResource MahApps.Styles.Button}" Margin="0,8,0,0">New Project</Button>
 					</StackPanel>
+				</DockPanel>
+			</mah:Flyout>
+			<mah:Flyout Position="Right" Theme="Light" Header="Export" IsModal="True" IsOpen="{Binding IsExportOpen}">
+				<DockPanel Margin="8">
+					<UniformGrid Columns="2" Rows="1" DockPanel.Dock="Bottom">
+						<Button Margin="8" Style="{StaticResource MahApps.Styles.Button}" Command="{Binding ExportRenderCommand}">Render</Button>
+						<Button Margin="8" Style="{StaticResource MahApps.Styles.Button}" Command="{Binding ExportCancelCommand}">Cancel</Button>
+					</UniformGrid>
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="auto" />
+							<ColumnDefinition Width="*" />
+							<ColumnDefinition Width="auto" />
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="auto" />
+							<RowDefinition Height="auto" />
+							<RowDefinition Height="auto" />
+						</Grid.RowDefinitions>
+						<Label Grid.Row="0" Grid.Column="0" Margin="8">Format</Label>
+						<ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportFormatOptions}" SelectedItem="{Binding ExportFormat}" DisplayMemberPath="Text" />
+						<Label Grid.Row="1" Grid.Column="0" Margin="8">Scaling</Label>
+						<ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportZoomOptions}" SelectedValue="{Binding ExportZoom}" SelectedValuePath="Value" DisplayMemberPath="Text" />
+						<Label Grid.Row="2" Grid.Column="0" Margin="8">File</Label>
+						<TextBox Grid.Row="2" Grid.Column="1" Margin="0,8,8,8" Text="{Binding ExportPath, TargetNullValue={StaticResource DefaultExportFileText}}" IsReadOnly="True" />
+						<Button Grid.Row="2" Grid.Column="2" Margin="0,8,8,8" Click="OnExportBrowseClick">
+							<ic:PackIconFontAwesome Kind="FolderOpenRegular" />
+						</Button>
+					</Grid>
 				</DockPanel>
 			</mah:Flyout>
 		</mah:FlyoutsControl>
@@ -120,18 +121,18 @@
 						<RowDefinition Height="*" />
 						<RowDefinition Height="auto" />
 					</Grid.RowDefinitions>
-					<ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-						<ListBox ItemsSource="{Binding Sequencer.StepTypes}" SelectedItem="{Binding Sequencer.SelectedStepType}" Margin="4">
-							<ListBox.ItemTemplate>
-								<DataTemplate DataType="{x:Type m:StepDescriptor}">
-									<StackPanel Orientation="Horizontal">
-										<Image Source="{Binding Icon}" Width="32" Height="32" Stretch="Uniform" Margin="0,8" />
-										<TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" />
-									</StackPanel>
-								</DataTemplate>
-							</ListBox.ItemTemplate>
-						</ListBox>
-					</ScrollViewer>
+					<ListBox Grid.Row="0" Margin="4" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+							 MouseMove="OnToolboxMouseMove"
+						     ItemsSource="{Binding Sequencer.StepTypes}" SelectedItem="{Binding Sequencer.SelectedStepType}">
+						<ListBox.ItemTemplate>
+							<DataTemplate DataType="{x:Type m:StepDescriptor}">
+								<StackPanel Orientation="Horizontal">
+									<Image Source="{Binding Icon}" Width="32" Height="32" Stretch="Uniform" Margin="0,8" />
+									<TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" />
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
 					<StackPanel Grid.Row="1" HorizontalAlignment="Right" Orientation="Horizontal">
 						<Button Margin="8" Padding="8,4" Command="{Binding Sequencer.AddItemCommand}">
 							<ic:PackIconFontAwesome Width="14" Height="14" Kind="PlusSolid" />
@@ -240,8 +241,9 @@
 											<ColumnDefinition Width="1*" />
 											<ColumnDefinition Width="auto" />
 											<ColumnDefinition Width="2*" />
+											<ColumnDefinition Width="auto" />
 										</Grid.ColumnDefinitions>
-										<Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="7" Content="{Binding Label}" />
+										<Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="8" Content="{Binding Label}" />
 										<ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Values12}" SelectedItem="{Binding Hours}" />
 										<TextBlock Grid.Row="1" Grid.Column="1" Margin="4,0" FontSize="16" VerticalAlignment="Bottom">:</TextBlock>
 										<ComboBox Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Values60}" SelectedItem="{Binding Minutes}" />
@@ -249,6 +251,11 @@
 										<ComboBox Grid.Row="1" Grid.Column="4" ItemsSource="{Binding Values60}" SelectedItem="{Binding Seconds}" />
 										<TextBlock Grid.Row="1" Grid.Column="5" Margin="4,0" FontSize="16" VerticalAlignment="Bottom">.</TextBlock>
 										<mah:NumericUpDown Grid.Row="1" Grid.Column="6" Minimum="0" Maximum="999" Value="{Binding Milliseconds}" />
+										<Button Grid.Row="1" Grid.Column="7" Margin="4,0,0,0" ToolTip="Reset to default"
+												Command="{Binding SetDefaultCommand}"
+												Visibility="{Binding ShowDefault, Converter={StaticResource BooleanToVisibilityConverter}}">
+											<ic:PackIconFontAwesome Kind="HistorySolid" />
+										</Button>
 									</Grid>
 								</DataTemplate>
 								<DataTemplate DataType="{x:Type vmc:ColorPropertyViewModel}">
@@ -262,7 +269,7 @@
 											</Rectangle>
 										</Button>
 										<Popup Width="350" Height="200" Placement="Bottom" PlacementTarget="{Binding ElementName=colorButton}" IsOpen="{Binding IsPopupOpen}" StaysOpen="False">
-											<local:ColorPicker SelectedColor="{Binding Color, Converter={StaticResource colorConverter}}" />
+											<controls:ColorPicker SelectedColor="{Binding Color, Converter={StaticResource colorConverter}}" />
 										</Popup>
 									</StackPanel>
 								</DataTemplate>
@@ -297,11 +304,11 @@
 		</mah:MetroTabControl>
 		<GridSplitter Grid.Row="0" Grid.Column="1" Width="5" ResizeDirection="Columns" />
 		<Border Grid.Row="0" Grid.Column="2" Background="Black">
-			<local:LedBoardControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-								   Stretch="Uniform" StretchDirection="Both"
-								   RenderOptions.BitmapScalingMode="NearestNeighbor"
-								   DotPitch="{Binding DotPitch}" PixelSize="{Binding PixelSize}"
-								   CurrentBoard="{Binding Sequencer.CurrentBoard}" />
+			<controls:LedBoardControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+									  Stretch="Uniform" StretchDirection="Both"
+									  RenderOptions.BitmapScalingMode="NearestNeighbor"
+									  DotPitch="{Binding DotPitch}" PixelSize="{Binding PixelSize}"
+									  CurrentBoard="{Binding Sequencer.CurrentBoard}" />
 		</Border>
 		<GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Height="5" ResizeDirection="Rows" />
 		<Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
@@ -364,8 +371,8 @@
 				</Button>
 			</Grid>
 			<Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Background="DarkGray">
-				<ScrollViewer x:Name="timelineScroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Padding="8">
-					<Grid>
+				<ScrollViewer x:Name="timelineScroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+					<Grid Margin="8">
 						<Grid.RowDefinitions>
 							<RowDefinition Height="auto" />
 							<RowDefinition Height="*" />
@@ -400,53 +407,29 @@
 								</ControlTemplate>
 							</Slider.Template>
 						</Slider>
-						<local:TimelineControl Grid.Row="1" VerticalAlignment="Top" Background="Transparent"
-											   ItemsSource="{Binding Sequencer.Sequence.Steps}"
-											   SelectedItem="{Binding Sequencer.SelectedItem}">
-							<ItemsControl.ItemsPanel>
-								<ItemsPanelTemplate>
-									<Canvas HorizontalAlignment="Left">
-										<Canvas.Width>
-											<MultiBinding Mode="OneWay" Converter="{StaticResource timelineWidthConverter}">
-												<Binding Path="Sequencer.Sequence.Length.TotalMilliseconds" />
-												<Binding Path="Zoom" />
-											</MultiBinding>
-										</Canvas.Width>
-									</Canvas>
-								</ItemsPanelTemplate>
-							</ItemsControl.ItemsPanel>
+						<controls:TimelineControl Grid.Row="1" Background="Transparent" AdornerColor="#FF777777"
+												  ItemsSource="{Binding Sequencer.Sequence.Steps}"
+												  SelectedItem="{Binding Sequencer.SelectedItem}"
+												  Zoom="{Binding Zoom}" TotalLength="{Binding Sequencer.Sequence.Length.TotalMilliseconds}"
+												  PreviewKeyUp="OnTimelineKeyUp" RequestBringIntoView="OnTimelineControlRequestBringIntoView">
 							<ItemsControl.ItemContainerStyle>
-								<Style TargetType="local:TimelineItem">
-									<Setter Property="Canvas.Left">
-										<Setter.Value>
-											<MultiBinding Mode="OneWay" Converter="{StaticResource timelineWidthConverter}">
-												<Binding Path="StartTime.TotalMilliseconds" />
-												<Binding Path="DataContext.Zoom" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}" />
-											</MultiBinding>
-										</Setter.Value>
-									</Setter>
+								<Style TargetType="controls:TimelineItem">
 									<Setter Property="Template">
 										<Setter.Value>
 											<ControlTemplate TargetType="ContentControl">
-												<Border BorderThickness="2">
+												<Border BorderThickness="2" Name="PART_Border">
 													<Border.Style>
 														<Style TargetType="Border">
 															<Setter Property="Background" Value="LightGray" />
 															<Setter Property="BorderBrush" Value="{StaticResource MahApps.Brushes.AccentBase}" />
 															<Style.Triggers>
-																<DataTrigger Binding="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TimelineItem}, Path=IsSelected}" Value="true">
+																<DataTrigger Binding="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=controls:TimelineItem}, Path=IsSelected}" Value="true">
 																	<Setter Property="Background" Value="{StaticResource MahApps.Brushes.Accent3}" />
 																	<Setter Property="BorderBrush" Value="{StaticResource MahApps.Brushes.Highlight}" />
 																</DataTrigger>
 															</Style.Triggers>
 														</Style>
 													</Border.Style>
-													<Border.Width>
-														<MultiBinding Mode="OneWay" Converter="{StaticResource timelineWidthConverter}">
-															<Binding Path="Length.TotalMilliseconds" />
-															<Binding Path="DataContext.Zoom" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}" />
-														</MultiBinding>
-													</Border.Width>
 													<ContentPresenter />
 												</Border>
 											</ControlTemplate>
@@ -457,14 +440,14 @@
 							<ItemsControl.ItemTemplate>
 								<DataTemplate DataType="{x:Type m:SequenceEntry}">
 									<StackPanel Orientation="Vertical" HorizontalAlignment="Left" Margin="4">
-										<local:LedBoardControl CurrentBoard="{Binding Step.Preview}" HorizontalAlignment="Left" Stretch="Uniform" StretchDirection="Both" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="64" Height="64" />
+										<controls:LedBoardControl CurrentBoard="{Binding Step.Preview}" HorizontalAlignment="Left" Stretch="Uniform" StretchDirection="Both" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="64" Height="64" />
 										<Border Background="White" Padding="4" HorizontalAlignment="Left" Margin="0,4,0,0">
 											<TextBlock Text="{Binding Step.DisplayName}" />
 										</Border>
 									</StackPanel>
 								</DataTemplate>
 							</ItemsControl.ItemTemplate>
-						</local:TimelineControl>
+						</controls:TimelineControl>
 					</Grid>
 				</ScrollViewer>
 			</Border>
