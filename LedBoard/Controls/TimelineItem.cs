@@ -15,7 +15,7 @@ namespace LedBoard.Controls
 		public TimelineItem(TimelineControl owner)
 		{
 			_Owner = owner;
-			ResizeAdorner = new TimelineItemResizeAdorner(this);
+			ResizeAdorner = new TimelineItemResizeAdorner(this, _Owner.AdornerColor);
 		}
 
 		public TimelineItemResizeAdorner ResizeAdorner { get; }

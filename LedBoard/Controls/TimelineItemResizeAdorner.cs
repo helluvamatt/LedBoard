@@ -20,11 +20,11 @@ namespace LedBoard.Controls
 
 		private Point? _InitialPoint;
 
-		public TimelineItemResizeAdorner(TimelineItem adornedElement) : base(adornedElement)
+		public TimelineItemResizeAdorner(TimelineItem adornedElement, Color adornerColor) : base(adornedElement)
 		{
 			Cursor = Cursors.SizeWE;
-			_HandleBrush = new SolidColorBrush(Color.FromArgb(0xAA, 0xAA, 0xAA, 0xAA));
-			_ArrowBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x77, 0x77, 0x77));
+			_HandleBrush = new SolidColorBrush(Color.FromArgb(0x99, adornerColor.R, adornerColor.G, adornerColor.B));
+			_ArrowBrush = new SolidColorBrush(adornerColor);
 			_RightArrowGeom = Geometry.Parse("M 0 0 L 8 4 L 0 8 z");
 		}
 

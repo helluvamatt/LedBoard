@@ -3,6 +3,7 @@ using LedBoard.Services;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -19,6 +20,10 @@ namespace LedBoard.Controls
 
 		private Canvas _Canvas;
 		private TimelineDropAdorner _DropAdorner;
+
+		private TimelineItemMoveAdorner _MoveAdorner;
+		private Point? _InitialItemOffset;
+		private bool _IsMoving;
 
 		public TimelineControl()
 		{
@@ -138,7 +143,7 @@ namespace LedBoard.Controls
 		protected override DependencyObject GetContainerForItemOverride()
 		{
 			var control = new TimelineItem(this);
-			control.MouseUp += OnItemMouseUp;
+			control.MouseDown += OnItemMouseDown;
 			return control;
 		}
 
@@ -236,9 +241,11 @@ namespace LedBoard.Controls
 			e.Handled = true;
 		}
 
-		protected override void OnMouseUp(MouseButtonEventArgs e)
+		protected override void OnMouseDown(MouseButtonEventArgs e)
 		{
-			base.OnMouseUp(e);
+			base.OnMouseDown(e);
+
+			// Mouse down on an item would have been handled by another handler, if we get here, the user is clicking somewhere there is not an item, so clear the selection
 			if (!e.Handled)
 			{
 				SelectedItem = null;
@@ -246,13 +253,83 @@ namespace LedBoard.Controls
 			}
 		}
 
+		protected override void OnMouseMove(MouseEventArgs e)
+		{
+			bool isInDrag = e.LeftButton == MouseButtonState.Pressed && SelectedItem != null && _InitialItemOffset.HasValue;
+			if (isInDrag && ItemContainerGenerator.ContainerFromItem(SelectedItem) is TimelineItem tli)
+			{
+				Point p = e.GetPosition(tli);
+				Point pAbs = e.GetPosition(this);
+				double deltaX = p.X - _InitialItemOffset.Value.X;
+				if (Math.Abs(deltaX) > 10 || _IsMoving)
+				{
+					_IsMoving = true;
+					AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
+
+					// Display move adorner
+					if (_MoveAdorner == null)
+					{
+						_MoveAdorner = new TimelineItemMoveAdorner(tli, AdornerColor);
+						layer.Add(_MoveAdorner);
+					}
+					double left = Canvas.GetLeft(tli);
+					if (deltaX < -left) deltaX = -left;
+					if (deltaX > ActualWidth - tli.ActualWidth - left) deltaX = ActualWidth - tli.ActualWidth - left;
+					_MoveAdorner.OffsetX = deltaX;
+
+					// Display drop adorner for drop target
+					if (_DropAdorner == null)
+					{
+						_DropAdorner = new TimelineDropAdorner(this, AdornerColor);
+						layer.Add(_DropAdorner);
+					}
+					(_DropAdorner.LeftOffset, _) = FindDropPosition(pAbs.X);
+				}
+				e.Handled = true;
+			}
+			base.OnMouseMove(e);
+		}
+
+		protected override void OnMouseUp(MouseButtonEventArgs e)
+		{
+			if (_IsMoving)
+			{
+				_InitialItemOffset = null;
+				_IsMoving = false;
+				AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
+				if (_MoveAdorner != null)
+				{
+					layer.Remove(_MoveAdorner);
+					_MoveAdorner = null;
+				}
+				if (_DropAdorner != null)
+				{
+					layer.Remove(_DropAdorner);
+					_DropAdorner = null;
+				}
+
+				if (ItemsSource is ObservableCollection<SequenceEntry> collection)
+				{
+					var p = e.GetPosition(this);
+					(_, int index) = FindDropPosition(p.X);
+					collection.Move(SelectedIndex, index);
+				}
+
+				e.Handled = true;
+			}
+			base.OnMouseUp(e);
+		}
+
 		#endregion
 
-		private void OnItemMouseUp(object sender, MouseButtonEventArgs e)
+		private void OnItemMouseDown(object sender, MouseButtonEventArgs e)
 		{
+			// If this MouseDown event was actually on an item, select that item
 			if (sender is TimelineItem item)
 			{
 				SelectedIndex = ItemContainerGenerator.IndexFromContainer(item);
+				_InitialItemOffset = e.GetPosition(item);
+				_IsMoving = false;
 				Focus();
 				e.Handled = true;
 			}
