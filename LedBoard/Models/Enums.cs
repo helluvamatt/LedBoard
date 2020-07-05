@@ -2,6 +2,8 @@
 
 namespace LedBoard.Models
 {
+	#region Images
+
 	public enum ImageResizeMode
 	{
 		[Description("Crop")]
@@ -39,4 +41,32 @@ namespace LedBoard.Models
 		[Description("Right to Left")]
 		RightToLeft,
 	}
+
+	#endregion
+
+	#region Text
+
+	public enum Alignment
+	{
+		[Description("Top Left")]
+		TopLeft,
+		[Description("Top Center")]
+		TopCenter,
+		[Description("Top Right")]
+		TopRight,
+		[Description("Middle Left")]
+		MiddleLeft,
+		[Description("Middle Center")]
+		MiddleCenter,
+		[Description("Middle Right")]
+		MiddleRight,
+		[Description("Bottom Left")]
+		BottomLeft,
+		[Description("Bottom Center")]
+		BottomCenter,
+		[Description("Bottom Right")]
+		BottomRight
+	}
+
+	#endregion
 }

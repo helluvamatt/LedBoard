@@ -19,6 +19,4 @@ namespace LedBoard.Models
 	}
 
 	public enum Editors { Text, Color, LedFont, TimeSpan, TimeSpanAdvanced, FileResource, Dropdown, Alignment }
-
-	public enum Alignment { TopLeft, TopCenter, TopRight, MiddleLeft, MiddleCenter, MiddleRight, BottomLeft, BottomCenter, BottomRight }
 }
