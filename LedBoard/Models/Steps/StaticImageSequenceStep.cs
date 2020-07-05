@@ -14,7 +14,7 @@ namespace LedBoard.Models.Steps
 
 		private IBoard _StaticImage;
 
-		protected override bool OnInit(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService)
+		protected override bool OnInit(int width, int height, IResourcesService resourcesService)
 		{
 			_StaticImage = new MemoryBoard(width, height);
 			var imageStream = resourcesService.OpenResource(TypedConfiguration.Image);

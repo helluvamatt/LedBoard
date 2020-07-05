@@ -17,7 +17,7 @@ namespace LedBoard.Models.Steps
 
 		public override TimeSpan DefaultLength => TimeSpan.FromMilliseconds(_FrameDelay.TotalMilliseconds * _StepCount);
 
-		protected override bool OnInit(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService)
+		protected override bool OnInit(int width, int height, IResourcesService resourcesService)
 		{
 			_FontRendering.Layout(TypedConfiguration?.Font ?? FontService.GetDefault(), TypedConfiguration.Text);
 			_TextOffsetY = (height - _FontRendering.FontHeight) / 2;
@@ -45,6 +45,10 @@ namespace LedBoard.Models.Steps
 
 		public override void AnimateFrame(IBoard board, int step)
 		{
+			if (TypedConfiguration.VariableSpeed)
+			{
+				step = ComputeVariableLengthStep(step, _StepCount);
+			}
 			_FontRendering.RenderText(board, _TextOffsetX - step, _TextOffsetY, TypedConfiguration.BackgroundColor, TypedConfiguration.ForegroundColor);
 		}
 	}
@@ -63,6 +67,9 @@ namespace LedBoard.Models.Steps
 		[EditorFor("Text Color", Editors.Color)]
 		public int ForegroundColor { get; set; }
 
+		[EditorFor("Auto Speed", Editors.Checkbox)]
+		public bool VariableSpeed { get; set; }
+
 		public object Clone()
 		{
 			return new ScrollingTextConfig
@@ -71,6 +78,7 @@ namespace LedBoard.Models.Steps
 				Font = Font,
 				BackgroundColor = BackgroundColor,
 				ForegroundColor = ForegroundColor,
+				VariableSpeed = VariableSpeed,
 			};
 		}
 	}

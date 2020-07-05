@@ -135,10 +135,9 @@ namespace LedBoard.Models
 		/// </summary>
 		/// <param name="width">Board width</param>
 		/// <param name="height">Board height</param>
-		/// <param name="frameDelay">Frame length</param>
 		/// <param name="resourcesService">Resources Service</param>
 		/// <returns>True if initialization was successful, false otherwise</returns>
-		protected virtual bool OnInit(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService) => true;
+		protected virtual bool OnInit(int width, int height, IResourcesService resourcesService) => true;
 
 		/// <inheritdoc />
 		public abstract void AnimateFrame(IBoard board, int step);
@@ -170,11 +169,11 @@ namespace LedBoard.Models
 		/// <inheritdoc />
 		public bool Init(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService)
 		{
-			if (!_Length.HasValue) Length = DefaultLength;
 			_FrameDelay = frameDelay;
-			bool result = OnInit(width, height, frameDelay, resourcesService);
+			bool result = OnInit(width, height, resourcesService);
 			if (result)
 			{
+				if (!_Length.HasValue) Length = DefaultLength;
 				Preview.BeginEdit();
 				RenderPreview(Preview);
 				Preview.Commit(this);

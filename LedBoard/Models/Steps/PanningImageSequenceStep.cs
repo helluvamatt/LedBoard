@@ -15,9 +15,8 @@ namespace LedBoard.Models.Steps
 		public override TimeSpan DefaultLength => TimeSpan.FromSeconds(5);
 		public override IEnumerable<string> Resources => new string[] { TypedConfiguration.Image };
 
-		protected override bool OnInit(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService)
+		protected override bool OnInit(int width, int height, IResourcesService resourcesService)
 		{
-			_FrameDelay = frameDelay;
 			var imageStream = resourcesService.OpenResource(TypedConfiguration.Image);
 			if (imageStream != null)
 			{
