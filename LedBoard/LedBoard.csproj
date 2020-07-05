@@ -75,7 +75,7 @@
     <Compile Include="Interop\User32.cs" />
     <Compile Include="Models\DoubleDescriptor.cs" />
     <Compile Include="Models\ExportFormatDescriptor.cs" />
-    <Compile Include="Models\ImageEnums.cs" />
+    <Compile Include="Models\Enums.cs" />
     <Compile Include="Models\IntDescriptor.cs" />
     <Compile Include="Models\Serialization\ProjectModel.cs" />
     <Compile Include="Models\Serialization\SerializableBoard.cs" />
@@ -100,6 +100,7 @@
     <Compile Include="Controls\TimelineControl.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="ViewModels\Config\AlignmentPropertyViewModel.cs" />
+    <Compile Include="ViewModels\Config\BooleanPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\ColorPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\DropdownPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\FileResourcePropertyViewModel.cs" />

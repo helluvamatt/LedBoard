@@ -261,6 +261,9 @@
 							</ItemsControl.Style>
 							<ItemsControl.Resources>
 								<c:ColorConverter x:Key="colorConverter" />
+								<Style TargetType="Label" BasedOn="{StaticResource MahApps.Styles.Label}">
+									<Setter Property="FontWeight" Value="Bold" />
+								</Style>
 								<DataTemplate DataType="{x:Type vmc:TextPropertyViewModel}">
 									<StackPanel Orientation="Vertical">
 										<Label Content="{Binding Label}" />
@@ -362,6 +365,12 @@
 									<StackPanel Orientation="Vertical">
 										<Label Content="{Binding Label}" />
 										<ComboBox ItemsSource="{Binding Fonts}" SelectedValue="{Binding Font}" DisplayMemberPath="Name" />
+									</StackPanel>
+								</DataTemplate>
+								<DataTemplate DataType="{x:Type vmc:BooleanPropertyViewModel}">
+									<StackPanel Orientation="Vertical">
+										<Label Content="{Binding Label}" />
+										<CheckBox IsChecked="{Binding Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">Enabled</CheckBox>
 									</StackPanel>
 								</DataTemplate>
 							</ItemsControl.Resources>

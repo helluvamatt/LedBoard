@@ -38,6 +38,9 @@ namespace LedBoard.ViewModels
 						PropertyViewModel propVm = null;
 						switch (editorForAttr.Editor)
 						{
+							case Editors.Checkbox:
+								propVm = new BooleanPropertyViewModel(prop, editorForAttr.Label, (bool)prop.GetValue(_CurrentConfiguration));
+								break;
 							case Editors.Color:
 								propVm = new ColorPropertyViewModel(prop, editorForAttr.Label, (int)prop.GetValue(_CurrentConfiguration));
 								break;
