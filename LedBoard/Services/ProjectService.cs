@@ -31,6 +31,7 @@ namespace LedBoard.Services
 					}
 					_ResourcesService.LoadProject(model, zipPath =>
 					{
+						zipPath = zipPath.Replace(Path.DirectorySeparatorChar, '/');
 						var entry = archive.GetEntry($"resources/{zipPath}");
 						if (entry != null) return entry.Open();
 						return null;
@@ -53,6 +54,7 @@ namespace LedBoard.Services
 					}
 					_ResourcesService.SaveProject(project, (localPath, src) =>
 					{
+						localPath = localPath.Replace(Path.DirectorySeparatorChar, '/');
 						var resourceEntry = archive.CreateEntry($"resources/{localPath}");
 						using (var zipStream = resourceEntry.Open())
 						{

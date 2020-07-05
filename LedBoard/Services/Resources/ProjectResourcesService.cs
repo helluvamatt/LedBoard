@@ -56,6 +56,14 @@ namespace LedBoard.Services.Resources
 							}
 						}
 					}
+					else
+					{
+						throw new InvalidDataException($"Resource \"{resource.Uri}\" is missing from project.");
+					}
+				}
+				else
+				{
+					throw new InvalidDataException($"Resource URI \"{resource.Uri}\" is invalid.");
 				}
 			}
 		}
