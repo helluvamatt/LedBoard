@@ -15,7 +15,8 @@
 	xmlns:vmc="clr-namespace:LedBoard.ViewModels.Config"
     mc:Ignorable="d"
 	DataContext="{Binding RelativeSource={RelativeSource Self}}"
-    Title="Led Board" Height="720" Width="1280" ResizeMode="CanResizeWithGrip">
+    Title="Led Board" Height="720" Width="1280" ResizeMode="CanResizeWithGrip"
+	Closing="OnWindowClosing">
 	<mah:MetroWindow.Resources>
 		<c:TimelineWidthConverter x:Key="timelineWidthConverter" />
 		<c:TimelineWidthConverter x:Key="timelineOffsetConverter" ReturnThickness="True" />
@@ -99,13 +100,13 @@
 	</mah:MetroWindow.Resources>
 	<mah:MetroWindow.RightWindowCommands>
 		<mah:WindowCommands>
-			<Button Click="OnProjectSettingsClick">
+			<Button Click="OnProjectSettingsClick" ToolTip="Project settings...">
 				<ic:PackIconFontAwesome Kind="CogSolid" />
 			</Button>
-			<Button Command="{Binding ExportCommand}">
+			<Button Command="{Binding ExportCommand}" ToolTip="Export image(s)...">
 				<ic:PackIconFontAwesome Kind="FileExportSolid" />
 			</Button>
-			<Button Command="{Binding SaveProjectCommand}">
+			<Button Command="{Binding SaveProjectCommand}" ToolTip="Save project">
 				<ic:PackIconFontAwesome Kind="SaveSolid" />
 			</Button>
 		</mah:WindowCommands>
@@ -115,6 +116,7 @@
 			<mah:Flyout Position="Right" Theme="Light" Header="Project Settings" IsModal="True" CloseButtonVisibility="Collapsed" IsPinned="True" IsOpen="{Binding IsProjectSettingsOpen}">
 				<DockPanel Margin="8">
 					<StackPanel Orientation="Vertical" DockPanel.Dock="Bottom">
+						<Button Margin="0,8,0,0" Click="OnSaveProjectAsClick" Style="{StaticResource MahApps.Styles.Button}" Visibility="{Binding Sequencer, Converter={StaticResource nullToVisibilityConverter}}">Save Project As...</Button>
 						<Button Margin="0,8,0,0" Click="OnNewProjectClick" Style="{StaticResource MahApps.Styles.Button}">New Project</Button>
 						<Button Margin="0,8,0,0" Click="OnLoadProjectClick" Style="{StaticResource MahApps.Styles.Button}">Open Project</Button>
 						<Button Margin="0,8,0,0" Click="OnCancelClick" Style="{StaticResource MahApps.Styles.Button}">Cancel</Button>
@@ -160,11 +162,15 @@
 			</mah:Flyout>
 		</mah:FlyoutsControl>
 	</mah:MetroWindow.Flyouts>
+	<mah:MetroWindow.MetroDialogOptions>
+		<mah:MetroDialogSettings AnimateHide="False" AnimateShow="False" />
+	</mah:MetroWindow.MetroDialogOptions>
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*" />
 			<RowDefinition Height="auto" />
 			<RowDefinition Height="*" />
+			<RowDefinition Height="auto" />
 		</Grid.RowDefinitions>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="1*" />
@@ -524,5 +530,24 @@
 				</ScrollViewer>
 			</Border>
 		</Grid>
+		<StatusBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3">
+			<StatusBarItem Style="{StaticResource MahApps.Styles.StatusBarItem}">
+				<TextBlock>
+					<TextBlock.Style>
+						<Style TargetType="TextBlock">
+							<Setter Property="Text" Value="All changes saved." />
+							<Style.Triggers>
+								<DataTrigger Binding="{Binding Sequencer.Sequence.IsDirty}" Value="True">
+									<Setter Property="Text" Value="Project has unsaved changes." />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding Sequencer}" Value="{x:Null}">
+									<Setter Property="Text" Value="No project loaded." />
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+					</TextBlock.Style>
+				</TextBlock>
+			</StatusBarItem>
+		</StatusBar>
 	</Grid>
 </mah:MetroWindow>

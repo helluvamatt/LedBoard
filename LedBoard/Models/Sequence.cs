@@ -157,6 +157,8 @@ namespace LedBoard.Models
 				}
 			}
 
+			IsDirty = true;
+
 			RecomputeTimeline();
 		}
 
@@ -170,9 +172,12 @@ namespace LedBoard.Models
 
 				// Tell the sequencer to update the current frame
 				CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
+
+				IsDirty = true;
 			}
 			else if (e.PropertyName == nameof(ISequenceStep.Length))
 			{
+				IsDirty = true;
 				RecomputeTimeline();
 			}
 		}

@@ -1,5 +1,4 @@
-﻿using LedBoard.Controls;
-using LedBoard.Converters;
+﻿using LedBoard.Converters;
 using LedBoard.Models;
 using LedBoard.Models.Serialization;
 using LedBoard.Services;
@@ -19,21 +18,24 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 
 namespace LedBoard
 {
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
-	public partial class MainWindow : MetroWindow, IDialogService
+	public partial class MainWindow : MetroWindow, IDialogService, ICheckDirty
 	{
 		private readonly ProjectResourcesService _ResourcesService;
 		private readonly double[] _ZoomValues;
 
+		private bool _SkipDirty;
+
 		public MainWindow()
 		{
 			_ResourcesService = new ProjectResourcesService(Path.Combine(Path.GetTempPath(), "LedBoard"));
-			SaveProjectCommand = new DelegateCommand(OnSaveProject, () => Sequencer != null);
+			SaveProjectCommand = new DelegateCommand(DoSaveProject, () => Sequencer != null);
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Zoom < MaxZoom);
 			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Zoom > MinZoom);
 			ExportCommand = new DelegateCommand(() => IsExportOpen = true, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
@@ -52,6 +54,18 @@ namespace LedBoard
 		public ICommand ExportCancelCommand { get; }
 
 		#region Dependency properties
+
+		#region ProjectPath
+
+		public static readonly DependencyProperty ProjectPathProperty = DependencyProperty.Register(nameof(ProjectPath), typeof(string), typeof(MainWindow), new PropertyMetadata(null));
+
+		public string ProjectPath
+		{
+			get => (string)GetValue(ProjectPathProperty);
+			set => SetValue(ProjectPathProperty, value);
+		}
+
+		#endregion
 
 		#region Sequencer
 
@@ -260,24 +274,71 @@ namespace LedBoard
 
 		#region Event handlers
 
+		private async void OnWindowClosing(object sender, CancelEventArgs e)
+		{
+			if (IsDirty && !_SkipDirty)
+			{
+				// Cancel now, we will be called again if we are to close again
+				e.Cancel = true;
+
+				// Prompt the user to save the project
+				bool? result = await ShowConfirmDialogCancelable("Save Project?", "You have unsaved changes to your project. Would you like to save?");
+				if (result.HasValue)
+				{
+					if (result.Value)
+					{
+						if (await OnSaveProject())
+						{
+							// No need to set _SkipDirty as the project has been saved and is no longer dirty
+							Close();
+						}
+					}
+					else
+					{
+						_SkipDirty = true;
+						Close();
+					}
+				}
+			}
+		}
+
 		private void OnProjectSettingsClick(object sender, RoutedEventArgs e)
 		{
 			IsProjectSettingsOpen = true;
 		}
 
-		private void OnNewProjectClick(object sender, RoutedEventArgs e)
+		private async void OnSaveProjectAsClick(object sender, RoutedEventArgs e)
 		{
+			if (Sequencer == null) return;
+			await OnSaveProjectAs();
+		}
+
+		private async void OnNewProjectClick(object sender, RoutedEventArgs e)
+		{
+			if (IsDirty)
+			{
+				bool? doSave = await ShowConfirmDialogCancelable("Save Project?", "You have unsaved changes to your project. Would you like to save?");
+				if ((!doSave.HasValue) || (doSave.Value && !await OnSaveProject())) return;
+			}
+
 			Sequencer = new SequencerViewModel(this, _ResourcesService, NewBoardWidth, NewBoardHeight, NewFrameRate);
 			IsProjectSettingsOpen = false;
+			ProjectPath = null;
 		}
 
 		private async void OnLoadProjectClick(object sender, RoutedEventArgs e)
 		{
+			if (IsDirty)
+			{
+				bool? doSave = await ShowConfirmDialogCancelable("Save Project?", "You have unsaved changes to your project. Would you like to save?");
+				if ((!doSave.HasValue) || (doSave.Value && !await OnSaveProject())) return;
+			}
+
 			string result = OpenFileDialog("Open Project...", "LED Board project|*.ledproj|All files|*.*");
 			if (result != null)
 			{
 				// Open progress dialog
-				var controller = await this.ShowProgressAsync("Please wait...", "Loading project...", false, DialogSettings);
+				var controller = await this.ShowProgressAsync("Please wait...", "Loading project...", false);
 				controller.SetIndeterminate();
 
 				await Task.Run(async () =>
@@ -293,6 +354,7 @@ namespace LedBoard
 							Sequencer = new SequencerViewModel(this, _ResourcesService, project);
 							Sequencer.Sequence.GetCurrentFrame(Sequencer.CurrentBoard);
 							IsProjectSettingsOpen = false;
+							ProjectPath = result;
 						});
 					}
 					catch (Exception ex)
@@ -311,80 +373,104 @@ namespace LedBoard
 			else IsProjectSettingsOpen = false;
 		}
 
-		private async void OnSaveProject()
+		private async void DoSaveProject()
 		{
-			if (Sequencer == null) return;
+			await OnSaveProject();
+		}
+
+		private async Task<bool> OnSaveProject()
+		{
+			if (ProjectPath == null) return await OnSaveProjectAs();
+			else return await SaveProject(ProjectPath);
+		}
+
+		private async Task<bool> OnSaveProjectAs()
+		{
+			if (Sequencer == null) return false;
 			string result = SaveFileDialog("Save project as...", "LED Board project|*.ledproj|All files|*.*");
 			if (result != null)
 			{
-				// Open progress dialog
-				var controller = await this.ShowProgressAsync("Please wait...", "Saving project...", false, DialogSettings);
-				controller.SetIndeterminate();
-
-				string error = null;
-				Exception exception = null;
-
-				try
+				if (await SaveProject(result))
 				{
-					// Extract dependency properties to locals
-					var sequencer = Sequencer;
-
-					// Create project model
-					var project = sequencer.ExportProject();
-
-					// Asynchrounously save the project
-					await Task.Run(() =>
-					{
-						var resourceList = new List<ProjectResourceModel>();
-						var errorList = new List<string>();
-						foreach (var entry in sequencer.Sequence.Steps)
-						{
-							foreach (var resourceUri in entry.Step.Resources.Where(uri => !string.IsNullOrWhiteSpace(uri)))
-							{
-								if (_ResourcesService.TryGetResourceMeta(resourceUri, out long filesize, out string signature))
-								{
-									resourceList.Add(new ProjectResourceModel
-									{
-										Uri = resourceUri,
-										FileSize = filesize,
-										Signature = signature,
-									});
-								}
-								else
-								{
-									errorList.Add($"{entry.Step.DisplayName}: {resourceUri}");
-								}
-							}
-						}
-
-						if (errorList.Any())
-						{
-							// Resource processing failed
-							error = $"Some resources are invalid:\r\n\r\n{string.Join("\r\n", errorList)}";
-						}
-						else
-						{
-							// Store resource references in project
-							project.Resources = resourceList.ToArray();
-
-							// Save project
-							new ProjectService(_ResourcesService).SaveProject(project, result);
-						}
-					});
-				}
-				catch (Exception ex)
-				{
-					error = ex.Message;
-					exception = ex;
-				}
-
-				await controller.CloseAsync();
-
-				if (error != null || exception != null)
-				{
-					ShowMessageDialog("Error", $"Failed to load project: {error ?? exception.Message}", MessageDialogIconType.Error, exception?.ToString());
+					ProjectPath = result;
+					return true;
 				}
 			}
+			return false;
+		}
+
+		private async Task<bool> SaveProject(string path)
+		{
+			// Open progress dialog
+			var controller = await this.ShowProgressAsync("Please wait...", "Saving project...", false);
+			controller.SetIndeterminate();
+
+			string error = null;
+			Exception exception = null;
+
+			try
+			{
+				// Extract dependency properties to locals
+				var sequencer = Sequencer;
+
+				// Create project model
+				var project = sequencer.ExportProject();
+
+				// Asynchrounously save the project
+				await Task.Run(() =>
+				{
+					var resourceList = new List<ProjectResourceModel>();
+					var errorList = new List<string>();
+					foreach (var entry in sequencer.Sequence.Steps)
+					{
+						foreach (var resourceUri in entry.Step.Resources.Where(uri => !string.IsNullOrWhiteSpace(uri)))
+						{
+							if (_ResourcesService.TryGetResourceMeta(resourceUri, out long filesize, out string signature))
+							{
+								resourceList.Add(new ProjectResourceModel
+								{
+									Uri = resourceUri,
+									FileSize = filesize,
+									Signature = signature,
+								});
+							}
+							else
+							{
+								errorList.Add($"{entry.Step.DisplayName}: {resourceUri}");
+							}
+						}
+					}
+
+					if (errorList.Any())
+					{
+						// Resource processing failed
+						error = $"Some resources are invalid:\r\n\r\n{string.Join("\r\n", errorList)}";
+					}
+					else
+					{
+						// Store resource references in project
+						project.Resources = resourceList.ToArray();
+
+						// Save project
+						new ProjectService(_ResourcesService).SaveProject(project, path);
+					}
+				});
+			}
+			catch (Exception ex)
+			{
+				error = ex.Message;
+				exception = ex;
+			}
+
+			await controller.CloseAsync();
+
+			if (error != null || exception != null)
+			{
+				ShowMessageDialog("Error", $"Failed to load project: {error ?? exception.Message}", MessageDialogIconType.Error, exception?.ToString());
+				return false;
+			}
+
+			return true;
 		}
 
 		private void OnZoomOut()
@@ -442,6 +528,20 @@ namespace LedBoard
 					else if (timelineScroller.HorizontalOffset > rightOffsetThreshold) timelineScroller.ScrollToHorizontalOffset(rightOffsetThreshold);
 				});
 			}
+			else if (e.PropertyName == nameof(Sequence.IsDirty))
+			{
+				Dispatcher.Invoke(() =>
+				{
+					if (IsDirty)
+					{
+						Interop.User32.ShutdownBlockReasonCreate(new WindowInteropHelper(this).Handle, "You have unsaved changes to your project.");
+					}
+					else
+					{
+						Interop.User32.ShutdownBlockReasonDestroy(new WindowInteropHelper(this).Handle);
+					}
+				});
+			}
 
 			CommandManager.InvalidateRequerySuggested();
 		}
@@ -492,8 +592,12 @@ namespace LedBoard
 			IsExportOpen = false;
 
 			// Open progress dialog
-			var settings = DialogSettings;
-			settings.NegativeButtonText = "Cancel";
+			var settings = new MetroDialogSettings
+			{
+				AnimateShow = false,
+				AnimateHide = false,
+				NegativeButtonText = "Cancel"
+			};
 			var controller = await this.ShowProgressAsync("Please wait...", "Exporting image...", true, settings);
 
 			// Extract properties to locals
@@ -563,7 +667,7 @@ namespace LedBoard
 				};
 				_CurrentDialog = (BaseMetroDialog)Resources["MessageDialog"];
 				_CurrentDialog.DataContext = vm;
-				await this.ShowMetroDialogAsync(_CurrentDialog, DialogSettings);
+				await this.ShowMetroDialogAsync(_CurrentDialog);
 			});
 		}
 
@@ -600,24 +704,59 @@ namespace LedBoard
 		{
 			Dispatcher.Invoke(async () =>
 			{
-				var settings = DialogSettings;
-				settings.AffirmativeButtonText = affirmativeBtnText ?? "Yes";
-				settings.NegativeButtonText = negativeBtnText ?? "No";
-				settings.DefaultButtonFocus = MessageDialogResult.Negative;
-				var result = await this.ShowMessageAsync(title, message, MessageDialogStyle.AffirmativeAndNegative, settings);
-				callback.Invoke(result == MessageDialogResult.Affirmative);
+				bool result = await ShowConfirmDialog(title, message, affirmativeBtnText, negativeBtnText);
+				callback.Invoke(result);
 			});
 		}
-
-		private MetroDialogSettings DialogSettings => new MetroDialogSettings { AnimateHide = false, AnimateShow = false };
 
 		private async void OnCloseMessageDialog(object sender, RoutedEventArgs e)
 		{
 			if (_CurrentDialog != null)
 			{
-				await this.HideMetroDialogAsync(_CurrentDialog, DialogSettings);
+				await this.HideMetroDialogAsync(_CurrentDialog);
 				_CurrentDialog = null;
 			}
+		}
+
+		private async Task<bool> ShowConfirmDialog(string title, string message, string affirmativeBtnText = null, string negativeBtnText = null)
+		{
+			var settings = new MetroDialogSettings
+			{
+				AnimateShow = false,
+				AnimateHide = false,
+				AffirmativeButtonText = affirmativeBtnText ?? "Yes",
+				NegativeButtonText = negativeBtnText ?? "No",
+				DefaultButtonFocus = MessageDialogResult.Negative
+			};
+			return (await this.ShowMessageAsync(title, message, MessageDialogStyle.AffirmativeAndNegative, settings)) == MessageDialogResult.Affirmative;
+		}
+
+		private async Task<bool?> ShowConfirmDialogCancelable(string title, string message, string affirmativeBtnText = null, string negativeBtnText = null, string auxBtnText = null)
+		{
+			var settings = new MetroDialogSettings
+			{
+				AnimateShow = false,
+				AnimateHide = false,
+				AffirmativeButtonText = affirmativeBtnText ?? "Yes",
+				NegativeButtonText = negativeBtnText ?? "No",
+				FirstAuxiliaryButtonText = auxBtnText ?? "Cancel",
+				DefaultButtonFocus = MessageDialogResult.FirstAuxiliary,
+			};
+			var result = await this.ShowMessageAsync(title, message, MessageDialogStyle.AffirmativeAndNegativeAndSingleAuxiliary, settings);
+			if (result == MessageDialogResult.FirstAuxiliary) return null;
+			return result == MessageDialogResult.Affirmative;
+		}
+
+		#endregion
+
+		#region ICheckDirty impl
+
+		public bool IsDirty => Sequencer?.Sequence?.IsDirty ?? false;
+
+		public async void HandleSessionEnd()
+		{
+			bool? doSave = await ShowConfirmDialogCancelable("Save Project?", "You have unsaved changes to your project. Would you like to save?");
+			if ((!doSave.HasValue) || (doSave.Value && !await OnSaveProject())) return;
 		}
 
 		#endregion

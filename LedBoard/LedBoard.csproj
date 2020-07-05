@@ -71,6 +71,8 @@
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\PureHueConverter.cs" />
     <Compile Include="Converters\TimelineWidthConverter.cs" />
+    <Compile Include="ICheckDirty.cs" />
+    <Compile Include="Interop\User32.cs" />
     <Compile Include="Models\DoubleDescriptor.cs" />
     <Compile Include="Models\ExportFormatDescriptor.cs" />
     <Compile Include="Models\IntDescriptor.cs" />
