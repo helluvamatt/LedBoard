@@ -21,7 +21,7 @@ namespace LedBoard.ViewModels
 
 		private bool _Updating;
 
-		public SequenceStepConfigViewModel(ISequenceStep step, IDialogService dialogService)
+		public SequenceStepConfigViewModel(ISequenceStep step, IDialogService dialogService, IResourcesService resourcesService)
 		{
 			_Step = step ?? throw new ArgumentNullException(nameof(step));
 			_CurrentConfiguration = step.CurrentConfiguration;
@@ -51,7 +51,7 @@ namespace LedBoard.ViewModels
 								propVm = new LedFontPropertyViewModel(prop, editorForAttr.Label, (LedFont)prop.GetValue(_CurrentConfiguration));
 								break;
 							case Editors.FileResource:
-								propVm = new FileResourcePropertyViewModel(prop, editorForAttr.Label, (string)prop.GetValue(_CurrentConfiguration), editorForAttr.Parameter as string, dialogService);
+								propVm = new FileResourcePropertyViewModel(prop, editorForAttr.Label, (string)prop.GetValue(_CurrentConfiguration), editorForAttr.Parameter as string, dialogService, resourcesService);
 								break;
 							case Editors.TimeSpan:
 								propVm = new TimeSpanPropertyViewModel(prop, editorForAttr.Label, (TimeSpan)prop.GetValue(_CurrentConfiguration));

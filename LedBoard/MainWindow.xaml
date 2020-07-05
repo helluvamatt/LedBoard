@@ -11,6 +11,7 @@
 	xmlns:controls="clr-namespace:LedBoard.Controls"
 	xmlns:c="clr-namespace:LedBoard.Converters"
 	xmlns:m="clr-namespace:LedBoard.Models"
+	xmlns:vm="clr-namespace:LedBoard.ViewModels"
 	xmlns:vmc="clr-namespace:LedBoard.ViewModels.Config"
     mc:Ignorable="d"
 	DataContext="{Binding RelativeSource={RelativeSource Self}}"
@@ -18,6 +19,7 @@
 	<mah:MetroWindow.Resources>
 		<c:TimelineWidthConverter x:Key="timelineWidthConverter" />
 		<c:TimelineWidthConverter x:Key="timelineOffsetConverter" ReturnThickness="True" />
+		<c:NullToVisibilityConverter x:Key="nullToVisibilityConverter" />
 		<c:EnumBoolConverter x:Key="enumBoolConverter" />
 		<x:Array x:Key="FrameRateOptions" Type="{x:Type m:IntDescriptor}">
 			<m:IntDescriptor Value="20" Text="Very Fast (50 fps)" />
@@ -46,6 +48,54 @@
 			<m:DoubleDescriptor Value="4" Text="400%" />
 		</x:Array>
 		<sys:String x:Key="DefaultExportFileText">Please select a file...</sys:String>
+		<mah:CustomDialog x:Key="MessageDialog" d:DataContext="{d:DesignInstance Type={x:Type vm:MessageDialogViewModel}}" Title="{Binding Title}">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="*" />
+					<RowDefinition Height="auto" />
+				</Grid.RowDefinitions>
+				<ic:PackIconFontAwesome Margin="8" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Top">
+					<ic:PackIconFontAwesome.Style>
+						<Style TargetType="ic:PackIconFontAwesome">
+							<Setter Property="Visibility" Value="Collapsed" />
+							<Setter Property="Width" Value="24" />
+							<Setter Property="Height" Value="24" />
+							<Style.Triggers>
+								<DataTrigger Binding="{Binding IconType}" Value="{x:Static vm:MessageDialogIconType.Error}">
+									<Setter Property="Visibility" Value="Visible" />
+									<Setter Property="Kind" Value="TimesCircleSolid" />
+									<Setter Property="Foreground" Value="{StaticResource MahApps.Brushes.Control.Validation}" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding IconType}" Value="{x:Static vm:MessageDialogIconType.Warning}">
+									<Setter Property="Visibility" Value="Visible" />
+									<Setter Property="Kind" Value="ExclamationTriangleSolid" />
+									<Setter Property="Foreground" Value="{StaticResource MahApps.Brushes.Control.Validation}" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding IconType}" Value="{x:Static vm:MessageDialogIconType.Info}">
+									<Setter Property="Visibility" Value="Visible" />
+									<Setter Property="Kind" Value="InfoCircleSolid" />
+									<Setter Property="Foreground" Value="{StaticResource MahApps.Brushes.AccentBase}" />
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+					</ic:PackIconFontAwesome.Style>
+				</ic:PackIconFontAwesome>
+				<TextBlock Margin="0,8,8,8" Grid.Column="1" Grid.Row="0" Text="{Binding Message}" TextWrapping="Wrap" />
+				<Expander Margin="0,0,8,8" Grid.Column="1" Grid.Row="1" IsExpanded="False" Header="Detailed Message" Visibility="{Binding DetailedMessage, Converter={StaticResource nullToVisibilityConverter}}">
+					<Border BorderThickness="1" BorderBrush="Black" Background="LightGray">
+						<ScrollViewer HorizontalScrollBarVisibility="auto" VerticalScrollBarVisibility="auto" Padding="8">
+							<TextBlock Text="{Binding DetailedMessage}" FontFamily="Courier New" FontSize="10" TextWrapping="NoWrap" />
+						</ScrollViewer>
+					</Border>
+				</Expander>
+				<Button Margin="0,0,8,8" HorizontalAlignment="Right" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" Click="OnCloseMessageDialog" Style="{StaticResource MahApps.Styles.Button.Dialogs}">OK</Button>
+			</Grid>
+		</mah:CustomDialog>
 	</mah:MetroWindow.Resources>
 	<mah:MetroWindow.RightWindowCommands>
 		<mah:WindowCommands>
@@ -55,16 +105,20 @@
 			<Button Command="{Binding ExportCommand}">
 				<ic:PackIconFontAwesome Kind="FileExportSolid" />
 			</Button>
+			<Button Command="{Binding SaveProjectCommand}">
+				<ic:PackIconFontAwesome Kind="SaveSolid" />
+			</Button>
 		</mah:WindowCommands>
 	</mah:MetroWindow.RightWindowCommands>
 	<mah:MetroWindow.Flyouts>
 		<mah:FlyoutsControl>
 			<mah:Flyout Position="Right" Theme="Light" Header="Project Settings" IsModal="True" CloseButtonVisibility="Collapsed" IsPinned="True" IsOpen="{Binding IsProjectSettingsOpen}">
 				<DockPanel Margin="8">
-					<UniformGrid Columns="2" Rows="1" DockPanel.Dock="Bottom">
-						<Button Margin="8" IsEnabled="False" Style="{StaticResource MahApps.Styles.Button}">Open Project</Button>
-						<Button Margin="8" Click="OnCancelClick" Style="{StaticResource MahApps.Styles.Button}">Cancel</Button>
-					</UniformGrid>
+					<StackPanel Orientation="Vertical" DockPanel.Dock="Bottom">
+						<Button Margin="0,8,0,0" Click="OnNewProjectClick" Style="{StaticResource MahApps.Styles.Button}">New Project</Button>
+						<Button Margin="0,8,0,0" Click="OnLoadProjectClick" Style="{StaticResource MahApps.Styles.Button}">Open Project</Button>
+						<Button Margin="0,8,0,0" Click="OnCancelClick" Style="{StaticResource MahApps.Styles.Button}">Cancel</Button>
+					</StackPanel>
 					<StackPanel Orientation="Vertical">
 						<Label>Board Width</Label>
 						<mah:NumericUpDown Value="{Binding NewBoardWidth}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" />
@@ -72,7 +126,6 @@
 						<mah:NumericUpDown Value="{Binding NewBoardHeight}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" />
 						<Label>Frame Rate</Label>
 						<ComboBox ItemsSource="{StaticResource FrameRateOptions}" SelectedValue="{Binding NewFrameRate}" SelectedValuePath="Value" DisplayMemberPath="Text" />
-						<Button Click="OnNewProjectClick" Style="{StaticResource MahApps.Styles.Button}" Margin="0,8,0,0">New Project</Button>
 					</StackPanel>
 				</DockPanel>
 			</mah:Flyout>
@@ -327,7 +380,6 @@
 												  CurrentBoard="{Binding Sequencer.CurrentBoard}" />
 					</Border>
 				</ScrollViewer>
-				
 			</DockPanel>
 		</Border>
 		<GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Height="5" ResizeDirection="Rows" />

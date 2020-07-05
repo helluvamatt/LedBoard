@@ -1,7 +1,12 @@
 ﻿using LedBoard.Models;
+using LedBoard.Models.Serialization;
 using LedBoard.Services;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -16,11 +21,35 @@ namespace LedBoard.ViewModels
 		private CancellationTokenSource _CancelController;
 		private bool _Loop;
 
-		public SequencerViewModel(IDialogService dialogService, int boardWidth, int boardHeight, int frameDelay)
+		public SequencerViewModel(IDialogService dialogService, IResourcesService resourcesService, ProjectModel project) : this(dialogService, resourcesService, project.Width, project.Height, project.FrameDelay)
+		{
+			// Populate sequencer/sequence from project
+			int index = 0;
+			try
+			{
+				foreach (ProjectStepModel step in project.Steps)
+				{
+					index++;
+					ISequenceStep sequenceStep = StepService.CreateStep(step);
+					Sequence.Steps.Add(new SequenceEntry(sequenceStep));
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidDataException($"Sequence Step #{index} is either an unknown type or its configuration was invalid.", ex);
+			}
+			Sequence.IsDirty = false;
+		}
+
+		public SequencerViewModel(IDialogService dialogService, IResourcesService resourcesService, int boardWidth, int boardHeight, int frameDelay)
 		{
 			_DialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+			if (resourcesService == null) throw new ArgumentNullException(nameof(resourcesService));
 			CurrentBoard = new MemoryBoard(boardWidth, boardHeight);
-			Sequence = new Sequence(Dispatcher, boardWidth, boardHeight, frameDelay);
+			Sequence = new Sequence(Dispatcher, resourcesService, boardWidth, boardHeight, frameDelay)
+			{
+				IsDirty = true,
+			};
 			Sequence.CurrentFrameChanged += OnSequenceCurrentFrameChanged;
 			StopCommand = new DelegateCommand(OnStop);
 			PlayPauseCommand = new DelegateCommand(OnPlayPause);
@@ -262,6 +291,28 @@ namespace LedBoard.ViewModels
 				exporter.FinalizeImage();
 			}
 			catch (OperationCanceledException) { } // Eat, we are canceling
+		}
+
+		public ProjectModel ExportProject()
+		{
+			return new ProjectModel
+			{
+				Width = CurrentBoard.Width,
+				Height = CurrentBoard.Height,
+				FrameDelay = (int)Sequence.FrameDelay.TotalMilliseconds,
+				Steps = Sequence.Steps.Select(entry => new ProjectStepModel
+				{
+					Duration = entry.Length.TotalMilliseconds,
+					Type = entry.Step.GetType().FullName,
+					ConfigurationType = entry.Step.ConfigurationType.FullName,
+					Configuration = GetConfigurationDictionary(entry.Step.CurrentConfiguration),
+				}).ToArray(),
+			};
+		}
+
+		private Dictionary<string, object> GetConfigurationDictionary(object configObj)
+		{
+			return configObj.GetType().GetProperties().ToDictionary(prop => prop.Name, prop => prop.GetValue(configObj));
 		}
 
 		#endregion

@@ -18,7 +18,7 @@ namespace LedBoard.Models.Steps
 
 		public override TimeSpan DefaultLength => TimeSpan.FromMilliseconds(_FrameDelay.TotalMilliseconds * _StepCount);
 
-		protected override bool OnInit(int width, int height, TimeSpan frameDelay)
+		protected override bool OnInit(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService)
 		{
 			_FontRendering.Layout(TypedConfiguration?.Font ?? FontService.GetDefault(), TypedConfiguration.Text);
 			_TextOffsetY = (height - _FontRendering.FontHeight) / 2;

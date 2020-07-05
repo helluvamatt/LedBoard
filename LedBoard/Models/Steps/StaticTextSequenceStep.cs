@@ -15,7 +15,7 @@ namespace LedBoard.Models.Steps
 
 		public override TimeSpan DefaultLength => TimeSpan.FromSeconds(5);
 
-		protected override bool OnInit(int width, int height, TimeSpan frameDelay)
+		protected override bool OnInit(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService)
 		{
 			_FontRendering.Layout(TypedConfiguration?.Font ?? FontService.GetDefault(), TypedConfiguration.Text);
 

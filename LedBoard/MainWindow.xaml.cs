@@ -1,14 +1,18 @@
 ﻿using LedBoard.Controls;
 using LedBoard.Converters;
 using LedBoard.Models;
+using LedBoard.Models.Serialization;
 using LedBoard.Services;
 using LedBoard.Services.Export;
+using LedBoard.Services.Resources;
 using LedBoard.ViewModels;
 using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,10 +27,13 @@ namespace LedBoard
 	/// </summary>
 	public partial class MainWindow : MetroWindow, IDialogService
 	{
+		private readonly ProjectResourcesService _ResourcesService;
 		private readonly double[] _ZoomValues;
 
 		public MainWindow()
 		{
+			_ResourcesService = new ProjectResourcesService(Path.Combine(Path.GetTempPath(), "LedBoard"));
+			SaveProjectCommand = new DelegateCommand(OnSaveProject, () => Sequencer != null);
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Zoom < MaxZoom);
 			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Zoom > MinZoom);
 			ExportCommand = new DelegateCommand(() => IsExportOpen = true, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
@@ -37,6 +44,7 @@ namespace LedBoard
 			_ZoomValues = ((DoubleDescriptor[])Resources["BoardZoomOptions"]).Select(dd => dd.Value).ToArray();
 		}
 
+		public ICommand SaveProjectCommand { get; }
 		public ICommand ZoomInCommand { get; }
 		public ICommand ZoomOutCommand { get; }
 		public ICommand ExportCommand { get; }
@@ -259,14 +267,124 @@ namespace LedBoard
 
 		private void OnNewProjectClick(object sender, RoutedEventArgs e)
 		{
-			Sequencer = new SequencerViewModel(this, NewBoardWidth, NewBoardHeight, NewFrameRate);
+			Sequencer = new SequencerViewModel(this, _ResourcesService, NewBoardWidth, NewBoardHeight, NewFrameRate);
 			IsProjectSettingsOpen = false;
+		}
+
+		private async void OnLoadProjectClick(object sender, RoutedEventArgs e)
+		{
+			string result = OpenFileDialog("Open Project...", "LED Board project|*.ledproj|All files|*.*");
+			if (result != null)
+			{
+				// Open progress dialog
+				var controller = await this.ShowProgressAsync("Please wait...", "Loading project...", false, DialogSettings);
+				controller.SetIndeterminate();
+
+				await Task.Run(async () =>
+				{
+					try
+					{
+						// Asynchronously load project
+						ProjectModel project = new ProjectService(_ResourcesService).LoadProject(result);
+
+						// Back to the UI thread, create the SequencerViewModel from the project
+						Dispatcher.Invoke(() =>
+						{
+							Sequencer = new SequencerViewModel(this, _ResourcesService, project);
+							Sequencer.Sequence.GetCurrentFrame(Sequencer.CurrentBoard);
+							IsProjectSettingsOpen = false;
+						});
+					}
+					catch (Exception ex)
+					{
+						ShowMessageDialog("Error", $"Failed to load project: {ex.Message}", MessageDialogIconType.Error, ex.ToString());
+					}
+
+					await controller.CloseAsync();
+				});
+			}
 		}
 
 		private void OnCancelClick(object sender, RoutedEventArgs e)
 		{
 			if (Sequencer == null) Close();
 			else IsProjectSettingsOpen = false;
+		}
+
+		private async void OnSaveProject()
+		{
+			if (Sequencer == null) return;
+			string result = SaveFileDialog("Save project as...", "LED Board project|*.ledproj|All files|*.*");
+			if (result != null)
+			{
+				// Open progress dialog
+				var controller = await this.ShowProgressAsync("Please wait...", "Saving project...", false, DialogSettings);
+				controller.SetIndeterminate();
+
+				string error = null;
+				Exception exception = null;
+
+				try
+				{
+					// Extract dependency properties to locals
+					var sequencer = Sequencer;
+
+					// Create project model
+					var project = sequencer.ExportProject();
+
+					// Asynchrounously save the project
+					await Task.Run(() =>
+					{
+						var resourceList = new List<ProjectResourceModel>();
+						var errorList = new List<string>();
+						foreach (var entry in sequencer.Sequence.Steps)
+						{
+							foreach (var resourceUri in entry.Step.Resources.Where(uri => !string.IsNullOrWhiteSpace(uri)))
+							{
+								if (_ResourcesService.TryGetResourceMeta(resourceUri, out long filesize, out string signature))
+								{
+									resourceList.Add(new ProjectResourceModel
+									{
+										Uri = resourceUri,
+										FileSize = filesize,
+										Signature = signature,
+									});
+								}
+								else
+								{
+									errorList.Add($"{entry.Step.DisplayName}: {resourceUri}");
+								}
+							}
+						}
+
+						if (errorList.Any())
+						{
+							// Resource processing failed
+							error = $"Some resources are invalid:\r\n\r\n{string.Join("\r\n", errorList)}";
+						}
+						else
+						{
+							// Store resource references in project
+							project.Resources = resourceList.ToArray();
+
+							// Save project
+							new ProjectService(_ResourcesService).SaveProject(project, result);
+						}
+					});
+				}
+				catch (Exception ex)
+				{
+					error = ex.Message;
+					exception = ex;
+				}
+
+				await controller.CloseAsync();
+
+				if (error != null || exception != null)
+				{
+					ShowMessageDialog("Error", $"Failed to load project: {error ?? exception.Message}", MessageDialogIconType.Error, exception?.ToString());
+				}
+			}
 		}
 
 		private void OnZoomOut()
@@ -300,7 +418,7 @@ namespace LedBoard
 		{
 			if (Sequencer?.SelectedItem != null)
 			{
-				ConfigurationModel = new SequenceStepConfigViewModel(Sequencer.SelectedItem.Step, this);
+				ConfigurationModel = new SequenceStepConfigViewModel(Sequencer.SelectedItem.Step, this, _ResourcesService);
 				ToolboxTabPage = 1;
 			}
 			else
@@ -330,7 +448,7 @@ namespace LedBoard
 
 		private void OnToolboxMouseMove(object sender, MouseEventArgs e)
 		{
-			if (sender is ListBox source && e.LeftButton == MouseButtonState.Pressed)
+			if (sender is ListBox source && e.LeftButton == MouseButtonState.Pressed && source.SelectedItem != null)
 			{
 				DragDrop.DoDragDrop(source, new DataObject(DataFormats.Serializable, source.SelectedItem), DragDropEffects.Copy);
 			}
@@ -418,7 +536,7 @@ namespace LedBoard
 					{
 						Dispatcher.Invoke(() =>
 						{
-							ShowMessageDialog("Error", $"Failed to export image(s): {ex.Message}");
+							ShowMessageDialog("Error", $"Failed to export image(s): {ex.Message}", MessageDialogIconType.Error, ex.ToString());
 						});
 					}
 					await controller.CloseAsync();
@@ -430,38 +548,79 @@ namespace LedBoard
 
 		#region IDialogService impl
 
-		public async void ShowMessageDialog(string title, string message)
+		private BaseMetroDialog _CurrentDialog;
+
+		public void ShowMessageDialog(string title, string message, MessageDialogIconType icon, string detailedMessage = null)
 		{
-			var settings = DialogSettings;
-			settings.AffirmativeButtonText = "OK";
-			await this.ShowMessageAsync(title, message, MessageDialogStyle.Affirmative, settings);
+			Dispatcher.Invoke(async () =>
+			{
+				var vm = new MessageDialogViewModel
+				{
+					Title = title,
+					Message = message,
+					DetailedMessage = detailedMessage,
+					IconType = icon,
+				};
+				_CurrentDialog = (BaseMetroDialog)Resources["MessageDialog"];
+				_CurrentDialog.DataContext = vm;
+				await this.ShowMetroDialogAsync(_CurrentDialog, DialogSettings);
+			});
 		}
 
 		public string OpenFileDialog(string title, string filters, string initialDirectory = null)
 		{
-			var ofd = new OpenFileDialog
+			return Dispatcher.Invoke(() =>
 			{
-				CheckFileExists = true,
-				Filter = filters,
-				InitialDirectory = initialDirectory,
-				Title = title,
-			};
-			return (ofd.ShowDialog(this) ?? false) ? ofd.FileName : null;
+				var ofd = new OpenFileDialog
+				{
+					CheckFileExists = true,
+					Filter = filters,
+					InitialDirectory = initialDirectory,
+					Title = title,
+				};
+				return (ofd.ShowDialog(this) ?? false) ? ofd.FileName : null;
+			});
 		}
 
-		public async void ConfirmDialog(string title, string message, Action<bool> callback, string affirmativeBtnText = null, string negativeBtnText = null)
+		public string SaveFileDialog(string title, string filters, string initialDirectory = null)
 		{
-			var settings = DialogSettings;
-			settings.AffirmativeButtonText = affirmativeBtnText ?? "Yes";
-			settings.NegativeButtonText = negativeBtnText ?? "No";
-			settings.DefaultButtonFocus = MessageDialogResult.Negative;
-			var result = await this.ShowMessageAsync(title, message, MessageDialogStyle.AffirmativeAndNegative, settings);
-			callback.Invoke(result == MessageDialogResult.Affirmative);
+			return Dispatcher.Invoke(() =>
+			{
+				var sfd = new SaveFileDialog
+				{
+					Filter = filters,
+					InitialDirectory = initialDirectory,
+					Title = title,
+				};
+				return (sfd.ShowDialog(this) ?? false) ? sfd.FileName : null;
+			});
+		}
+
+		public void ConfirmDialog(string title, string message, Action<bool> callback, string affirmativeBtnText = null, string negativeBtnText = null)
+		{
+			Dispatcher.Invoke(async () =>
+			{
+				var settings = DialogSettings;
+				settings.AffirmativeButtonText = affirmativeBtnText ?? "Yes";
+				settings.NegativeButtonText = negativeBtnText ?? "No";
+				settings.DefaultButtonFocus = MessageDialogResult.Negative;
+				var result = await this.ShowMessageAsync(title, message, MessageDialogStyle.AffirmativeAndNegative, settings);
+				callback.Invoke(result == MessageDialogResult.Affirmative);
+			});
+		}
+
+		private MetroDialogSettings DialogSettings => new MetroDialogSettings { AnimateHide = false, AnimateShow = false };
+
+		private async void OnCloseMessageDialog(object sender, RoutedEventArgs e)
+		{
+			if (_CurrentDialog != null)
+			{
+				await this.HideMetroDialogAsync(_CurrentDialog, DialogSettings);
+				_CurrentDialog = null;
+			}
 		}
 
 		#endregion
-
-		private MetroDialogSettings DialogSettings => new MetroDialogSettings { AnimateHide = false, AnimateShow = false };
 
 		#region Export handler
 

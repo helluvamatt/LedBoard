@@ -12,4 +12,7 @@
 	<m:StepDescriptor x:Key="Clock" SortOrder="2" DisplayName="Clock"
 					  Type="{x:Type ms:ClockSequenceStep}"
 					  Icon="{ic:FontAwesomeImage Kind=ClockRegular, Brush={StaticResource MahApps.Brushes.AccentBase}}" />
+	<m:StepDescriptor x:Key="StaticImage" SortOrder="3" DisplayName="Image"
+					  Type="{x:Type ms:StaticImageSequenceStep}"
+					  Icon="{ic:FontAwesomeImage Kind=ImageSolid, Brush={StaticResource MahApps.Brushes.AccentBase}}" />
 </ResourceDictionary>

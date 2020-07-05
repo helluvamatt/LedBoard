@@ -1,5 +1,9 @@
-﻿using System;
+﻿using LedBoard.Services;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace LedBoard.Models
 {
@@ -41,8 +45,9 @@ namespace LedBoard.Models
 		/// <param name="width">Board width</param>
 		/// <param name="height">Board height</param>
 		/// <param name="frameDelay">Frame length</param>
+		/// <param name="resourcesService">Service to load resources from</param>
 		/// <returns>True if initialization was successful, false otherwise</returns>
-		bool Init(int width, int height, TimeSpan frameDelay);
+		bool Init(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService);
 
 		/// <summary>
 		/// (Re)configure the step
@@ -56,6 +61,11 @@ namespace LedBoard.Models
 		/// <param name="board">Board to update</param>
 		/// <param name="step">Frame index local to this step</param>
 		void AnimateFrame(IBoard board, int step);
+
+		/// <summary>
+		/// Get resource URIs defined by this step
+		/// </summary>
+		IEnumerable<string> Resources { get; }
 	}
 
 	/// <summary>
@@ -64,7 +74,7 @@ namespace LedBoard.Models
 	/// <typeparam name="TConfig">Type of the configuration object</typeparam>
 	public abstract class SequenceStepBase<TConfig> : ISequenceStep where TConfig : class, ICloneable
 	{
-		private TimeSpan _Length;
+		private TimeSpan? _Length;
 
 		protected SequenceStepBase()
 		{
@@ -80,6 +90,9 @@ namespace LedBoard.Models
 		/// <inheritdoc />
 		public IBoard Preview { get; } = new MemoryBoard(16, 16);
 
+		/// <inheritdoc />
+		public virtual IEnumerable<string> Resources => Enumerable.Empty<string>();
+
 		/// <summary>
 		/// Current strongly-typed configuration object
 		/// </summary>
@@ -93,7 +106,7 @@ namespace LedBoard.Models
 		/// <inheritdoc />
 		public TimeSpan Length
 		{
-			get => _Length;
+			get => _Length ?? DefaultLength;
 			set
 			{
 				if (_Length != value)
@@ -119,8 +132,9 @@ namespace LedBoard.Models
 		/// <param name="width">Board width</param>
 		/// <param name="height">Board height</param>
 		/// <param name="frameDelay">Frame length</param>
+		/// <param name="resourcesService">Resources Service</param>
 		/// <returns>True if initialization was successful, false otherwise</returns>
-		protected virtual bool OnInit(int width, int height, TimeSpan frameDelay) => true;
+		protected virtual bool OnInit(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService) => true;
 
 		/// <inheritdoc />
 		public abstract void AnimateFrame(IBoard board, int step);
@@ -150,9 +164,10 @@ namespace LedBoard.Models
 		#endregion
 
 		/// <inheritdoc />
-		public bool Init(int width, int height, TimeSpan frameDelay)
+		public bool Init(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService)
 		{
-			bool result = OnInit(width, height, frameDelay);
+			if (!_Length.HasValue) Length = DefaultLength;
+			bool result = OnInit(width, height, frameDelay, resourcesService);
 			if (result)
 			{
 				Preview.BeginEdit();

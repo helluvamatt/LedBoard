@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LedBoard.Services;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -10,15 +11,18 @@ namespace LedBoard.Models
 	public class Sequence : INotifyPropertyChanged
 	{
 		private readonly Dispatcher _Dispatcher;
+		private readonly IResourcesService _ResourcesService;
 		private readonly int _BoardWidth;
 		private readonly int _BoardHeight;
 
+		private bool _IsDirty;
 		private TimeSpan _CurrentTime;
 		private SequenceEntry _CurrentEntry;
 
-		public Sequence(Dispatcher dispatcher, int boardWidth, int boardHeight, int frameDelay)
+		public Sequence(Dispatcher dispatcher, IResourcesService resourcesService, int boardWidth, int boardHeight, int frameDelay)
 		{
 			_Dispatcher = dispatcher;
+			_ResourcesService = resourcesService;
 			_BoardWidth = boardWidth;
 			_BoardHeight = boardHeight;
 			FrameDelay = TimeSpan.FromMilliseconds(frameDelay);
@@ -28,6 +32,24 @@ namespace LedBoard.Models
 
 		public TimeSpan FrameDelay { get; }
 		public TimeSpan Length => TimeSpan.FromMilliseconds(Steps.Sum(step => step.Length.TotalMilliseconds));
+
+		public bool IsDirty
+		{
+			get => _IsDirty;
+			set
+			{
+				if (_IsDirty != value)
+				{
+					_IsDirty = value;
+					PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDirty)));
+				}
+			}
+		}
+
+		public void ResetDirty()
+		{
+			IsDirty = false;
+		}
 
 		public ObservableCollection<SequenceEntry> Steps { get; }
 
@@ -130,8 +152,7 @@ namespace LedBoard.Models
 			{
 				foreach (SequenceEntry entry in e.NewItems)
 				{
-					entry.Init(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay);
-					entry.Step.Length = entry.Step.DefaultLength;
+					entry.Init(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay, _ResourcesService);
 					entry.PropertyChanged += OnSequenceEntryPropertyChanged;
 				}
 			}
@@ -145,7 +166,7 @@ namespace LedBoard.Models
 			if (e.PropertyName == nameof(ISequenceStep.CurrentConfiguration))
 			{
 				// Reinitialize on configuration changes
-				entry.Init(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay);
+				entry.Init(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay, _ResourcesService);
 
 				// Tell the sequencer to update the current frame
 				CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
@@ -222,9 +243,9 @@ namespace LedBoard.Models
 
 		public TimeSpan Length => Step.Length;
 
-		public void Init(Dispatcher dispatcher, int boardWidth, int boardHeight, TimeSpan frameDelay)
+		public void Init(Dispatcher dispatcher, int boardWidth, int boardHeight, TimeSpan frameDelay, IResourcesService resourcesService)
 		{
-			Step.Init(boardWidth, boardHeight, frameDelay);
+			Step.Init(boardWidth, boardHeight, frameDelay, resourcesService);
 			dispatcher.Invoke(() =>
 			{
 				IsReady = true;
