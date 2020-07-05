@@ -75,9 +75,11 @@
     <Compile Include="Interop\User32.cs" />
     <Compile Include="Models\DoubleDescriptor.cs" />
     <Compile Include="Models\ExportFormatDescriptor.cs" />
+    <Compile Include="Models\ImageEnums.cs" />
     <Compile Include="Models\IntDescriptor.cs" />
     <Compile Include="Models\Serialization\ProjectModel.cs" />
     <Compile Include="Models\Serialization\SerializableBoard.cs" />
+    <Compile Include="Models\Steps\PanningImageSequenceStep.cs" />
     <Compile Include="Models\Steps\StaticImageSequenceStep.cs" />
     <Compile Include="Services\Export\GifExporter.cs" />
     <Compile Include="Services\Export\PngExporter.cs" />

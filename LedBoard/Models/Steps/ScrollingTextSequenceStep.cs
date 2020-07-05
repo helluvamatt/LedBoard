@@ -12,7 +12,6 @@ namespace LedBoard.Models.Steps
 		private int _TextOffsetY;
 		private int _TextWidth;
 		private int _StepCount;
-		private TimeSpan _FrameDelay;
 
 		public override string DisplayName => TypedConfiguration != null && !string.IsNullOrWhiteSpace(TypedConfiguration.Text) ? $"Scrolling Text: {Utils.TrimText(TypedConfiguration.Text, 16)}" : "Scrolling Text";
 
@@ -25,7 +24,6 @@ namespace LedBoard.Models.Steps
 			_TextOffsetX = width;
 			_TextWidth = _FontRendering.TextWidth;
 			_StepCount = width + _TextWidth;
-			_FrameDelay = frameDelay;
 			return true;
 		}
 

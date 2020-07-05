@@ -15,4 +15,7 @@
 	<m:StepDescriptor x:Key="StaticImage" SortOrder="3" DisplayName="Image"
 					  Type="{x:Type ms:StaticImageSequenceStep}"
 					  Icon="{ic:FontAwesomeImage Kind=ImageSolid, Brush={StaticResource MahApps.Brushes.AccentBase}}" />
+	<m:StepDescriptor x:Key="PanningImage" SortOrder="4" DisplayName="Panning Image"
+					  Type="{x:Type ms:PanningImageSequenceStep}"
+					  Icon="{ic:FontAwesomeImage Kind=ImagesSolid, Brush={StaticResource MahApps.Brushes.AccentBase}}" />
 </ResourceDictionary>

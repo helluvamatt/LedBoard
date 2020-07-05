@@ -75,6 +75,7 @@ namespace LedBoard.Models
 	public abstract class SequenceStepBase<TConfig> : ISequenceStep where TConfig : class, ICloneable
 	{
 		private TimeSpan? _Length;
+		protected TimeSpan _FrameDelay;
 
 		protected SequenceStepBase()
 		{
@@ -167,6 +168,7 @@ namespace LedBoard.Models
 		public bool Init(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService)
 		{
 			if (!_Length.HasValue) Length = DefaultLength;
+			_FrameDelay = frameDelay;
 			bool result = OnInit(width, height, frameDelay, resourcesService);
 			if (result)
 			{
@@ -185,6 +187,13 @@ namespace LedBoard.Models
 		{
 			TypedConfiguration = newConfiguration as TConfig;
 			OnPropertyChanged(nameof(CurrentConfiguration));
+		}
+
+		protected int ComputeVariableLengthStep(int step, int availableSteps)
+		{
+			double timeOffset = step * _FrameDelay.TotalMilliseconds;
+			double animStep = timeOffset / Length.TotalMilliseconds;
+			return (int)(animStep * availableSteps);
 		}
 	}
 }

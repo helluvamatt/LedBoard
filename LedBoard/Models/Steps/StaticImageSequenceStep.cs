@@ -1,7 +1,6 @@
 ﻿using LedBoard.Services;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
@@ -32,19 +31,19 @@ namespace LedBoard.Models.Steps
 								g.Clear(Color.Black);
 								switch (TypedConfiguration.ResizeQuality)
 								{
-									case StaticImageResizeQuality.NearestNeighbor:
+									case ImageResizeQuality.NearestNeighbor:
 										g.InterpolationMode = InterpolationMode.NearestNeighbor;
 										break;
-									case StaticImageResizeQuality.Bilinear:
+									case ImageResizeQuality.Bilinear:
 										g.InterpolationMode = InterpolationMode.Bilinear;
 										break;
-									case StaticImageResizeQuality.HighQualityBilinear:
+									case ImageResizeQuality.HighQualityBilinear:
 										g.InterpolationMode = InterpolationMode.HighQualityBilinear;
 										break;
-									case StaticImageResizeQuality.Bicubic:
+									case ImageResizeQuality.Bicubic:
 										g.InterpolationMode = InterpolationMode.Bicubic;
 										break;
-									case StaticImageResizeQuality.HighQualityBicubic:
+									case ImageResizeQuality.HighQualityBicubic:
 										g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 										break;
 									default:
@@ -57,14 +56,14 @@ namespace LedBoard.Models.Steps
 								int destX, destY, destW, destH;
 								switch (TypedConfiguration.ResizeMode)
 								{
-									case StaticImageResizeMode.Stretch:
+									case ImageResizeMode.Stretch:
 										destRect = new Rectangle(0, 0, width, height);
 										break;
-									case StaticImageResizeMode.Crop:
+									case ImageResizeMode.Crop:
 										destRect = new Rectangle(0, 0, width, height);
 										srcRect = destRect;
 										break;
-									case StaticImageResizeMode.Center:
+									case ImageResizeMode.Center:
 										ratio = Math.Min((float)width / srcRect.Width, (float)height / srcRect.Height);
 										destW = (int)(srcRect.Width * ratio);
 										destH = (int)(srcRect.Height * ratio);
@@ -72,7 +71,7 @@ namespace LedBoard.Models.Steps
 										destY = (height - destH) / 2;
 										destRect = new Rectangle(destX, destY, destW, destH);
 										break;
-									case StaticImageResizeMode.Fit:
+									case ImageResizeMode.Fit:
 									default:
 										ratio = Math.Max((float)width / srcRect.Width, (float)height / srcRect.Height);
 										destW = (int)(srcRect.Width * ratio);
@@ -110,8 +109,8 @@ namespace LedBoard.Models.Steps
 		{
 			return new StaticImageConfig()
 			{
-				ResizeMode = StaticImageResizeMode.Fit,
-				ResizeQuality = StaticImageResizeQuality.HighQualityBicubic,
+				ResizeMode = ImageResizeMode.Fit,
+				ResizeQuality = ImageResizeQuality.HighQualityBicubic,
 			};
 		}
 
@@ -130,10 +129,10 @@ namespace LedBoard.Models.Steps
 		public string Image { get; set; }
 
 		[EditorFor("Resize Mode", Editors.Dropdown)]
-		public StaticImageResizeMode ResizeMode { get; set; }
+		public ImageResizeMode ResizeMode { get; set; }
 
 		[EditorFor("Resize Quality", Editors.Dropdown)]
-		public StaticImageResizeQuality ResizeQuality { get; set; }
+		public ImageResizeQuality ResizeQuality { get; set; }
 
 		public object Clone()
 		{
@@ -144,31 +143,5 @@ namespace LedBoard.Models.Steps
 				ResizeQuality = ResizeQuality,
 			};
 		}
-	}
-
-	public enum StaticImageResizeMode
-	{
-		[Description("Crop")]
-		Crop,
-		[Description("Resize and Center (Preserves Aspect Ratio)")]
-		Center,
-		[Description("Resize and Fit (Preserves Aspect Ratio)")]
-		Fit,
-		[Description("Stretch (May Distort Image)")]
-		Stretch,
-	}
-
-	public enum StaticImageResizeQuality
-	{
-		[Description("Nearest Neighbor (Fastest, Lowest Quality)")]
-		NearestNeighbor,
-		[Description("Bilinear (Fast, Acceptable Quality)")]
-		Bilinear,
-		[Description("High-Quality Bilinear (Average Speed, Decent Quality)")]
-		HighQualityBilinear,
-		[Description("Bicubic (Slow, Better Quality)")]
-		Bicubic,
-		[Description("High-Quality Bicubic (Slowest, Best Quality)")]
-		HighQualityBicubic,
 	}
 }
