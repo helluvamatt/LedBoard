@@ -110,6 +110,9 @@ namespace LedBoard.Models
 			get => _Length ?? DefaultLength;
 			set
 			{
+				// Enforce a minimum length
+				if (value < _FrameDelay) value = _FrameDelay;
+
 				if (_Length != value)
 				{
 					_Length = value;

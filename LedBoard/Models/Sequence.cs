@@ -258,9 +258,11 @@ namespace LedBoard.Models
 			});
 		}
 
-		public void HandleResize(double deltaMs)
+		public bool HandleResize(double deltaMs)
 		{
-			Step.Length = TimeSpan.FromMilliseconds(Step.Length.TotalMilliseconds + deltaMs);
+			var newLength = TimeSpan.FromMilliseconds(Step.Length.TotalMilliseconds + deltaMs);
+			Step.Length = newLength;
+			return Step.Length == newLength;
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;

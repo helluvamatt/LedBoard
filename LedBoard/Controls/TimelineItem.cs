@@ -70,7 +70,7 @@ namespace LedBoard.Controls
 			}
 		}
 
-		public void HandleResize(double delta)
+		public bool HandleResize(double delta)
 		{
 			if (_Entry != null)
 			{
@@ -78,8 +78,9 @@ namespace LedBoard.Controls
 				delta /= _Owner.Zoom;
 
 				// Modify the entry
-				_Entry.HandleResize(delta);
+				return _Entry.HandleResize(delta);
 			}
+			return true;
 		}
 	}
 }

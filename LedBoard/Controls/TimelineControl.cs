@@ -367,7 +367,7 @@ namespace LedBoard.Controls
 			foreach (var item in Items)
 			{
 				var uiItem = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
-				uiItem.UpdateBounds();
+				uiItem?.UpdateBounds();
 			}
 		}
 	}

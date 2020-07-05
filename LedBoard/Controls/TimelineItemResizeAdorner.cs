@@ -54,8 +54,10 @@ namespace LedBoard.Controls
 			{
 				Point p = e.GetPosition(this);
 				double delta = p.X - _InitialPoint.Value.X;
-				((TimelineItem)AdornedElement).HandleResize(delta);
-				_InitialPoint = p;
+				if (((TimelineItem)AdornedElement).HandleResize(delta))
+				{
+					_InitialPoint = p;
+				}
 			}
 		}
 
