@@ -19,7 +19,6 @@ namespace LedBoard.ViewModels
 		private readonly IDialogService _DialogService;
 
 		private CancellationTokenSource _CancelController;
-		private bool _Loop;
 
 		public SequencerViewModel(IDialogService dialogService, IResourcesService resourcesService, ProjectModel project) : this(dialogService, resourcesService, project.Width, project.Height, project.FrameDelay)
 		{
@@ -31,7 +30,9 @@ namespace LedBoard.ViewModels
 				{
 					index++;
 					ISequenceStep sequenceStep = StepService.CreateStep(step);
-					Sequence.Steps.Add(new SequenceEntry(sequenceStep));
+					var entry = new SequenceEntry(sequenceStep);
+					if (step.Transition != null) entry.Transition = StepService.CreateTransition(step.Transition);
+					Sequence.Steps.Add(entry);
 				}
 			}
 			catch (Exception ex)
@@ -63,6 +64,7 @@ namespace LedBoard.ViewModels
 		public Sequence Sequence { get; }
 
 		public IEnumerable<StepDescriptor> StepTypes => StepService.StepTypes;
+		public IEnumerable<TransitionDescriptor> TransitionTypes => StepService.TransitionTypes;
 
 		#region Dependency properties
 
@@ -96,7 +98,7 @@ namespace LedBoard.ViewModels
 		private static void OnIsLoopingChanged(DependencyObject owner, DependencyPropertyChangedEventArgs e)
 		{
 			var vm = (SequencerViewModel)owner;
-			vm._Loop = vm.IsLooping;
+			vm.Sequence.Loop = vm.IsLooping;
 		}
 
 		#endregion
@@ -258,14 +260,14 @@ namespace LedBoard.ViewModels
 			while (_CancelController != null && !_CancelController.IsCancellationRequested)
 			{
 				hasMore = Sequence.Advance(CurrentBoard);
-				if (hasMore || _Loop)
+				if (hasMore || Sequence.Loop)
 				{
 					try
 					{
 						await Task.Delay(Sequence.FrameDelay, _CancelController.Token);
 					}
 					catch (OperationCanceledException) { } // Eat, we are pausing
-					if (!hasMore && _Loop) Sequence.CurrentTime = 0;
+					if (!hasMore && Sequence.Loop) Sequence.CurrentTime = 0;
 				}
 				else break;
 			}
@@ -305,14 +307,21 @@ namespace LedBoard.ViewModels
 					Duration = entry.Length.TotalMilliseconds,
 					Type = entry.Step.GetType().FullName,
 					ConfigurationType = entry.Step.ConfigurationType.FullName,
-					Configuration = GetConfigurationDictionary(entry.Step.CurrentConfiguration),
+					Configuration = GetConfigurationMap(entry.Step.CurrentConfiguration),
+					Transition = entry.Transition != null ? new ProjectTransitionModel
+					{
+						Duration = entry.Transition.Length.TotalMilliseconds,
+						Type = entry.Transition.GetType().FullName,
+						ConfigurationType = entry.Transition.ConfigurationType.FullName,
+						Configuration = GetConfigurationMap(entry.Transition.CurrentConfiguration),
+					} : null,
 				}).ToArray(),
 			};
 		}
 
-		private Dictionary<string, object> GetConfigurationDictionary(object configObj)
+		private ProjectConfigurationMap GetConfigurationMap(object configObj)
 		{
-			return configObj.GetType().GetProperties().ToDictionary(prop => prop.Name, prop => prop.GetValue(configObj));
+			return new ProjectConfigurationMap(configObj.GetType().GetProperties().ToDictionary(prop => prop.Name, prop => prop.GetValue(configObj)));
 		}
 
 		#endregion

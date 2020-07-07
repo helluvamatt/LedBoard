@@ -466,10 +466,11 @@ namespace LedBoard
 
 			if (error != null || exception != null)
 			{
-				ShowMessageDialog("Error", $"Failed to load project: {error ?? exception.Message}", MessageDialogIconType.Error, exception?.ToString());
+				ShowMessageDialog("Error", $"Failed to save project: {error ?? exception.Message}", MessageDialogIconType.Error, exception?.ToString());
 				return false;
 			}
 
+			Sequencer.Sequence.ResetDirty();
 			return true;
 		}
 
@@ -505,11 +506,24 @@ namespace LedBoard
 			if (Sequencer?.SelectedItem != null)
 			{
 				ConfigurationModel = new SequenceStepConfigViewModel(Sequencer.SelectedItem.Step, this, _ResourcesService);
-				ToolboxTabPage = 1;
+				ToolboxTabPage = 2;
 			}
 			else
 			{
 				ConfigurationModel = null;
+			}
+		}
+
+		private void OnTimelineTransitionSelected(object sender, EventArgs e)
+		{
+			if (sender == null)
+			{
+				ConfigurationModel = null;
+			}
+			else if (sender is ISequenceTransition transition)
+			{
+				ConfigurationModel = new SequenceStepConfigViewModel(transition, this, _ResourcesService);
+				ToolboxTabPage = 2;
 			}
 		}
 

@@ -13,7 +13,7 @@ namespace LedBoard.ViewModels
 {
 	public class SequenceStepConfigViewModel : DependencyObject
 	{
-		private readonly ISequenceStep _Step;
+		private readonly ISequenceItem _Step;
 		private readonly object _CurrentConfiguration;
 		private readonly Type _ConfigType;
 		private readonly List<PropertyViewModel> _Properties;
@@ -21,7 +21,7 @@ namespace LedBoard.ViewModels
 
 		private bool _Updating;
 
-		public SequenceStepConfigViewModel(ISequenceStep step, IDialogService dialogService, IResourcesService resourcesService)
+		public SequenceStepConfigViewModel(ISequenceItem step, IDialogService dialogService, IResourcesService resourcesService)
 		{
 			_Step = step ?? throw new ArgumentNullException(nameof(step));
 			_CurrentConfiguration = step.CurrentConfiguration;
@@ -87,6 +87,8 @@ namespace LedBoard.ViewModels
 		}
 
 		public IEnumerable<PropertyViewModel> Properties => _Properties;
+
+		public string DisplayName => _Step.DisplayName;
 
 		public void Unwire()
 		{

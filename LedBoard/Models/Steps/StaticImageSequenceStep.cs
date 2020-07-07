@@ -100,7 +100,7 @@ namespace LedBoard.Models.Steps
 			return true;
 		}
 
-		public override void AnimateFrame(IBoard board, int step)
+		protected override void OnAnimateFrame(IBoard board)
 		{
 			if (_StaticImage != null) board.CopyFrom(_StaticImage);
 		}

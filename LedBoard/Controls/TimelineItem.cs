@@ -1,7 +1,12 @@
 ﻿using LedBoard.Models;
+using LedBoard.Services;
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
 
 namespace LedBoard.Controls
 {
@@ -11,14 +16,18 @@ namespace LedBoard.Controls
 
 		private Border _Border;
 		private SequenceEntry _Entry;
+		private bool _HasTransitionAdorner;
 
 		public TimelineItem(TimelineControl owner)
 		{
 			_Owner = owner;
 			ResizeAdorner = new TimelineItemResizeAdorner(this, _Owner.AdornerColor);
+			TransitionAdorner = new TimelineItemTransitionAdorner(this, _Owner, _Owner.TransitionTemplate);
+			TransitionAdorner.MouseDown += OnTransitionAdornerMouseDown;
 		}
 
 		public TimelineItemResizeAdorner ResizeAdorner { get; }
+		public TimelineItemTransitionAdorner TransitionAdorner { get; }
 
 		public SequenceEntry Entry
 		{
@@ -46,6 +55,8 @@ namespace LedBoard.Controls
 			set => SetValue(IsSelectedProperty, value);
 		}
 
+		public event EventHandler TransitionSelected;
+
 		public override void OnApplyTemplate()
 		{
 			base.OnApplyTemplate();
@@ -53,9 +64,31 @@ namespace LedBoard.Controls
 			UpdateBounds();
 		}
 
+		protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+		{
+			base.OnRenderSizeChanged(sizeInfo);
+			UpdateTransition();
+		}
+
 		private void OnEntryPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			_Owner.UpdateItemLayout();
+			if (e.PropertyName == nameof(SequenceEntry.Transition))
+			{
+				UpdateTransition();
+			}
+			else
+			{
+				_Owner.UpdateItemLayout();
+			}
+		}
+
+		private void OnTransitionAdornerMouseDown(object sender, MouseButtonEventArgs e)
+		{
+			if (e.LeftButton == MouseButtonState.Pressed)
+			{
+				TransitionSelected?.Invoke(this, EventArgs.Empty);
+				e.Handled = true;
+			}
 		}
 
 		public void UpdateBounds()
@@ -63,10 +96,10 @@ namespace LedBoard.Controls
 			if (_Entry != null)
 			{
 				Canvas.SetLeft(this, _Entry.StartTime.TotalMilliseconds * _Owner.Zoom);
-				if (_Border != null)
-				{
-					_Border.Width = _Entry.Length.TotalMilliseconds * _Owner.Zoom;
-				}
+				double width = _Entry.Length.TotalMilliseconds * _Owner.Zoom;
+				if (_Border != null) _Border.Width = width;
+				UpdateLayout();
+				UpdateTransition();
 			}
 		}
 
@@ -81,6 +114,30 @@ namespace LedBoard.Controls
 				return _Entry.HandleResize(delta);
 			}
 			return true;
+		}
+
+		private void UpdateTransition()
+		{
+			AdornerLayer layer = AdornerLayer.GetAdornerLayer(_Owner);
+			if (_Entry.Transition != null)
+			{
+				if (!_HasTransitionAdorner)
+				{
+					layer.Add(TransitionAdorner);
+					_HasTransitionAdorner = true;
+				}
+				double itemWidth = _Border?.ActualWidth ?? ActualWidth;
+				double itemHeight = _Border?.ActualHeight ?? ActualHeight;
+				double width = _Entry.Transition.Length.TotalMilliseconds * _Owner.Zoom;
+				TransitionAdorner.Width = width;
+				TransitionAdorner.Icon = StepService.GetIconForTransition(_Entry.Transition);
+				TransitionAdorner.Offset = new Point(itemWidth - width / 2, itemHeight);
+			}
+			else
+			{
+				layer.Remove(TransitionAdorner);
+				_HasTransitionAdorner = false;
+			}
 		}
 	}
 }

@@ -13,13 +13,19 @@ namespace LedBoard.Converters
 		{
 			if (value is string val)
 			{
-				Color color = (Color)System.Windows.Media.ColorConverter.ConvertFromString(val);
-				if (!IncludeAlpha) color.A = 0xFF;
-				return color;
+				try
+				{
+					Color color = (Color)System.Windows.Media.ColorConverter.ConvertFromString(val);
+					if (!IncludeAlpha) color.A = 0xFF;
+					return color;
+				}
+				catch
+				{
+					return Binding.DoNothing;
+				}
 			}
 			else if (value is Color c)
 			{
-
 				return IncludeAlpha ? $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}" : $"#{c.R:X2}{c.G:X2}{c.B:X2}";
 			}
 			return Binding.DoNothing;

@@ -64,6 +64,8 @@
     <Compile Include="Controls\TimelineItem.cs" />
     <Compile Include="Controls\TimelineItemMoveAdorner.cs" />
     <Compile Include="Controls\TimelineItemResizeAdorner.cs" />
+    <Compile Include="Controls\TimelineItemTransitionAdorner.cs" />
+    <Compile Include="Controls\TimelineTransitionDropAdorner.cs" />
     <Compile Include="Converters\ColorConverter.cs" />
     <Compile Include="Converters\EnumBoolConverter.cs" />
     <Compile Include="Converters\HexColorConverter.cs" />
@@ -77,10 +79,16 @@
     <Compile Include="Models\ExportFormatDescriptor.cs" />
     <Compile Include="Models\Enums.cs" />
     <Compile Include="Models\IntDescriptor.cs" />
+    <Compile Include="Models\ISequenceItem.cs" />
     <Compile Include="Models\Serialization\ProjectModel.cs" />
     <Compile Include="Models\Serialization\SerializableBoard.cs" />
     <Compile Include="Models\Steps\PanningImageSequenceStep.cs" />
     <Compile Include="Models\Steps\StaticImageSequenceStep.cs" />
+    <Compile Include="Models\SequenceTransitionBase.cs" />
+    <Compile Include="Models\TransitionDescriptor.cs" />
+    <Compile Include="Models\Transitions\CrossfadeTransition.cs" />
+    <Compile Include="Models\Transitions\DipToBlackTransition.cs" />
+    <Compile Include="Models\Transitions\DissolveTransition.cs" />
     <Compile Include="Services\Export\GifExporter.cs" />
     <Compile Include="Services\Export\PngExporter.cs" />
     <Compile Include="Services\IExportService.cs" />
@@ -138,6 +146,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="StepData\Transitions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\Board.cs" />
@@ -184,7 +196,6 @@
       <Version>4.3.0</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Resource Include="FontData\sys_var_double.txt" />
     <Resource Include="FontData\sys_var_single.txt" />

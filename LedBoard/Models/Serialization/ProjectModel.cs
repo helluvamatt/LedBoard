@@ -15,13 +15,14 @@ namespace LedBoard.Models.Serialization
 	{
 		public ProjectStepModel()
 		{
-			Configuration = new Dictionary<string, object>();
+			Configuration = new ProjectConfigurationMap();
 		}
 
 		public string Type { get; set; }
 		public double Duration { get; set; }
 		public string ConfigurationType { get; set; }
-		public Dictionary<string, object> Configuration { get; set; }
+		public ProjectConfigurationMap Configuration { get; set; }
+		public ProjectTransitionModel Transition { get; set; }
 	}
 
 	public class ProjectResourceModel
@@ -29,5 +30,25 @@ namespace LedBoard.Models.Serialization
 		public string Uri { get; set; }
 		public long FileSize { get; set; }
 		public string Signature { get; set; }
+	}
+
+	public class ProjectTransitionModel
+	{
+		public ProjectTransitionModel()
+		{
+			Configuration = new ProjectConfigurationMap();
+		}
+
+		public string Type { get; set; }
+		public double Duration { get; set; }
+		public string ConfigurationType { get; set; }
+		public ProjectConfigurationMap Configuration { get; set; }
+	}
+
+	public class ProjectConfigurationMap : Dictionary<string, object>
+	{
+		public ProjectConfigurationMap() : base() { }
+
+		public ProjectConfigurationMap(IDictionary<string, object> values) : base(values) { }
 	}
 }

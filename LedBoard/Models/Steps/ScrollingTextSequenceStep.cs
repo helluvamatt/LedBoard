@@ -13,6 +13,8 @@ namespace LedBoard.Models.Steps
 		private int _TextWidth;
 		private int _StepCount;
 
+		protected override bool SupportsAnimation => true;
+
 		public override string DisplayName => TypedConfiguration != null && !string.IsNullOrWhiteSpace(TypedConfiguration.Text) ? $"Scrolling Text: {Utils.TrimText(TypedConfiguration.Text, 16)}" : "Scrolling Text";
 
 		public override TimeSpan DefaultLength => TimeSpan.FromMilliseconds(_FrameDelay.TotalMilliseconds * _StepCount);
@@ -43,12 +45,9 @@ namespace LedBoard.Models.Steps
 			_FontRendering.RenderText(previewBoard, 1, 4, TypedConfiguration.BackgroundColor, TypedConfiguration.ForegroundColor);
 		}
 
-		public override void AnimateFrame(IBoard board, int step)
+		protected override void OnAnimateFrame(IBoard board, TimeSpan frameTime, TimeSpan transitionExtra)
 		{
-			if (TypedConfiguration.VariableSpeed)
-			{
-				step = ComputeVariableLengthStep(step, _StepCount);
-			}
+			int step = ComputeStep(_StepCount, frameTime, transitionExtra);
 			_FontRendering.RenderText(board, _TextOffsetX - step, _TextOffsetY, TypedConfiguration.BackgroundColor, TypedConfiguration.ForegroundColor);
 		}
 	}
@@ -67,9 +66,6 @@ namespace LedBoard.Models.Steps
 		[EditorFor("Text Color", Editors.Color)]
 		public int ForegroundColor { get; set; }
 
-		[EditorFor("Auto Speed", Editors.Checkbox)]
-		public bool VariableSpeed { get; set; }
-
 		public object Clone()
 		{
 			return new ScrollingTextConfig
@@ -78,7 +74,6 @@ namespace LedBoard.Models.Steps
 				Font = Font,
 				BackgroundColor = BackgroundColor,
 				ForegroundColor = ForegroundColor,
-				VariableSpeed = VariableSpeed,
 			};
 		}
 	}

@@ -1,0 +1,59 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+					xmlns:m="clr-namespace:LedBoard.Models"
+					xmlns:mt="clr-namespace:LedBoard.Models.Transitions">
+	<m:TransitionDescriptor x:Key="DipToColor" SortOrder="0" DisplayName="Dip to Color"
+							Type="{x:Type mt:DipToColorTransition}">
+		<m:TransitionDescriptor.Icon>
+			<DrawingImage>
+				<DrawingImage.Drawing>
+					<DrawingGroup>
+						<GeometryDrawing Brush="{StaticResource MahApps.Brushes.AccentBase}">
+							<GeometryDrawing.Geometry>
+								<RectangleGeometry Rect="0,0,512,512" />
+							</GeometryDrawing.Geometry>
+						</GeometryDrawing>
+						<GeometryDrawing Geometry="M 0,0 H 512 L 256,512 z" Brush="Black" />
+					</DrawingGroup>
+				</DrawingImage.Drawing>
+			</DrawingImage>
+		</m:TransitionDescriptor.Icon>
+	</m:TransitionDescriptor>
+	<m:TransitionDescriptor x:Key="Crossfade" SortOrder="0" DisplayName="Cross Fade"
+							Type="{x:Type mt:CrossfadeTransition}">
+		<m:TransitionDescriptor.Icon>
+			<DrawingImage>
+				<DrawingImage.Drawing>
+					<GeometryDrawing>
+						<GeometryDrawing.Geometry>
+							<RectangleGeometry Rect="0,0,512,512" />
+						</GeometryDrawing.Geometry>
+						<GeometryDrawing.Brush>
+							<LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+								<GradientStop Offset="0" Color="Black" />
+								<GradientStop Offset="1" Color="{StaticResource MahApps.Colors.AccentBase}" />
+							</LinearGradientBrush>
+						</GeometryDrawing.Brush>
+					</GeometryDrawing>
+				</DrawingImage.Drawing>
+			</DrawingImage>
+		</m:TransitionDescriptor.Icon>
+	</m:TransitionDescriptor>
+	<m:TransitionDescriptor x:Key="Dissolve" SortOrder="0" DisplayName="Dissolve"
+							Type="{x:Type mt:DissolveTransition}">
+		<m:TransitionDescriptor.Icon>
+			<DrawingImage>
+				<DrawingImage.Drawing>
+					<DrawingGroup>
+						<GeometryDrawing Brush="Black">
+							<GeometryDrawing.Geometry>
+								<RectangleGeometry Rect="0,0,512,512" />
+							</GeometryDrawing.Geometry>
+						</GeometryDrawing>
+						<GeometryDrawing Geometry="M 0,0 H 512 v 64 H 0 v 64 H 512 v 64 H 0 v 64 H 512 v 64 H 0 v 64 H 512 v 64 H 0 V 0 h 64 V 512 h 64 V 0 h 64 V 512 h 64 V 0 h 64 V 512 h 64 V 0 h 64 V 512 h 64 V 0 z" Brush="{StaticResource MahApps.Brushes.AccentBase}" />
+					</DrawingGroup>
+				</DrawingImage.Drawing>
+			</DrawingImage>
+		</m:TransitionDescriptor.Icon>
+	</m:TransitionDescriptor>
+</ResourceDictionary>

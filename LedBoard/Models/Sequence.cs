@@ -15,9 +15,13 @@ namespace LedBoard.Models
 		private readonly int _BoardWidth;
 		private readonly int _BoardHeight;
 
+		private readonly IBoard _PrevBoard;
+		private readonly IBoard _NextBoard;
+
 		private bool _IsDirty;
 		private TimeSpan _CurrentTime;
 		private SequenceEntry _CurrentEntry;
+		private int _CurrentEntryIndex;
 
 		public Sequence(Dispatcher dispatcher, IResourcesService resourcesService, int boardWidth, int boardHeight, int frameDelay)
 		{
@@ -25,6 +29,8 @@ namespace LedBoard.Models
 			_ResourcesService = resourcesService;
 			_BoardWidth = boardWidth;
 			_BoardHeight = boardHeight;
+			_PrevBoard = new MemoryBoard(boardWidth, boardHeight);
+			_NextBoard = new MemoryBoard(boardWidth, boardHeight);
 			FrameDelay = TimeSpan.FromMilliseconds(frameDelay);
 			Steps = new ObservableCollection<SequenceEntry>();
 			Steps.CollectionChanged += OnStepsCollectionChanged;
@@ -32,6 +38,8 @@ namespace LedBoard.Models
 
 		public TimeSpan FrameDelay { get; }
 		public TimeSpan Length => TimeSpan.FromMilliseconds(Steps.Sum(step => step.Length.TotalMilliseconds));
+
+		#region IsDirty property
 
 		public bool IsDirty
 		{
@@ -51,7 +59,11 @@ namespace LedBoard.Models
 			IsDirty = false;
 		}
 
+		#endregion
+
 		public ObservableCollection<SequenceEntry> Steps { get; }
+
+		public bool Loop { get; set; }
 
 		#region CurrentTime property
 
@@ -70,21 +82,31 @@ namespace LedBoard.Models
 		private void SetCurrentTime(TimeSpan value, bool lookupStep)
 		{
 			_CurrentTime = value;
-			if (lookupStep) _CurrentEntry = FindAtTime(_CurrentTime);
+			if (lookupStep) _CurrentEntry = FindAtTime(_CurrentTime, out _CurrentEntryIndex);
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTime)));
 			CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
 		}
 
-		private SequenceEntry FindAtTime(TimeSpan time)
+		private SequenceEntry FindAtTime(TimeSpan time, out int index)
 		{
 			// Shortcut for the first step
-			if (time == TimeSpan.Zero) return Steps.FirstOrDefault();
-
-			foreach (SequenceEntry current in Steps.Reverse())
+			if (time == TimeSpan.Zero)
 			{
-				if (time >= current.StartTime) return current;
+				index = 0;
+				return Steps.FirstOrDefault();
 			}
 
+			for (int i = Steps.Count - 1; i >= 0; i--)
+			{
+				var current = Steps[i];
+				if (time >= current.StartTime)
+				{
+					index = i;
+					return current;
+				}
+			}
+
+			index = 0;
 			return Steps.FirstOrDefault();
 		}
 
@@ -92,27 +114,78 @@ namespace LedBoard.Models
 
 		public bool Advance(IBoard board)
 		{
-			board.BeginEdit();
-			_CurrentEntry.Step.AnimateFrame(board, GetCurrentStepOffset(out TimeSpan stepOffsetTime));
-			board.Commit(this);
+			TimeSpan stepOffsetTime = _CurrentTime - _CurrentEntry.StartTime;
+			Render(board, _CurrentEntry, _CurrentEntryIndex, stepOffsetTime);
 			SetCurrentTime(_CurrentTime + FrameDelay, stepOffsetTime + FrameDelay >= _CurrentEntry.Length);
 			return _CurrentTime < Length;
 		}
 
 		public void GetCurrentFrame(IBoard board)
 		{
-			board.BeginEdit();
-			_CurrentEntry.Step.AnimateFrame(board, GetCurrentStepOffset(out _));
-			board.Commit(this);
+			Render(board, _CurrentEntry, _CurrentEntryIndex, _CurrentTime - _CurrentEntry.StartTime);
 		}
 
 		public void RenderFrameAt(IBoard board, TimeSpan ts)
 		{
-			var entry = FindAtTime(ts);
+			var entry = FindAtTime(ts, out int index);
 			if (entry != null)
 			{
+				Render(board, entry, index, ts - entry.StartTime);
+			}
+		}
+
+		private void Render(IBoard board, SequenceEntry entry, int entryIndex, TimeSpan tsOffset)
+		{
+			int prevIndex = entryIndex > 0 ? entryIndex - 1 : Steps.Count - 1;
+			SequenceEntry previousEntry = Steps[prevIndex];
+
+			if (tsOffset < entry.StartTransitionLength && previousEntry.Transition != null)
+			{
+				// Time since the start of the transition (includes the previous entry's transition length)
+				TimeSpan nextOffset = tsOffset + previousEntry.EndTransitionLength;
+
+				// We are in the transition from the previous step
+				_PrevBoard.BeginEdit();
+				previousEntry.Step.AnimateFrame(_PrevBoard, previousEntry.StartTransitionLength + previousEntry.Length + tsOffset, previousEntry.StartTransitionLength + previousEntry.EndTransitionLength);
+				_PrevBoard.Commit(this);
+
+				_NextBoard.BeginEdit();
+				entry.Step.AnimateFrame(_NextBoard, nextOffset, entry.StartTransitionLength + entry.EndTransitionLength);
+				_NextBoard.Commit(this);
+
 				board.BeginEdit();
-				entry.Step.AnimateFrame(board, GetStepOffset(entry, ts, out _));
+				previousEntry.Transition.AnimateFrame(board, _PrevBoard, _NextBoard, nextOffset);
+				board.Commit(this);
+			}
+			else if (tsOffset > entry.Length - entry.EndTransitionLength && entry.Transition != null)
+			{
+				// We are in the end transition for this step
+				int nextIndex = entryIndex < Steps.Count - 1 ? entryIndex + 1 : 0;
+				SequenceEntry nextEntry = Steps[nextIndex];
+
+				// Time since the start of the transition
+				// Works by taking the current time from the beginning of this step, adding the end transition length (extending past the end of the step), then subtracting the length of the step
+				TimeSpan nextOffset = tsOffset + entry.EndTransitionLength - entry.Length;
+
+				_PrevBoard.BeginEdit();
+				entry.Step.AnimateFrame(_PrevBoard, tsOffset + entry.StartTransitionLength, entry.StartTransitionLength + entry.EndTransitionLength);
+				_PrevBoard.Commit(this);
+
+				_NextBoard.BeginEdit();
+				nextEntry.Step.AnimateFrame(_NextBoard, nextOffset, nextEntry.StartTransitionLength + nextEntry.EndTransitionLength);
+				_NextBoard.Commit(this);
+
+				board.BeginEdit();
+				entry.Transition.AnimateFrame(board, _PrevBoard, _NextBoard, nextOffset);
+				board.Commit(this);
+			}
+			else
+			{
+				tsOffset += entry.StartTransitionLength;
+
+				// We are not in a transition, just render the board directly
+				board.BeginEdit();
+				entry.Step.AnimateFrame(board, tsOffset, entry.StartTransitionLength + entry.EndTransitionLength);
 				board.Commit(this);
 			}
 		}
@@ -144,6 +217,8 @@ namespace LedBoard.Models
 				foreach (SequenceEntry entry in e.OldItems)
 				{
 					entry.PropertyChanged -= OnSequenceEntryPropertyChanged;
+					entry.StepConfigurationChanged -= OnSequenceEntryStepConfigurationChanged;
+					entry.TransitionConfigurationChanged -= OnSequenceEntryTransitionConfigurationChanged;
 				}
 			}
 
@@ -152,8 +227,11 @@ namespace LedBoard.Models
 			{
 				foreach (SequenceEntry entry in e.NewItems)
 				{
-					entry.Init(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay, _ResourcesService);
+					entry.InitStep(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay, _ResourcesService);
 					entry.PropertyChanged += OnSequenceEntryPropertyChanged;
+					entry.StepConfigurationChanged += OnSequenceEntryStepConfigurationChanged;
+					entry.TransitionConfigurationChanged += OnSequenceEntryTransitionConfigurationChanged;
+					RecomputeTransitionExtra(entry);
 				}
 			}
 
@@ -162,23 +240,36 @@ namespace LedBoard.Models
 			RecomputeTimeline();
 		}
 
+		private void OnSequenceEntryStepConfigurationChanged(object sender, EventArgs e)
+		{
+			var entry = (SequenceEntry)sender;
+
+			// Reinitialize on configuration changes
+			entry.InitStep(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay, _ResourcesService);
+
+			// Tell the sequencer to update the current frame
+			CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
+
+			IsDirty = true;
+		}
+
+		private void OnSequenceEntryTransitionConfigurationChanged(object sender, EventArgs e)
+		{
+			var entry = (SequenceEntry)sender;
+			OnTransitionChanged(entry);
+		}
+
 		private void OnSequenceEntryPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
 			var entry = (SequenceEntry)sender;
-			if (e.PropertyName == nameof(ISequenceStep.CurrentConfiguration))
-			{
-				// Reinitialize on configuration changes
-				entry.Init(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay, _ResourcesService);
-
-				// Tell the sequencer to update the current frame
-				CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
-
-				IsDirty = true;
-			}
-			else if (e.PropertyName == nameof(ISequenceStep.Length))
+			if (e.PropertyName == nameof(SequenceEntry.Length))
 			{
 				IsDirty = true;
 				RecomputeTimeline();
+			}
+			else if (e.PropertyName == nameof(SequenceEntry.Transition))
+			{
+				OnTransitionChanged(entry);
 			}
 		}
 
@@ -196,24 +287,62 @@ namespace LedBoard.Models
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Length)));
 		}
 
-		private int GetCurrentStepOffset(out TimeSpan stepOffsetTime)
+		private void OnTransitionChanged(SequenceEntry entry)
 		{
-			return GetStepOffset(_CurrentEntry, _CurrentTime, out stepOffsetTime);
+			// Initialize the transition
+			entry.InitTransition(_BoardWidth, _BoardHeight, FrameDelay);
+
+			// Recompute TransitionExtraLength for this entry, the one before, and the one after, looping around as necessary
+			RecomputeTransitionExtra(entry);
+
+			// Tell the sequencer to update the current frame, the transition may affect the current board
+			CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
+
+			IsDirty = true;
 		}
 
-		private int GetStepOffset(SequenceEntry entry, TimeSpan ts, out TimeSpan stepOffsetTime)
+		private void RecomputeTransitionExtra(SequenceEntry entry)
 		{
-			stepOffsetTime = ts - entry.StartTime;
-			return (int)(stepOffsetTime.TotalMilliseconds / FrameDelay.TotalMilliseconds);
+			// Compute previous and next indexes, looping as necessary
+			int index = Steps.IndexOf(entry);
+			int prevIndex = index > 0 ? index - 1 : Steps.Count - 1;
+			int nextIndex = index < Steps.Count - 1 ? index + 1 : 0;
+
+			ComputeTransitionExtra(entry, index);
+			if (prevIndex != index)
+			{
+				SequenceEntry prev = Steps[prevIndex];
+				ComputeTransitionExtra(prev, prevIndex);
+			}
+			if (nextIndex != prevIndex)
+			{
+				SequenceEntry next = Steps[nextIndex];
+				ComputeTransitionExtra(next, nextIndex);
+			}
+		}
+
+		private void ComputeTransitionExtra(SequenceEntry entry, int index)
+		{
+			int prevIndex = index > 0 ? index - 1 : Steps.Count - 1;
+			ISequenceTransition prevTransition = Steps[prevIndex].Transition;
+
+			if (prevTransition != null) entry.StartTransitionLength = TimeSpan.FromMilliseconds(prevTransition.Length.TotalMilliseconds / 2);
+			else entry.StartTransitionLength = TimeSpan.Zero;
+			if (entry.Transition != null) entry.EndTransitionLength = TimeSpan.FromMilliseconds(entry.Transition.Length.TotalMilliseconds / 2);
+			else entry.EndTransitionLength = TimeSpan.Zero;
 		}
 	}
 
 	public class SequenceEntry : INotifyPropertyChanged
 	{
+		private bool _IsInitTransition = false;
+
 		public SequenceEntry(ISequenceStep step)
 		{
 			Step = step ?? throw new ArgumentNullException(nameof(step));
-			Step.PropertyChanged += (sender, e) => PropertyChanged?.Invoke(this, e);
+			Step.PropertyChanged += OnStepPropertyChanged;
+			StartTransitionLength = TimeSpan.Zero;
+			EndTransitionLength = TimeSpan.Zero;
 		}
 
 		private bool _IsReady = false;
@@ -244,18 +373,46 @@ namespace LedBoard.Models
 			}
 		}
 
+		private ISequenceTransition _Transition;
+		public ISequenceTransition Transition
+		{
+			get => _Transition;
+			set
+			{
+				if (_Transition != value)
+				{
+					if (_Transition != null) _Transition.PropertyChanged -= OnTransitionPropertyChanged;
+					_Transition = value;
+					if (_Transition != null) _Transition.PropertyChanged += OnTransitionPropertyChanged;
+					PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Transition)));
+				}
+			}
+		}
+
 		public ISequenceStep Step { get; }
 
 		public TimeSpan Length => Step.Length;
+		public TimeSpan StartTransitionLength { get; set; }
+		public TimeSpan EndTransitionLength { get; set; }
 
-		public void Init(Dispatcher dispatcher, int boardWidth, int boardHeight, TimeSpan frameDelay, IResourcesService resourcesService)
+		public void InitStep(Dispatcher dispatcher, int boardWidth, int boardHeight, TimeSpan frameDelay, IResourcesService resourcesService)
 		{
 			Step.Init(boardWidth, boardHeight, frameDelay, resourcesService);
+			InitTransition(boardWidth, boardHeight, frameDelay);
 			dispatcher.Invoke(() =>
 			{
 				IsReady = true;
 				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Length)));
 			});
+		}
+
+		public void InitTransition(int boardWidth, int boardHeight, TimeSpan frameDelay)
+		{
+			// Check re-entrancy
+			if (_IsInitTransition) return;
+			_IsInitTransition = true;
+			Transition?.Init(boardWidth, boardHeight, frameDelay);
+			_IsInitTransition = false;
 		}
 
 		public bool HandleResize(double deltaMs)
@@ -266,6 +423,36 @@ namespace LedBoard.Models
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
+		public event EventHandler StepConfigurationChanged;
+		public event EventHandler TransitionConfigurationChanged;
+
+		private void OnStepPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			if (e.PropertyName == nameof(ISequenceStep.Length))
+			{
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Length)));
+			}
+			else if (e.PropertyName == nameof(ISequenceStep.CurrentConfiguration))
+			{
+				StepConfigurationChanged?.Invoke(this, EventArgs.Empty);
+			}
+			else
+			{
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Step)));
+			}
+		}
+
+		private void OnTransitionPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			if (e.PropertyName == nameof(ISequenceTransition.CurrentConfiguration))
+			{
+				TransitionConfigurationChanged?.Invoke(this, EventArgs.Empty);
+			}
+			else
+			{
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Transition)));
+			}
+		}
 
 		public override bool Equals(object obj) => obj is SequenceEntry entry && entry.Step == Step;
 		public override int GetHashCode() => Step.GetHashCode();

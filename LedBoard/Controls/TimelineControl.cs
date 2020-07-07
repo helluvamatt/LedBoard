@@ -20,6 +20,7 @@ namespace LedBoard.Controls
 
 		private Canvas _Canvas;
 		private TimelineDropAdorner _DropAdorner;
+		private TimelineTransitionDropAdorner _TransitionDropAdorner;
 
 		private TimelineItemMoveAdorner _MoveAdorner;
 		private Point? _InitialItemOffset;
@@ -49,6 +50,8 @@ namespace LedBoard.Controls
 		}
 
 		#region Dependency properties
+
+		public DataTemplate TransitionTemplate { get; set; }
 
 		#region AdornerColor
 
@@ -100,6 +103,8 @@ namespace LedBoard.Controls
 
 		#endregion
 
+		public event EventHandler TransitionSelected;
+
 		#region Control overrides
 
 		public override void OnApplyTemplate()
@@ -144,6 +149,7 @@ namespace LedBoard.Controls
 		{
 			var control = new TimelineItem(this);
 			control.MouseDown += OnItemMouseDown;
+			control.TransitionSelected += OnItemTransitionSelected;
 			return control;
 		}
 
@@ -178,15 +184,38 @@ namespace LedBoard.Controls
 
 		protected override void OnDragEnter(DragEventArgs e)
 		{
+			e.Effects = DragDropEffects.None;
 			if (e.Data.GetDataPresent(DataFormats.Serializable))
 			{
-				if (e.Data.GetData(DataFormats.Serializable) is StepDescriptor)
+				object dataItem = e.Data.GetData(DataFormats.Serializable);
+				if (dataItem is StepDescriptor)
 				{
 					Point p = e.GetPosition(this);
 					_DropAdorner = new TimelineDropAdorner(this, AdornerColor);
 					(_DropAdorner.LeftOffset, _) = FindDropPosition(p.X);
 					AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
 					layer.Add(_DropAdorner);
+					e.Effects = DragDropEffects.Copy;
+				}
+				else if (dataItem is TransitionDescriptor)
+				{
+					Point p = e.GetPosition(this);
+					(_, int index) = FindDropPosition(p.X);
+					index--; // The transition location refers to the item immediately preceding it
+					if (index > -1 && index < Items.Count)
+					{
+						var item = (TimelineItem)ItemContainerGenerator.ContainerFromIndex(index);
+						if (item != null)
+						{
+							_TransitionDropAdorner = new TimelineTransitionDropAdorner(this, AdornerColor)
+							{
+								AttachedItem = item
+							};
+							AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
+							layer.Add(_TransitionDropAdorner);
+							e.Effects = DragDropEffects.Copy;
+						}
+					}
 				}
 			}
 			e.Handled = true;
@@ -200,6 +229,12 @@ namespace LedBoard.Controls
 				layer.Remove(_DropAdorner);
 				_DropAdorner = null;
 			}
+			if (_TransitionDropAdorner != null)
+			{
+				AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
+				layer.Remove(_TransitionDropAdorner);
+				_TransitionDropAdorner = null;
+			}
 			e.Handled = true;
 		}
 
@@ -208,13 +243,29 @@ namespace LedBoard.Controls
 			e.Effects = DragDropEffects.None;
 			if (e.Data.GetDataPresent(DataFormats.Serializable))
 			{
-				if (e.Data.GetData(DataFormats.Serializable) is StepDescriptor)
+				object dataItem = e.Data.GetData(DataFormats.Serializable);
+				if (dataItem is StepDescriptor)
 				{
 					e.Effects = DragDropEffects.Copy;
 					if (_DropAdorner != null)
 					{
 						var p = e.GetPosition(this);
 						(_DropAdorner.LeftOffset, _) = FindDropPosition(p.X);
+					}
+				}
+				else if (dataItem is TransitionDescriptor)
+				{
+					var p = e.GetPosition(this);
+					(_, int index) = FindDropPosition(p.X);
+					index--; // The transition location refers to the item immediately preceding it
+					if (index > -1 && index < Items.Count)
+					{
+						var item = (TimelineItem)ItemContainerGenerator.ContainerFromIndex(index);
+						if (item != null && _TransitionDropAdorner != null)
+						{
+							_TransitionDropAdorner.AttachedItem = item;
+							e.Effects = DragDropEffects.Copy;
+						}
 					}
 				}
 			}
@@ -226,7 +277,8 @@ namespace LedBoard.Controls
 			OnDragLeave(e);
 			if (e.Data.GetDataPresent(DataFormats.Serializable))
 			{
-				if (e.Data.GetData(DataFormats.Serializable) is StepDescriptor descriptor)
+				object dataItem = e.Data.GetData(DataFormats.Serializable);
+				if (dataItem is StepDescriptor descriptor)
 				{
 					if (ItemsSource is IList<SequenceEntry> collection)
 					{
@@ -235,6 +287,20 @@ namespace LedBoard.Controls
 						var p = e.GetPosition(this);
 						(_, int index) = FindDropPosition(p.X);
 						collection.Insert(index, entry);
+					}
+				}
+				else if (dataItem is TransitionDescriptor transitionDescriptor)
+				{
+					Point p = e.GetPosition(this);
+					(_, int index) = FindDropPosition(p.X);
+					index--; // The transition location refers to the item immediately preceding it
+					if (index > -1 && index < Items.Count)
+					{
+						var item = (TimelineItem)ItemContainerGenerator.ContainerFromIndex(index);
+						if (item != null)
+						{
+							item.Entry.Transition = StepService.CreateTransition(transitionDescriptor);
+						}
 					}
 				}
 			}
@@ -249,6 +315,7 @@ namespace LedBoard.Controls
 			if (!e.Handled)
 			{
 				SelectedItem = null;
+				SelectTransition(null);
 				Focus();
 			}
 		}
@@ -312,6 +379,7 @@ namespace LedBoard.Controls
 				{
 					var p = e.GetPosition(this);
 					(_, int index) = FindDropPosition(p.X);
+					if (index > SelectedIndex) index--;
 					collection.Move(SelectedIndex, index);
 				}
 
@@ -327,11 +395,22 @@ namespace LedBoard.Controls
 			// If this MouseDown event was actually on an item, select that item
 			if (sender is TimelineItem item)
 			{
+				SelectTransition(null);
 				SelectedIndex = ItemContainerGenerator.IndexFromContainer(item);
 				_InitialItemOffset = e.GetPosition(item);
 				_IsMoving = false;
 				Focus();
 				e.Handled = true;
+			}
+		}
+
+		private void OnItemTransitionSelected(object sender, EventArgs e)
+		{
+			if (sender is TimelineItem item)
+			{
+				SelectedItem = null;
+				SelectTransition(item);
+				Focus();
 			}
 		}
 
@@ -367,8 +446,22 @@ namespace LedBoard.Controls
 			foreach (var item in Items)
 			{
 				var uiItem = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
-				uiItem?.UpdateBounds();
+				if (uiItem != null)
+				{
+					uiItem.UpdateBounds();
+				}
 			}
+		}
+
+		private void SelectTransition(TimelineItem item)
+		{
+			int? selectedIndex = item != null ? (int?)ItemContainerGenerator.IndexFromContainer(item) : null;
+			for (int i = 0; i < Items.Count; i++)
+			{
+				var container = (TimelineItem)ItemContainerGenerator.ContainerFromIndex(i);
+				container.TransitionAdorner.IsSelected = i == selectedIndex;
+			}
+			TransitionSelected?.Invoke(item?.Entry?.Transition, EventArgs.Empty);
 		}
 	}
 }

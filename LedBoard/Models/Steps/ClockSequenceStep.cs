@@ -33,7 +33,7 @@ namespace LedBoard.Models.Steps
 			fontRendering.RenderText(previewBoard, 1, 4, TypedConfiguration.BackgroundColor, TypedConfiguration.ForegroundColor);
 		}
 
-		public override void AnimateFrame(IBoard board, int step)
+		protected override void OnAnimateFrame(IBoard board)
 		{
 			string text;
 

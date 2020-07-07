@@ -208,6 +208,20 @@
 					</StackPanel>
 				</Grid>
 			</mah:MetroTabItem>
+			<mah:MetroTabItem Header="Transitions">
+				<ListBox Margin="4" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+						 MouseMove="OnToolboxMouseMove"
+						 ItemsSource="{Binding Sequencer.TransitionTypes}">
+					<ListBox.ItemTemplate>
+						<DataTemplate DataType="{x:Type m:TransitionDescriptor}">
+							<StackPanel Orientation="Horizontal">
+								<Image Source="{Binding Icon}" Width="32" Height="32" Stretch="Uniform" Margin="0,8" />
+								<TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" />
+							</StackPanel>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+			</mah:MetroTabItem>
 			<mah:MetroTabItem Header="Properties">
 				<Grid>
 					<Grid.RowDefinitions>
@@ -219,9 +233,9 @@
 							<Style TargetType="Label" BasedOn="{StaticResource MahApps.Styles.Label}">
 								<Setter Property="FontWeight" Value="Bold" />
 								<Setter Property="Padding" Value="8,8,8,0" />
-								<Setter Property="Content" Value="{Binding Sequencer.SelectedItem.Step.DisplayName}" />
+								<Setter Property="Content" Value="{Binding ConfigurationModel.DisplayName}" />
 								<Style.Triggers>
-									<DataTrigger Binding="{Binding Sequencer.SelectedItem}" Value="{x:Null}">
+									<DataTrigger Binding="{Binding ConfigurationModel}" Value="{x:Null}">
 										<Setter Property="Content" Value="No Item Selected" />
 									</DataTrigger>
 								</Style.Triggers>
@@ -494,11 +508,13 @@
 								</ControlTemplate>
 							</Slider.Template>
 						</Slider>
-						<controls:TimelineControl Grid.Row="1" Background="Transparent" AdornerColor="#FF777777"
+						<controls:TimelineControl Grid.Row="1" Background="Transparent" AdornerColor="{StaticResource MahApps.Colors.Gray5}"
+												  
 												  ItemsSource="{Binding Sequencer.Sequence.Steps}"
 												  SelectedItem="{Binding Sequencer.SelectedItem}"
 												  Zoom="{Binding Zoom}" TotalLength="{Binding Sequencer.Sequence.Length.TotalMilliseconds}"
-												  PreviewKeyUp="OnTimelineKeyUp" RequestBringIntoView="OnTimelineControlRequestBringIntoView">
+												  PreviewKeyUp="OnTimelineKeyUp" RequestBringIntoView="OnTimelineControlRequestBringIntoView"
+												  TransitionSelected="OnTimelineTransitionSelected">
 							<ItemsControl.ItemContainerStyle>
 								<Style TargetType="controls:TimelineItem">
 									<Setter Property="Template">
@@ -507,8 +523,8 @@
 												<Border BorderThickness="2" Name="PART_Border">
 													<Border.Style>
 														<Style TargetType="Border">
-															<Setter Property="Background" Value="LightGray" />
-															<Setter Property="BorderBrush" Value="{StaticResource MahApps.Brushes.AccentBase}" />
+															<Setter Property="Background" Value="{StaticResource MahApps.Brushes.Gray5}" />
+															<Setter Property="BorderBrush" Value="{StaticResource MahApps.Brushes.Gray1}" />
 															<Style.Triggers>
 																<DataTrigger Binding="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=controls:TimelineItem}, Path=IsSelected}" Value="true">
 																	<Setter Property="Background" Value="{StaticResource MahApps.Brushes.Accent3}" />
@@ -534,6 +550,25 @@
 									</StackPanel>
 								</DataTemplate>
 							</ItemsControl.ItemTemplate>
+							<controls:TimelineControl.TransitionTemplate>
+								<DataTemplate DataType="{x:Type controls:TimelineItemTransitionAdorner}">
+									<Border BorderThickness="2" Width="{Binding ActualWidth}">
+										<Border.Style>
+											<Style TargetType="Border">
+												<Setter Property="Background" Value="{StaticResource MahApps.Brushes.Gray5}" />
+												<Setter Property="BorderBrush" Value="{StaticResource MahApps.Brushes.Gray1}" />
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding IsSelected}" Value="true">
+														<Setter Property="Background" Value="{StaticResource MahApps.Brushes.Accent3}" />
+														<Setter Property="BorderBrush" Value="{StaticResource MahApps.Brushes.Highlight}" />
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Border.Style>
+										<Image Source="{Binding Icon}" Margin="4" Width="32" Height="32" />
+									</Border>
+								</DataTemplate>
+							</controls:TimelineControl.TransitionTemplate>
 						</controls:TimelineControl>
 					</Grid>
 				</ScrollViewer>

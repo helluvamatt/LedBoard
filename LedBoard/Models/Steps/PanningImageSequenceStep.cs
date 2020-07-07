@@ -11,6 +11,8 @@ namespace LedBoard.Models.Steps
 		private IBoard _ViewportImage;
 		private int _AvailableSteps;
 
+		protected override bool SupportsAnimation => true;
+
 		public override string DisplayName => "Panning Image";
 		public override TimeSpan DefaultLength => TimeSpan.FromSeconds(5);
 		public override IEnumerable<string> Resources => new string[] { TypedConfiguration.Image };
@@ -91,12 +93,12 @@ namespace LedBoard.Models.Steps
 			return true;
 		}
 
-		public override void AnimateFrame(IBoard board, int step)
+		protected override void OnAnimateFrame(IBoard board, TimeSpan frameTime, TimeSpan transitionExtra)
 		{
 			if (_ViewportImage != null)
 			{
 				board.SetAll(TypedConfiguration.BackgroundColor);
-				step = ComputeVariableLengthStep(step, _AvailableSteps);
+				int step = ComputeStep(_AvailableSteps, frameTime, transitionExtra);
 				if (step > _AvailableSteps) step = _AvailableSteps;
 				int srcX = 0, srcY = 0, srcW = _ViewportImage.Width, srcH = _ViewportImage.Height;
 				int dstX = 0, dstY = 0, dstW = board.Width, dstH = board.Height;

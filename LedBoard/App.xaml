@@ -13,6 +13,7 @@
 			</ResourceDictionary.MergedDictionaries>
 			<ResourceDictionary Source="FontData/LedFonts.xaml" x:Key="ledFonts" />
 			<ResourceDictionary Source="StepData/Steps.xaml" x:Key="steps" />
+			<ResourceDictionary Source="StepData/Transitions.xaml" x:Key="transitions" />
 			<Style x:Key="CustomTabControlStyle" TargetType="{x:Type TabControl}" BasedOn="{StaticResource MahApps.Styles.TabControl.Animated}">
 				<Setter Property="Template">
 					<Setter.Value>

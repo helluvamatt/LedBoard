@@ -7,37 +7,12 @@ using System.Linq;
 
 namespace LedBoard.Models
 {
-	public interface ISequenceStep : INotifyPropertyChanged
+	public interface ISequenceStep : ISequenceItem
 	{
-		/// <summary>
-		/// Name to display for this step
-		/// </summary>
-		string DisplayName { get; }
-
 		/// <summary>
 		/// Preview board
 		/// </summary>
 		IBoard Preview { get; }
-
-		/// <summary>
-		/// Total length of the animation
-		/// </summary>
-		TimeSpan Length { get; set; }
-
-		/// <summary>
-		/// Get the default duration of the animation
-		/// </summary>
-		TimeSpan DefaultLength { get; }
-
-		/// <summary>
-		/// Type of the configuration object (if present)
-		/// </summary>
-		Type ConfigurationType { get; }
-
-		/// <summary>
-		/// Current configuration representation
-		/// </summary>
-		object CurrentConfiguration { get; }
 
 		/// <summary>
 		/// Called by the sequencer when the step is added to a sequence
@@ -50,17 +25,12 @@ namespace LedBoard.Models
 		bool Init(int width, int height, TimeSpan frameDelay, IResourcesService resourcesService);
 
 		/// <summary>
-		/// (Re)configure the step
-		/// </summary>
-		/// <param name="newConfiguration"></param>
-		void Configure(object newConfiguration);
-
-		/// <summary>
 		/// Animate a frame and update the given board
 		/// </summary>
 		/// <param name="board">Board to update</param>
-		/// <param name="step">Frame index local to this step</param>
-		void AnimateFrame(IBoard board, int step);
+		/// <param name="localTime">Time index local to this step, including any padding for transitions</param>
+		/// <param name="transitionExtraLength">Extra time from transitions that should be added to the length of the step when performing animations</param>
+		void AnimateFrame(IBoard board, TimeSpan localTime, TimeSpan transitionExtraLength);
 
 		/// <summary>
 		/// Get resource URIs defined by this step
@@ -139,8 +109,24 @@ namespace LedBoard.Models
 		/// <returns>True if initialization was successful, false otherwise</returns>
 		protected virtual bool OnInit(int width, int height, IResourcesService resourcesService) => true;
 
-		/// <inheritdoc />
-		public abstract void AnimateFrame(IBoard board, int step);
+		/// <summary>
+		/// When overridden in a derived class, renders a frame of animation
+		/// </summary>
+		/// <param name="board">Render target</param>
+		/// <param name="localTime">Time index local to this step, including any padding for transitions</param>
+		/// <param name="transitionExtra">Extra transition time to be added to the Length when performing animations</param>
+		protected virtual void OnAnimateFrame(IBoard board, TimeSpan localTime, TimeSpan transitionExtra) { }
+
+		/// <summary>
+		/// When overridden in a derived class, renders a static frame
+		/// </summary>
+		/// <param name="board"></param>
+		protected virtual void OnAnimateFrame(IBoard board) { }
+
+		/// <summary>
+		/// When overridden in a derived class, indicates whether the step type can change the frame based on time
+		/// </summary>
+		protected virtual bool SupportsAnimation => false;
 
 		/// <summary>
 		/// When overridden in a derived class, renders a preview to the target board
@@ -191,11 +177,16 @@ namespace LedBoard.Models
 			OnPropertyChanged(nameof(CurrentConfiguration));
 		}
 
-		protected int ComputeVariableLengthStep(int step, int availableSteps)
+		/// <inheritdoc />
+		public void AnimateFrame(IBoard board, TimeSpan localTime, TimeSpan transitionExtra)
 		{
-			double timeOffset = step * _FrameDelay.TotalMilliseconds;
-			double animStep = timeOffset / Length.TotalMilliseconds;
-			return (int)(animStep * availableSteps);
+			if (SupportsAnimation) OnAnimateFrame(board, localTime, transitionExtra);
+			else OnAnimateFrame(board);
+		}
+
+		protected int ComputeStep(int availableSteps, TimeSpan frameTime, TimeSpan transitionExtra)
+		{
+			return (int)(frameTime.TotalMilliseconds / (Length + transitionExtra).TotalMilliseconds * availableSteps);
 		}
 	}
 }
