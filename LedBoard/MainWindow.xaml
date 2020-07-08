@@ -21,6 +21,7 @@
 		<c:TimelineWidthConverter x:Key="timelineWidthConverter" />
 		<c:TimelineWidthConverter x:Key="timelineOffsetConverter" ReturnThickness="True" />
 		<c:NullToVisibilityConverter x:Key="nullToVisibilityConverter" />
+		<c:NullToVisibilityConverter x:Key="notNullToVisibilityConverter" NotNullVisibility="Collapsed" NullVisibility="Visible" />
 		<c:EnumBoolConverter x:Key="enumBoolConverter" />
 		<x:Array x:Key="FrameRateOptions" Type="{x:Type m:IntDescriptor}">
 			<m:IntDescriptor Value="20" Text="Very Fast (50 fps)" />
@@ -169,7 +170,7 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*" />
 			<RowDefinition Height="auto" />
-			<RowDefinition Height="*" />
+			<RowDefinition Height="auto" />
 			<RowDefinition Height="auto" />
 		</Grid.RowDefinitions>
 		<Grid.ColumnDefinitions>
@@ -411,7 +412,7 @@
 				</ScrollViewer>
 			</DockPanel>
 		</Border>
-		<GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Height="5" ResizeDirection="Rows" />
+		<Border Background="DarkGray" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Height="5" />
 		<Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="auto" />
@@ -472,7 +473,7 @@
 				</Button>
 			</Grid>
 			<Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Background="DarkGray">
-				<ScrollViewer x:Name="timelineScroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+				<ScrollViewer x:Name="timelineScroller" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled">
 					<Grid Margin="8">
 						<Grid.RowDefinitions>
 							<RowDefinition Height="auto" />
@@ -483,8 +484,25 @@
 								Minimum="0"
 								Maximum="{Binding Sequencer.Sequence.Length.TotalMilliseconds}"
 								Value="{Binding Sequencer.Sequence.CurrentTime}">
+							<Slider.Resources>
+								<Style x:Key="LedBoard.Slider.HorizontalTrack" TargetType="{x:Type RepeatButton}">
+									<Setter Property="Background" Value="Transparent" />
+									<Setter Property="Focusable" Value="False" />
+									<Setter Property="IsTabStop" Value="False" />
+									<Setter Property="OverridesDefaultStyle" Value="True" />
+									<Setter Property="Template">
+										<Setter.Value>
+											<ControlTemplate TargetType="{x:Type RepeatButton}">
+												<Grid Background="{TemplateBinding Background}">
+													<Rectangle Height="3" Fill="{TemplateBinding Foreground}" />
+												</Grid>
+											</ControlTemplate>
+										</Setter.Value>
+									</Setter>
+								</Style>
+							</Slider.Resources>
 							<Slider.Width>
-								<MultiBinding Converter="{StaticResource timelineWidthConverter}">
+								<MultiBinding Converter="{StaticResource timelineWidthConverter}" ConverterParameter="16">
 									<Binding Path="Sequencer.Sequence.Length.TotalMilliseconds" />
 									<Binding Path="Zoom" />
 								</MultiBinding>
@@ -493,12 +511,18 @@
 								<ControlTemplate TargetType="Slider">
 									<Grid>
 										<TickBar Fill="White" Height="10" Margin="0,8,0,0" SnapsToDevicePixels="True" />
-										<Track Name="PART_Track" Height="8" SnapsToDevicePixels="True">
+										<Track Name="PART_Track" Height="16" SnapsToDevicePixels="True">
+											<Track.DecreaseRepeatButton>
+												<RepeatButton x:Name="HorizontalTrackDecrease" Command="{x:Static Slider.DecreaseLarge}" Foreground="Transparent" Style="{StaticResource LedBoard.Slider.HorizontalTrack}" />
+											</Track.DecreaseRepeatButton>
+											<Track.IncreaseRepeatButton>
+												<RepeatButton x:Name="HorizontalTrackIncrease" Command="{x:Static Slider.IncreaseLarge}" Foreground="Transparent" Style="{StaticResource LedBoard.Slider.HorizontalTrack}" />
+											</Track.IncreaseRepeatButton>
 											<Track.Thumb>
 												<Thumb>
 													<Thumb.Template>
 														<ControlTemplate>
-															<Path Data="M 0 0 L 8 0 L 4 6 Z" Stroke="Red" StrokeThickness="2" Fill="Red"></Path>
+															<Path Data="M 0 0 L 16 0 L 8 12 Z" Fill="Red" />
 														</ControlTemplate>
 													</Thumb.Template>
 												</Thumb>
@@ -508,10 +532,10 @@
 								</ControlTemplate>
 							</Slider.Template>
 						</Slider>
-						<controls:TimelineControl Grid.Row="1" Background="Transparent" AdornerColor="{StaticResource MahApps.Colors.Gray5}"
-												  
+						<controls:TimelineControl Grid.Row="1" Margin="8" AdornerColor="{StaticResource MahApps.Colors.Gray2}" ScrubberColor="Red"
 												  ItemsSource="{Binding Sequencer.Sequence.Steps}"
 												  SelectedItem="{Binding Sequencer.SelectedItem}"
+												  ScrubberPosition="{Binding Sequencer.Sequence.CurrentTime}"
 												  Zoom="{Binding Zoom}" TotalLength="{Binding Sequencer.Sequence.Length.TotalMilliseconds}"
 												  PreviewKeyUp="OnTimelineKeyUp" RequestBringIntoView="OnTimelineControlRequestBringIntoView"
 												  TransitionSelected="OnTimelineTransitionSelected">
@@ -593,5 +617,8 @@
 				</TextBlock>
 			</StatusBarItem>
 		</StatusBar>
+		<Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Grid.RowSpan="4" Background="{StaticResource MahApps.Brushes.Window.Background}" Visibility="{Binding Sequencer, Converter={StaticResource notNullToVisibilityConverter}}">
+			<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18pt" FontWeight="Bold">No Project Loaded</TextBlock>
+		</Border>
 	</Grid>
 </mah:MetroWindow>

@@ -18,6 +18,8 @@ namespace LedBoard.Controls
 		private const string PART_Canvas = "PART_Canvas";
 		private const string PART_ItemsPresenter = "PART_ItemsPresenter";
 
+		private TimelinePlaybackAdorner _PlaybackAdorner;
+
 		private Canvas _Canvas;
 		private TimelineDropAdorner _DropAdorner;
 		private TimelineTransitionDropAdorner _TransitionDropAdorner;
@@ -47,6 +49,8 @@ namespace LedBoard.Controls
 			ClipToBounds = false;
 			Focusable = true;
 			AllowDrop = true;
+
+			_PlaybackAdorner = new TimelinePlaybackAdorner(this);
 		}
 
 		#region Dependency properties
@@ -65,6 +69,36 @@ namespace LedBoard.Controls
 
 		#endregion
 
+		#region ScrubberColor
+
+		public Color ScrubberColor
+		{
+			set
+			{
+				_PlaybackAdorner.Color = value;
+			}
+		}
+
+		#endregion
+
+		#region ScrubberPosition
+
+		public static readonly DependencyProperty ScrubberPositionProperty = DependencyProperty.Register(nameof(ScrubberPosition), typeof(double), typeof(TimelineControl), new PropertyMetadata(0.0, OnScrubberPositionChanged));
+
+		public double ScrubberPosition
+		{
+			get => (double)GetValue(ScrubberPositionProperty);
+			set => SetValue(ScrubberPositionProperty, value);
+		}
+
+		private static void OnScrubberPositionChanged(DependencyObject owner, DependencyPropertyChangedEventArgs e)
+		{
+			var control = (TimelineControl)owner;
+			control._PlaybackAdorner.OffsetX = control.ScrubberPosition * control.Zoom;
+		}
+
+		#endregion
+
 		#region Zoom
 
 		public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(TimelineControl), new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange, OnZoomChanged));
@@ -79,6 +113,7 @@ namespace LedBoard.Controls
 		{
 			var control = (TimelineControl)owner;
 			control.UpdateItemLayout();
+			control._PlaybackAdorner.OffsetX = control.ScrubberPosition * control.Zoom;
 		}
 
 		#endregion
@@ -114,6 +149,7 @@ namespace LedBoard.Controls
 			presenter.ApplyTemplate();
 			_Canvas = (Canvas)ItemsPanel.FindName(PART_Canvas, presenter);
 			UpdateItemLayout();
+			AdornerLayer.GetAdornerLayer(this).Add(_PlaybackAdorner);
 		}
 
 		protected override HitTestResult HitTestCore(PointHitTestParameters hitTestParameters)
@@ -124,7 +160,7 @@ namespace LedBoard.Controls
 		protected override void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue)
 		{
 			base.OnItemsSourceChanged(oldValue, newValue);
-			AllowDrop = newValue is ICollection;
+			UpdateItemLayout();
 		}
 
 		protected override void PrepareContainerForItemOverride(DependencyObject element, object item)
@@ -161,14 +197,14 @@ namespace LedBoard.Controls
 		protected override void OnSelectionChanged(SelectionChangedEventArgs e)
 		{
 			base.OnSelectionChanged(e);
-			var adornerLayer = AdornerLayer.GetAdornerLayer(this);
+			
 			foreach (var item in e.RemovedItems)
 			{
 				TimelineItem tli = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
 				if (tli != null)
 				{
 					tli.IsSelected = false;
-					adornerLayer.Remove(tli.ResizeAdorner);
+					AdornerLayer.GetAdornerLayer(this).Remove(tli.ResizeAdorner);
 				}
 			}
 			foreach (var item in e.AddedItems)
@@ -177,7 +213,7 @@ namespace LedBoard.Controls
 				if (tli != null)
 				{
 					tli.IsSelected = true;
-					adornerLayer.Add(tli.ResizeAdorner);
+					AddAdorner(tli.ResizeAdorner);
 				}
 			}
 		}
@@ -193,8 +229,7 @@ namespace LedBoard.Controls
 					Point p = e.GetPosition(this);
 					_DropAdorner = new TimelineDropAdorner(this, AdornerColor);
 					(_DropAdorner.LeftOffset, _) = FindDropPosition(p.X);
-					AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
-					layer.Add(_DropAdorner);
+					AdornerLayer.GetAdornerLayer(this).Add(_DropAdorner);
 					e.Effects = DragDropEffects.Copy;
 				}
 				else if (dataItem is TransitionDescriptor)
@@ -211,8 +246,7 @@ namespace LedBoard.Controls
 							{
 								AttachedItem = item
 							};
-							AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
-							layer.Add(_TransitionDropAdorner);
+							AdornerLayer.GetAdornerLayer(this).Add(_TransitionDropAdorner);
 							e.Effects = DragDropEffects.Copy;
 						}
 					}
@@ -225,14 +259,12 @@ namespace LedBoard.Controls
 		{
 			if (_DropAdorner != null)
 			{
-				AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
-				layer.Remove(_DropAdorner);
+				AdornerLayer.GetAdornerLayer(this).Remove(_DropAdorner);
 				_DropAdorner = null;
 			}
 			if (_TransitionDropAdorner != null)
 			{
-				AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
-				layer.Remove(_TransitionDropAdorner);
+				AdornerLayer.GetAdornerLayer(this).Remove(_TransitionDropAdorner);
 				_TransitionDropAdorner = null;
 			}
 			e.Handled = true;
@@ -331,13 +363,12 @@ namespace LedBoard.Controls
 				if (Math.Abs(deltaX) > 10 || _IsMoving)
 				{
 					_IsMoving = true;
-					AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
 
 					// Display move adorner
 					if (_MoveAdorner == null)
 					{
 						_MoveAdorner = new TimelineItemMoveAdorner(tli, AdornerColor);
-						layer.Add(_MoveAdorner);
+						AddAdorner(_MoveAdorner);
 					}
 					double left = Canvas.GetLeft(tli);
 					if (deltaX < -left) deltaX = -left;
@@ -348,7 +379,7 @@ namespace LedBoard.Controls
 					if (_DropAdorner == null)
 					{
 						_DropAdorner = new TimelineDropAdorner(this, AdornerColor);
-						layer.Add(_DropAdorner);
+						AddAdorner(_DropAdorner);
 					}
 					(_DropAdorner.LeftOffset, _) = FindDropPosition(pAbs.X);
 				}
@@ -363,15 +394,14 @@ namespace LedBoard.Controls
 			{
 				_InitialItemOffset = null;
 				_IsMoving = false;
-				AdornerLayer layer = AdornerLayer.GetAdornerLayer(this);
 				if (_MoveAdorner != null)
 				{
-					layer.Remove(_MoveAdorner);
+					AdornerLayer.GetAdornerLayer(this).Remove(_MoveAdorner);
 					_MoveAdorner = null;
 				}
 				if (_DropAdorner != null)
 				{
-					layer.Remove(_DropAdorner);
+					AdornerLayer.GetAdornerLayer(this).Remove(_DropAdorner);
 					_DropAdorner = null;
 				}
 
@@ -436,21 +466,32 @@ namespace LedBoard.Controls
 
 		private void UpdateCanvasWidth()
 		{
-			if (_Canvas != null) _Canvas.Width = TotalLength * Zoom;
+			double lastEntryTransitionExtra = 0;
+			if (Items.Count > 0)
+			{
+				var lastItem = (TimelineItem)ItemContainerGenerator.ContainerFromIndex(Items.Count - 1);
+				lastEntryTransitionExtra = lastItem.TransitionAdorner.ActualWidth / 2;
+			}
+			if (_Canvas != null) _Canvas.Width = TotalLength * Zoom + lastEntryTransitionExtra;
 		}
 
 		public void UpdateItemLayout()
 		{
-			UpdateCanvasWidth();
-
+			double maxHeight = 0;
 			foreach (var item in Items)
 			{
 				var uiItem = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
 				if (uiItem != null)
 				{
 					uiItem.UpdateBounds();
+					double height = uiItem.ActualHeight + uiItem.TransitionAdorner.ActualHeight;
+					if (height > maxHeight) maxHeight = height;
 				}
 			}
+
+			UpdateCanvasWidth();
+			if (_Canvas != null) _Canvas.Height = maxHeight;
+			_PlaybackAdorner.Height = maxHeight;
 		}
 
 		private void SelectTransition(TimelineItem item)
@@ -462,6 +503,14 @@ namespace LedBoard.Controls
 				container.TransitionAdorner.IsSelected = i == selectedIndex;
 			}
 			TransitionSelected?.Invoke(item?.Entry?.Transition, EventArgs.Empty);
+		}
+
+		public void AddAdorner(Adorner adorner)
+		{
+			var layer = AdornerLayer.GetAdornerLayer(this);
+			layer.Remove(_PlaybackAdorner);
+			layer.Add(adorner);
+			layer.Add(_PlaybackAdorner);
 		}
 	}
 }

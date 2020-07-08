@@ -1,17 +1,12 @@
-﻿using LedBoard.Services;
-using System.Globalization;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Media;
 
 namespace LedBoard.Controls
 {
 	public class TimelineItemTransitionAdorner : Adorner
 	{
-		//private readonly Pen _BorderPen;
-		//private readonly Brush _BackgroundBrush;
 		private readonly VisualCollection _Visuals;
 		private readonly ContentPresenter _ContentPresenter;
 		private readonly TranslateTransform _Transform;
@@ -78,25 +73,5 @@ namespace LedBoard.Controls
 		protected override Visual GetVisualChild(int index) => _Visuals[index];
 
 		protected override int VisualChildrenCount => _Visuals.Count;
-
-		//protected override void OnRender(DrawingContext drawingContext)
-		//{
-		//	var item = (TimelineItem)AdornedElement;
-		//	if (item.Entry.Transition != null)
-		//	{
-		//		ImageSource icon = StepService.GetIconForTransition(item.Entry.Transition);
-		//		double width = item.Entry.Transition.Length.TotalMilliseconds * _Owner.Zoom;
-		//		double height = ICON_SIZE + PADDING * 2;
-		//		double offsetX = item.ActualWidth - width / 2;
-		//		drawingContext.PushTransform(new TranslateTransform(offsetX, item.ActualHeight));
-		//		drawingContext.DrawRectangle(_BackgroundBrush, _BorderPen, new Rect(0, 0, width, height));
-		//		if (icon != null)
-		//		{
-		//			var iconBounds = new Rect((width - ICON_SIZE) / 2, PADDING, ICON_SIZE, ICON_SIZE);
-		//			drawingContext.DrawImage(icon, iconBounds);
-		//		}
-		//		drawingContext.Pop();
-		//	}
-		//}
 	}
 }

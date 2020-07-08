@@ -118,12 +118,11 @@ namespace LedBoard.Controls
 
 		private void UpdateTransition()
 		{
-			AdornerLayer layer = AdornerLayer.GetAdornerLayer(_Owner);
 			if (_Entry.Transition != null)
 			{
 				if (!_HasTransitionAdorner)
 				{
-					layer.Add(TransitionAdorner);
+					_Owner.AddAdorner(TransitionAdorner);
 					_HasTransitionAdorner = true;
 				}
 				double itemWidth = _Border?.ActualWidth ?? ActualWidth;
@@ -132,10 +131,11 @@ namespace LedBoard.Controls
 				TransitionAdorner.Width = width;
 				TransitionAdorner.Icon = StepService.GetIconForTransition(_Entry.Transition);
 				TransitionAdorner.Offset = new Point(itemWidth - width / 2, itemHeight);
+				TransitionAdorner.UpdateLayout();
 			}
 			else
 			{
-				layer.Remove(TransitionAdorner);
+				AdornerLayer.GetAdornerLayer(_Owner).Remove(TransitionAdorner);
 				_HasTransitionAdorner = false;
 			}
 		}

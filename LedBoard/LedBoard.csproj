@@ -65,6 +65,7 @@
     <Compile Include="Controls\TimelineItemMoveAdorner.cs" />
     <Compile Include="Controls\TimelineItemResizeAdorner.cs" />
     <Compile Include="Controls\TimelineItemTransitionAdorner.cs" />
+    <Compile Include="Controls\TimelinePlaybackAdorner.cs" />
     <Compile Include="Controls\TimelineTransitionDropAdorner.cs" />
     <Compile Include="Converters\ColorConverter.cs" />
     <Compile Include="Converters\EnumBoolConverter.cs" />

@@ -14,6 +14,8 @@ namespace LedBoard.Converters
 			if (values[0] is double time && values[1] is double zoomFactor)
 			{
 				double value = time * zoomFactor;
+				if (parameter is double extra) value += extra;
+				if (parameter is string extraStr && double.TryParse(extraStr, out double extraFromStr)) value += extraFromStr;
 				if (ReturnThickness) return new Thickness(value, 0, 0, 0);
 				return value;
 			}

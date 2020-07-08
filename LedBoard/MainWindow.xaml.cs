@@ -157,6 +157,30 @@ namespace LedBoard
 
 		#endregion
 
+		#region StepHeight
+
+		public static readonly DependencyProperty StepHeightProperty = DependencyProperty.Register(nameof(StepHeight), typeof(double), typeof(MainWindow), new PropertyMetadata(0.0));
+
+		public double StepHeight
+		{
+			get => (double)GetValue(StepHeightProperty);
+			set => SetValue(StepHeightProperty, value);
+		}
+
+		#endregion
+
+		#region TransitionHeight
+
+		public static readonly DependencyProperty TransitionHeightProperty = DependencyProperty.Register(nameof(TransitionHeight), typeof(double), typeof(MainWindow), new PropertyMetadata(0.0));
+
+		public double TransitionHeight
+		{
+			get => (double)GetValue(TransitionHeightProperty);
+			set => SetValue(TransitionHeightProperty, value);
+		}
+
+		#endregion
+
 		#region BoardZoom
 
 		public static readonly DependencyProperty BoardZoomProperty = DependencyProperty.Register(nameof(BoardZoom), typeof(double), typeof(MainWindow), new PropertyMetadata(1.0));
