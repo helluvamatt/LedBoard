@@ -64,12 +64,12 @@
 				<RowDefinition Height="*" />
 				<RowDefinition Height="auto" />
 			</Grid.RowDefinitions>
-			<Canvas Grid.Column="0" Grid.Row="0" Grid.RowSpan="5" Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" Margin="4" MouseMove="OnSatValCanvasMouseMove" MouseDown="OnSatValCanvasMouseDown" Name="satValCanvas">
+			<Canvas Grid.Column="0" Grid.Row="0" Grid.RowSpan="5" Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" Margin="4" MouseMove="OnSatValCanvasMouseMove" MouseDown="OnSatValCanvasMouseDown" MouseUp="OnCanvasMouseUp" Name="satValCanvas">
 				<Rectangle Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Canvas}}"
 						   Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Canvas}}"
 						   Fill="{StaticResource LevelSaturationBrush}" Stroke="Black" StrokeThickness="1" />
 			</Canvas>
-			<Canvas Grid.Column="1" Grid.Row="0" Grid.RowSpan="5" Width="32" Margin="0,4,4,4" MouseMove="OnHueCanvasMouseMove" MouseDown="OnHueCanvasMouseDown">
+			<Canvas Grid.Column="1" Grid.Row="0" Grid.RowSpan="5" Width="32" Margin="0,4,4,4" MouseMove="OnHueCanvasMouseMove" MouseDown="OnHueCanvasMouseDown" MouseUp="OnCanvasMouseUp">
 				<Rectangle Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Canvas}}"
 						   Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Canvas}}"
 						   Fill="{StaticResource HueBrush}" Stroke="Black" StrokeThickness="1" />

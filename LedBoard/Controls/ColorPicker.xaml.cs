@@ -148,6 +148,8 @@ namespace LedBoard.Controls
 
 		#endregion
 
+		#region Event handlers
+
 		private void OnSatValCanvasMouseMove(object sender, MouseEventArgs e)
 		{
 			if (e.LeftButton == MouseButtonState.Pressed)
@@ -163,24 +165,10 @@ namespace LedBoard.Controls
 			if (e.LeftButton == MouseButtonState.Pressed)
 			{
 				Canvas canvas = (Canvas)sender;
+				canvas.CaptureMouse();
 				Point pos = e.GetPosition(canvas);
 				HandleSatValCanvas(canvas, pos);
 			}
-		}
-
-		private void HandleSatValCanvas(Canvas canvas, Point pos)
-		{
-			double sat = pos.X / canvas.ActualWidth;
-			double val = (canvas.ActualHeight - pos.Y) / canvas.ActualHeight;
-			if (sat < 0) sat = 0;
-			if (val < 0) val = 0;
-			if (sat > 1.0) sat = 1.0;
-			if (val > 1.0) val = 1.0;
-			_SelectedColorSetting = true;
-			SatComponent = sat;
-			ValComponent = val;
-			_SelectedColorSetting = false;
-			OnHsvComponentChanged();
 		}
 
 		private void OnHueCanvasMouseMove(object sender, MouseEventArgs e)
@@ -198,9 +186,33 @@ namespace LedBoard.Controls
 			if (e.LeftButton == MouseButtonState.Pressed)
 			{
 				Canvas canvas = (Canvas)sender;
+				canvas.CaptureMouse();
 				Point pos = e.GetPosition(canvas);
 				HandleHueCanvas(canvas, pos.Y);
 			}
+		}
+
+		private void OnCanvasMouseUp(object sender, MouseButtonEventArgs e)
+		{
+			Canvas canvas = (Canvas)sender;
+			canvas.ReleaseMouseCapture();
+		}
+
+		#endregion
+
+		private void HandleSatValCanvas(Canvas canvas, Point pos)
+		{
+			double sat = pos.X / canvas.ActualWidth;
+			double val = (canvas.ActualHeight - pos.Y) / canvas.ActualHeight;
+			if (sat < 0) sat = 0;
+			if (val < 0) val = 0;
+			if (sat > 1.0) sat = 1.0;
+			if (val > 1.0) val = 1.0;
+			_SelectedColorSetting = true;
+			SatComponent = sat;
+			ValComponent = val;
+			_SelectedColorSetting = false;
+			OnHsvComponentChanged();
 		}
 
 		private void HandleHueCanvas(Canvas canvas, double y)
