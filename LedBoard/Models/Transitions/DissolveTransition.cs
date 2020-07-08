@@ -68,6 +68,7 @@ namespace LedBoard.Models.Transitions
 
 	public class DissolveConfig : ICloneable
 	{
+		[EditorFor("Random Seed", Editors.Integer)]
 		public int RandomSeed { get; set; }
 
 		public object Clone()

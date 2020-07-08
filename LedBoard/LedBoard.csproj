@@ -113,6 +113,7 @@
     <Compile Include="ViewModels\Config\ColorPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\DropdownPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\FileResourcePropertyViewModel.cs" />
+    <Compile Include="ViewModels\Config\IntPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\LedFontPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\TextPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\TimeSpanAdvancedPropertyViewModel.cs" />

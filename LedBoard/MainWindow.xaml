@@ -285,6 +285,12 @@
 										<TextBox Text="{Binding Text}" />
 									</StackPanel>
 								</DataTemplate>
+								<DataTemplate DataType="{x:Type vmc:IntPropertyViewModel}">
+									<StackPanel Orientation="Vertical">
+										<Label Content="{Binding Label}" />
+										<mah:NumericUpDown Value="{Binding IntValue}" Interval="1" />
+									</StackPanel>
+								</DataTemplate>
 								<DataTemplate DataType="{x:Type vmc:AlignmentPropertyViewModel}">
 									<StackPanel Orientation="Vertical">
 										<Label Content="{Binding Label}" />

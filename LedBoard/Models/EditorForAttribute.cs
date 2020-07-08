@@ -18,5 +18,5 @@ namespace LedBoard.Models
 		public object Parameter { get; set; }
 	}
 
-	public enum Editors { Text, Color, LedFont, TimeSpan, TimeSpanAdvanced, FileResource, Dropdown, Alignment, Checkbox }
+	public enum Editors { Text, Color, LedFont, TimeSpan, TimeSpanAdvanced, FileResource, Dropdown, Alignment, Checkbox, Integer }
 }
