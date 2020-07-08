@@ -63,7 +63,23 @@ namespace LedBoard.Models
 
 		public ObservableCollection<SequenceEntry> Steps { get; }
 
-		public bool Loop { get; set; }
+		#region Loop property
+
+		private bool _Loop;
+		public bool Loop
+		{
+			get => _Loop;
+			set
+			{
+				if (_Loop != value)
+				{
+					_Loop = value;
+					CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
+				}
+			}
+		}
+
+		#endregion
 
 		#region CurrentTime property
 
@@ -115,31 +131,41 @@ namespace LedBoard.Models
 		public bool Advance(IBoard board)
 		{
 			TimeSpan stepOffsetTime = _CurrentTime - _CurrentEntry.StartTime;
-			Render(board, _CurrentEntry, _CurrentEntryIndex, stepOffsetTime);
+			Render(board, _CurrentEntry, _CurrentEntryIndex, stepOffsetTime, Loop);
 			SetCurrentTime(_CurrentTime + FrameDelay, stepOffsetTime + FrameDelay >= _CurrentEntry.Length);
 			return _CurrentTime < Length;
 		}
 
 		public void GetCurrentFrame(IBoard board)
 		{
-			Render(board, _CurrentEntry, _CurrentEntryIndex, _CurrentTime - _CurrentEntry.StartTime);
+			Render(board, _CurrentEntry, _CurrentEntryIndex, _CurrentTime - _CurrentEntry.StartTime, Loop);
 		}
 
-		public void RenderFrameAt(IBoard board, TimeSpan ts)
+		public void RenderFrameAt(IBoard board, TimeSpan ts, bool loop)
 		{
 			var entry = FindAtTime(ts, out int index);
 			if (entry != null)
 			{
-				Render(board, entry, index, ts - entry.StartTime);
+				Render(board, entry, index, ts - entry.StartTime, loop);
 			}
 		}
 
-		private void Render(IBoard board, SequenceEntry entry, int entryIndex, TimeSpan tsOffset)
+		private void Render(IBoard board, SequenceEntry entry, int entryIndex, TimeSpan tsOffset, bool loop)
 		{
-			int prevIndex = entryIndex > 0 ? entryIndex - 1 : Steps.Count - 1;
-			SequenceEntry previousEntry = Steps[prevIndex];
+			SequenceEntry previousEntry = null;
+			SequenceEntry nextEntry = null;
+			if (entryIndex > 0 || loop)
+			{
+				int prevIndex = entryIndex > 0 ? entryIndex - 1 : Steps.Count - 1;
+				previousEntry = Steps[prevIndex];
+			}
+			if (entryIndex < Steps.Count - 1 || loop)
+			{
+				int nextIndex = entryIndex < Steps.Count - 1 ? entryIndex + 1 : 0;
+				nextEntry = Steps[nextIndex];
+			}
 
-			if (tsOffset < entry.StartTransitionLength && previousEntry.Transition != null)
+			if (tsOffset < entry.StartTransitionLength && previousEntry?.Transition != null)
 			{
 				// Time since the start of the transition (includes the previous entry's transition length)
 				TimeSpan nextOffset = tsOffset + previousEntry.EndTransitionLength;
@@ -157,12 +183,8 @@ namespace LedBoard.Models
 				previousEntry.Transition.AnimateFrame(board, _PrevBoard, _NextBoard, nextOffset);
 				board.Commit(this);
 			}
-			else if (tsOffset > entry.Length - entry.EndTransitionLength && entry.Transition != null)
+			else if (tsOffset > entry.Length - entry.EndTransitionLength && entry.Transition != null && nextEntry != null)
 			{
-				// We are in the end transition for this step
-				int nextIndex = entryIndex < Steps.Count - 1 ? entryIndex + 1 : 0;
-				SequenceEntry nextEntry = Steps[nextIndex];
-
 				// Time since the start of the transition
 				// Works by taking the current time from the beginning of this step, adding the end transition length (extending past the end of the step), then subtracting the length of the step
 				TimeSpan nextOffset = tsOffset + entry.EndTransitionLength - entry.Length;
@@ -181,11 +203,21 @@ namespace LedBoard.Models
 			}
 			else
 			{
-				tsOffset += entry.StartTransitionLength;
+				// If we have a previous entry (either by looping or by being the 2nd or beyond step) add it's transition padding to our frame time
+				TimeSpan extra = TimeSpan.Zero;
+				if (nextEntry != null)
+				{
+					extra += entry.EndTransitionLength;
+				}
+				if (previousEntry != null)
+				{
+					tsOffset += previousEntry.EndTransitionLength;
+					extra += entry.StartTransitionLength;
+				}
 
 				// We are not in a transition, just render the board directly
 				board.BeginEdit();
-				entry.Step.AnimateFrame(board, tsOffset, entry.StartTransitionLength + entry.EndTransitionLength);
+				entry.Step.AnimateFrame(board, tsOffset, extra);
 				board.Commit(this);
 			}
 		}

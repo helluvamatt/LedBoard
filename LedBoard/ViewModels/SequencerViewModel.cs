@@ -285,7 +285,7 @@ namespace LedBoard.ViewModels
 				{
 					progress.Report(ts.TotalMilliseconds / Sequence.Length.TotalMilliseconds);
 					if (cancelToken.IsCancellationRequested) return;
-					Sequence.RenderFrameAt(board, ts);
+					Sequence.RenderFrameAt(board, ts, true);
 					if (cancelToken.IsCancellationRequested) return;
 					exporter.AddFrame(board);
 				}
