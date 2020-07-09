@@ -57,6 +57,8 @@ namespace LedBoard.Controls
 
 		public DataTemplate TransitionTemplate { get; set; }
 
+		public double TransitionHeight { get; set; }
+
 		#region AdornerColor
 
 		public static readonly DependencyProperty AdornerColorProperty = DependencyProperty.Register(nameof(AdornerColor), typeof(Color), typeof(TimelineControl), new PropertyMetadata(Colors.Black));
@@ -221,6 +223,7 @@ namespace LedBoard.Controls
 		protected override void OnDragEnter(DragEventArgs e)
 		{
 			e.Effects = DragDropEffects.None;
+			SetTransitionHitTestVisible(false);
 			if (e.Data.GetDataPresent(DataFormats.Serializable))
 			{
 				object dataItem = e.Data.GetData(DataFormats.Serializable);
@@ -267,11 +270,13 @@ namespace LedBoard.Controls
 				AdornerLayer.GetAdornerLayer(this).Remove(_TransitionDropAdorner);
 				_TransitionDropAdorner = null;
 			}
+			SetTransitionHitTestVisible(true);
 			e.Handled = true;
 		}
 
 		protected override void OnDragOver(DragEventArgs e)
 		{
+			SetTransitionHitTestVisible(false);
 			e.Effects = DragDropEffects.None;
 			if (e.Data.GetDataPresent(DataFormats.Serializable))
 			{
@@ -477,21 +482,24 @@ namespace LedBoard.Controls
 
 		public void UpdateItemLayout()
 		{
-			double maxHeight = 0;
+			double maxStepHeight = 0;
+			double maxTransitionHeight = 0;
 			foreach (var item in Items)
 			{
 				var uiItem = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
 				if (uiItem != null)
 				{
 					uiItem.UpdateBounds();
-					double height = uiItem.ActualHeight + uiItem.TransitionAdorner.ActualHeight;
-					if (height > maxHeight) maxHeight = height;
+					if (uiItem.ActualHeight > maxStepHeight) maxStepHeight = uiItem.ActualHeight;
+					if (uiItem.TransitionAdorner.ActualHeight > maxTransitionHeight) maxTransitionHeight = uiItem.TransitionAdorner.ActualHeight;
 				}
 			}
+			double height = maxStepHeight + maxTransitionHeight;
 
 			UpdateCanvasWidth();
-			if (_Canvas != null) _Canvas.Height = maxHeight;
-			_PlaybackAdorner.Height = maxHeight;
+			if (_Canvas != null) _Canvas.Height = height;
+			_PlaybackAdorner.Height = height;
+			TransitionHeight = maxTransitionHeight;
 		}
 
 		private void SelectTransition(TimelineItem item)
@@ -503,6 +511,18 @@ namespace LedBoard.Controls
 				container.TransitionAdorner.IsSelected = i == selectedIndex;
 			}
 			TransitionSelected?.Invoke(item?.Entry?.Transition, EventArgs.Empty);
+		}
+
+		private void SetTransitionHitTestVisible(bool value)
+		{
+			foreach (var item in Items)
+			{
+				var uiItem = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
+				if (uiItem != null && uiItem.TransitionAdorner != null) 
+				{
+					uiItem.TransitionAdorner.IsHitTestVisible = value;
+				}
+			}
 		}
 
 		public void AddAdorner(Adorner adorner)
