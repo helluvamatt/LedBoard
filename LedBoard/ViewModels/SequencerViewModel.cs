@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
 
 namespace LedBoard.ViewModels
@@ -117,11 +118,11 @@ namespace LedBoard.ViewModels
 
 		#region SelectedItem
 
-		public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register(nameof(SelectedItem), typeof(SequenceEntry), typeof(SequencerViewModel), new PropertyMetadata(null, OnSelectedItemChanged));
+		public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register(nameof(SelectedItem), typeof(ISequenceItem), typeof(SequencerViewModel), new PropertyMetadata(null, OnSelectedItemChanged));
 
-		public SequenceEntry SelectedItem
+		public ISequenceItem SelectedItem
 		{
-			get => (SequenceEntry)GetValue(SelectedItemProperty);
+			get => (ISequenceItem)GetValue(SelectedItemProperty);
 			set => SetValue(SelectedItemProperty, value);
 		}
 
@@ -205,7 +206,7 @@ namespace LedBoard.ViewModels
 			var entry = new SequenceEntry(step);
 
 			int index;
-			if (SelectedItem != null) index = Sequence.Steps.IndexOf(SelectedItem);
+			if (SelectedItem != null) FindEntryForItem(SelectedItem, out index);
 			else index = -1;
 			if (index < 0) Sequence.Steps.Add(entry);
 			else Sequence.Steps.Insert(index, entry);
@@ -221,12 +222,24 @@ namespace LedBoard.ViewModels
 		{
 			if (SelectedItem == null) return;
 
-			_DialogService.ConfirmDialog("Are you sure you want to delete this item?", SelectedItem.Step.DisplayName, result =>
+			_DialogService.ConfirmDialog("Are you sure you want to delete this item?", SelectedItem.DisplayName, result =>
 			{
 				if (result)
 				{
-					Sequence.Steps.Remove(SelectedItem);
-					SelectedItem = null;
+					var entry = FindEntryForItem(SelectedItem, out int index);
+					if (entry != null)
+					{
+						if (SelectedItem is ISequenceStep)
+						{
+							Sequence.Steps.Remove(entry);
+							SelectedItem = null;
+						}
+						else if (SelectedItem is ISequenceTransition)
+						{
+							entry.Transition = null;
+							SelectedItem = entry.Step;
+						}
+					}
 				}
 			});
 		}
@@ -234,6 +247,21 @@ namespace LedBoard.ViewModels
 		#endregion
 
 		#endregion
+
+		private SequenceEntry FindEntryForItem(ISequenceItem item, out int entryIndex)
+		{
+			for (int i = 0; i < Sequence.Steps.Count; i++)
+			{
+				var cur = Sequence.Steps[i];
+				if (cur.Step == item || cur.Transition == item)
+				{
+					entryIndex = i;
+					return cur;
+				}
+			}
+			entryIndex = -1;
+			return null;
+		}
 
 		private void OnSequenceCurrentFrameChanged(object sender, EventArgs e)
 		{

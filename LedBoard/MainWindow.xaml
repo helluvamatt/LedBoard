@@ -543,8 +543,7 @@
 												  SelectedItem="{Binding Sequencer.SelectedItem}"
 												  ScrubberPosition="{Binding Sequencer.Sequence.CurrentTime}"
 												  Zoom="{Binding Zoom}" TotalLength="{Binding Sequencer.Sequence.Length.TotalMilliseconds}"
-												  PreviewKeyUp="OnTimelineKeyUp" RequestBringIntoView="OnTimelineControlRequestBringIntoView"
-												  TransitionSelected="OnTimelineTransitionSelected">
+												  PreviewKeyUp="OnTimelineKeyUp" RequestBringIntoView="OnTimelineControlRequestBringIntoView">
 							<ItemsControl.ItemContainerStyle>
 								<Style TargetType="controls:TimelineItem">
 									<Setter Property="Template">

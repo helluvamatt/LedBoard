@@ -4,16 +4,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 
 namespace LedBoard.Controls
 {
-	public class TimelineControl : Selector
+	public class TimelineControl : ItemsControl
 	{
 		private const string PART_Canvas = "PART_Canvas";
 		private const string PART_ItemsPresenter = "PART_ItemsPresenter";
@@ -139,9 +139,49 @@ namespace LedBoard.Controls
 
 		#endregion
 
+		#region SelectedItem
+
+		public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register(nameof(SelectedItem), typeof(ISequenceItem), typeof(TimelineControl), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnSelectedItemChanged));
+
+		public ISequenceItem SelectedItem
+		{
+			get => (ISequenceItem)GetValue(SelectedItemProperty);
+			set => SetValue(SelectedItemProperty, value);
+		}
+
+		private static void OnSelectedItemChanged(DependencyObject owner, DependencyPropertyChangedEventArgs e)
+		{
+			var control = (TimelineControl)owner;
+			foreach (SequenceEntry entry in control.Items)
+			{
+				TimelineItem tli = (TimelineItem)control.ItemContainerGenerator.ContainerFromItem(entry);
+				if (tli != null)
+				{
+					if (control.SelectedItem == tli.Entry.Step)
+					{
+						tli.IsSelected = true;
+						control.AddAdorner(tli.ResizeAdorner);
+						tli.TransitionAdorner.IsSelected = false;
+					}
+					else if (control.SelectedItem == tli.Entry.Transition)
+					{
+						tli.IsSelected = false;
+						AdornerLayer.GetAdornerLayer(control).Remove(tli.ResizeAdorner);
+						tli.TransitionAdorner.IsSelected = true;
+					}
+					else
+					{
+						tli.IsSelected = false;
+						AdornerLayer.GetAdornerLayer(control).Remove(tli.ResizeAdorner);
+						tli.TransitionAdorner.IsSelected = false;
+					}
+				}
+			}
+		}
+
 		#endregion
 
-		public event EventHandler TransitionSelected;
+		#endregion
 
 		#region Control overrides
 
@@ -195,30 +235,6 @@ namespace LedBoard.Controls
 		protected override bool IsItemItsOwnContainerOverride(object item)
 		{
 			return false;
-		}
-
-		protected override void OnSelectionChanged(SelectionChangedEventArgs e)
-		{
-			base.OnSelectionChanged(e);
-			
-			foreach (var item in e.RemovedItems)
-			{
-				TimelineItem tli = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
-				if (tli != null)
-				{
-					tli.IsSelected = false;
-					AdornerLayer.GetAdornerLayer(this).Remove(tli.ResizeAdorner);
-				}
-			}
-			foreach (var item in e.AddedItems)
-			{
-				TimelineItem tli = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
-				if (tli != null)
-				{
-					tli.IsSelected = true;
-					AddAdorner(tli.ResizeAdorner);
-				}
-			}
 		}
 
 		protected override void OnDragEnter(DragEventArgs e)
@@ -353,7 +369,6 @@ namespace LedBoard.Controls
 			if (!e.Handled)
 			{
 				SelectedItem = null;
-				SelectTransition(null);
 				Focus();
 			}
 		}
@@ -411,12 +426,14 @@ namespace LedBoard.Controls
 					_DropAdorner = null;
 				}
 
-				if (ItemsSource is ObservableCollection<SequenceEntry> collection)
+				if (ItemsSource is ObservableCollection<SequenceEntry> collection && SelectedItem is ISequenceStep selectedStep)
 				{
+					var selectedEntry = collection.FirstOrDefault(entry => entry.Step == selectedStep);
+					int selectedIndex = collection.IndexOf(selectedEntry);
 					var p = e.GetPosition(this);
 					(_, int index) = FindDropPosition(p.X);
-					if (index > SelectedIndex) index--;
-					collection.Move(SelectedIndex, index);
+					if (index > selectedIndex) index--;
+					collection.Move(selectedIndex, index);
 				}
 
 				e.Handled = true;
@@ -437,8 +454,7 @@ namespace LedBoard.Controls
 			// If this MouseDown event was actually on an item, select that item
 			if (sender is TimelineItem item)
 			{
-				SelectTransition(null);
-				SelectedIndex = ItemContainerGenerator.IndexFromContainer(item);
+				SelectedItem = item.Entry.Step;
 				_InitialItemOffset = e.GetPosition(item);
 				_IsMoving = false;
 				Focus();
@@ -450,8 +466,7 @@ namespace LedBoard.Controls
 		{
 			if (sender is TimelineItem item)
 			{
-				SelectedItem = null;
-				SelectTransition(item);
+				SelectedItem = item.Entry.Transition;
 				Focus();
 			}
 		}
@@ -500,17 +515,6 @@ namespace LedBoard.Controls
 			UpdateCanvasWidth();
 		}
 
-		private void SelectTransition(TimelineItem item)
-		{
-			int? selectedIndex = item != null ? (int?)ItemContainerGenerator.IndexFromContainer(item) : null;
-			for (int i = 0; i < Items.Count; i++)
-			{
-				var container = (TimelineItem)ItemContainerGenerator.ContainerFromIndex(i);
-				container.TransitionAdorner.IsSelected = i == selectedIndex;
-			}
-			TransitionSelected?.Invoke(item?.Entry?.Transition, EventArgs.Empty);
-		}
-
 		private void SetAdornerHitTestVisible(bool value)
 		{
 			AdornerLayer.GetAdornerLayer(this).IsHitTestVisible = value;
@@ -520,6 +524,7 @@ namespace LedBoard.Controls
 		{
 			var layer = AdornerLayer.GetAdornerLayer(this);
 			layer.Remove(_PlaybackAdorner);
+			layer.Remove(adorner); // Does nothing if the adorner has not been added already
 			layer.Add(adorner);
 			layer.Add(_PlaybackAdorner);
 		}

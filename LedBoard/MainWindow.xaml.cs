@@ -529,25 +529,12 @@ namespace LedBoard
 		{
 			if (Sequencer?.SelectedItem != null)
 			{
-				ConfigurationModel = new SequenceStepConfigViewModel(Sequencer.SelectedItem.Step, this, _ResourcesService);
+				ConfigurationModel = new SequenceStepConfigViewModel(Sequencer.SelectedItem, this, _ResourcesService);
 				ToolboxTabPage = 2;
 			}
 			else
 			{
 				ConfigurationModel = null;
-			}
-		}
-
-		private void OnTimelineTransitionSelected(object sender, EventArgs e)
-		{
-			if (sender == null)
-			{
-				ConfigurationModel = null;
-			}
-			else if (sender is ISequenceTransition transition)
-			{
-				ConfigurationModel = new SequenceStepConfigViewModel(transition, this, _ResourcesService);
-				ToolboxTabPage = 2;
 			}
 		}
 
