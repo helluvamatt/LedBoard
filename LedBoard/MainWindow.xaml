@@ -538,7 +538,7 @@
 								</ControlTemplate>
 							</Slider.Template>
 						</Slider>
-						<controls:TimelineControl Grid.Row="1" Margin="8" AdornerColor="{StaticResource MahApps.Colors.Gray2}" ScrubberColor="Red"
+						<controls:TimelineControl Grid.Row="1" Margin="8" Height="148" AdornerColor="{StaticResource MahApps.Colors.Gray2}" ScrubberColor="Red"
 												  ItemsSource="{Binding Sequencer.Sequence.Steps}"
 												  SelectedItem="{Binding Sequencer.SelectedItem}"
 												  ScrubberPosition="{Binding Sequencer.Sequence.CurrentTime}"

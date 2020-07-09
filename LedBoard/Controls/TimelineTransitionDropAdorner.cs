@@ -28,7 +28,7 @@ namespace LedBoard.Controls
 		protected override void OnRender(DrawingContext drawingContext)
 		{
 			var owner = (TimelineControl)AdornedElement;
-			double height = owner.TransitionHeight;
+			double height = owner.ActualHeight - AttachedItem.ActualHeight;
 			double width = 1000 * owner.Zoom;
 			double xOffset = Canvas.GetLeft(AttachedItem) + AttachedItem.ActualWidth - (width / 2);
 			double yOffset = AttachedItem.ActualHeight;

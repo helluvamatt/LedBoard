@@ -33,14 +33,17 @@ namespace LedBoard.Controls
 			FrameworkElementFactory canvasFactory = new FrameworkElementFactory(typeof(Canvas));
 			canvasFactory.SetValue(Panel.IsItemsHostProperty, true);
 			canvasFactory.SetValue(HorizontalAlignmentProperty, HorizontalAlignment.Left);
+			canvasFactory.SetValue(VerticalAlignmentProperty, VerticalAlignment.Stretch);
 			canvasFactory.Name = PART_Canvas;
 			ItemsPanel = new ItemsPanelTemplate
 			{
 				VisualTree = canvasFactory,
 			};
 
-			FrameworkElementFactory itemsPresenterFactory = new FrameworkElementFactory(typeof(ItemsPresenter));
-			itemsPresenterFactory.Name = PART_ItemsPresenter;
+			FrameworkElementFactory itemsPresenterFactory = new FrameworkElementFactory(typeof(ItemsPresenter))
+			{
+				Name = PART_ItemsPresenter
+			};
 			Template = new ControlTemplate
 			{
 				VisualTree = itemsPresenterFactory,
@@ -56,8 +59,6 @@ namespace LedBoard.Controls
 		#region Dependency properties
 
 		public DataTemplate TransitionTemplate { get; set; }
-
-		public double TransitionHeight { get; set; }
 
 		#region AdornerColor
 
@@ -223,7 +224,7 @@ namespace LedBoard.Controls
 		protected override void OnDragEnter(DragEventArgs e)
 		{
 			e.Effects = DragDropEffects.None;
-			SetTransitionHitTestVisible(false);
+			SetAdornerHitTestVisible(false);
 			if (e.Data.GetDataPresent(DataFormats.Serializable))
 			{
 				object dataItem = e.Data.GetData(DataFormats.Serializable);
@@ -270,13 +271,13 @@ namespace LedBoard.Controls
 				AdornerLayer.GetAdornerLayer(this).Remove(_TransitionDropAdorner);
 				_TransitionDropAdorner = null;
 			}
-			SetTransitionHitTestVisible(true);
+			SetAdornerHitTestVisible(true);
 			e.Handled = true;
 		}
 
 		protected override void OnDragOver(DragEventArgs e)
 		{
-			SetTransitionHitTestVisible(false);
+			SetAdornerHitTestVisible(false);
 			e.Effects = DragDropEffects.None;
 			if (e.Data.GetDataPresent(DataFormats.Serializable))
 			{
@@ -423,6 +424,12 @@ namespace LedBoard.Controls
 			base.OnMouseUp(e);
 		}
 
+		protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+		{
+			base.OnRenderSizeChanged(sizeInfo);
+			_PlaybackAdorner.Height = ActualHeight;
+		}
+
 		#endregion
 
 		private void OnItemMouseDown(object sender, MouseButtonEventArgs e)
@@ -475,31 +482,22 @@ namespace LedBoard.Controls
 			if (Items.Count > 0)
 			{
 				var lastItem = (TimelineItem)ItemContainerGenerator.ContainerFromIndex(Items.Count - 1);
-				lastEntryTransitionExtra = lastItem.TransitionAdorner.ActualWidth / 2;
+				if (lastItem != null) lastEntryTransitionExtra = lastItem.TransitionAdorner.ActualWidth / 2;
 			}
 			if (_Canvas != null) _Canvas.Width = TotalLength * Zoom + lastEntryTransitionExtra;
 		}
 
 		public void UpdateItemLayout()
 		{
-			double maxStepHeight = 0;
-			double maxTransitionHeight = 0;
 			foreach (var item in Items)
 			{
 				var uiItem = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
 				if (uiItem != null)
 				{
 					uiItem.UpdateBounds();
-					if (uiItem.ActualHeight > maxStepHeight) maxStepHeight = uiItem.ActualHeight;
-					if (uiItem.TransitionAdorner.ActualHeight > maxTransitionHeight) maxTransitionHeight = uiItem.TransitionAdorner.ActualHeight;
 				}
 			}
-			double height = maxStepHeight + maxTransitionHeight;
-
 			UpdateCanvasWidth();
-			if (_Canvas != null) _Canvas.Height = height;
-			_PlaybackAdorner.Height = height;
-			TransitionHeight = maxTransitionHeight;
 		}
 
 		private void SelectTransition(TimelineItem item)
@@ -513,16 +511,9 @@ namespace LedBoard.Controls
 			TransitionSelected?.Invoke(item?.Entry?.Transition, EventArgs.Empty);
 		}
 
-		private void SetTransitionHitTestVisible(bool value)
+		private void SetAdornerHitTestVisible(bool value)
 		{
-			foreach (var item in Items)
-			{
-				var uiItem = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
-				if (uiItem != null && uiItem.TransitionAdorner != null) 
-				{
-					uiItem.TransitionAdorner.IsHitTestVisible = value;
-				}
-			}
+			AdornerLayer.GetAdornerLayer(this).IsHitTestVisible = value;
 		}
 
 		public void AddAdorner(Adorner adorner)
