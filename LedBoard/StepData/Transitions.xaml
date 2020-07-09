@@ -19,7 +19,7 @@
 			</DrawingImage>
 		</m:TransitionDescriptor.Icon>
 	</m:TransitionDescriptor>
-	<m:TransitionDescriptor x:Key="Crossfade" SortOrder="0" DisplayName="Cross Fade"
+	<m:TransitionDescriptor x:Key="Crossfade" SortOrder="1" DisplayName="Cross Fade"
 							Type="{x:Type mt:CrossfadeTransition}">
 		<m:TransitionDescriptor.Icon>
 			<DrawingImage>
@@ -39,7 +39,7 @@
 			</DrawingImage>
 		</m:TransitionDescriptor.Icon>
 	</m:TransitionDescriptor>
-	<m:TransitionDescriptor x:Key="Dissolve" SortOrder="0" DisplayName="Dissolve"
+	<m:TransitionDescriptor x:Key="Dissolve" SortOrder="2" DisplayName="Dissolve"
 							Type="{x:Type mt:DissolveTransition}">
 		<m:TransitionDescriptor.Icon>
 			<DrawingImage>
@@ -51,6 +51,27 @@
 							</GeometryDrawing.Geometry>
 						</GeometryDrawing>
 						<GeometryDrawing Geometry="M 0,0 H 512 v 64 H 0 v 64 H 512 v 64 H 0 v 64 H 512 v 64 H 0 v 64 H 512 v 64 H 0 V 0 h 64 V 512 h 64 V 0 h 64 V 512 h 64 V 0 h 64 V 512 h 64 V 0 h 64 V 512 h 64 V 0 z" Brush="{StaticResource MahApps.Brushes.AccentBase}" />
+					</DrawingGroup>
+				</DrawingImage.Drawing>
+			</DrawingImage>
+		</m:TransitionDescriptor.Icon>
+	</m:TransitionDescriptor>
+	<m:TransitionDescriptor x:Key="Wipe" SortOrder="3" DisplayName="Wipe"
+							Type="{x:Type mt:WipeTransition}">
+		<m:TransitionDescriptor.Icon>
+			<DrawingImage>
+				<DrawingImage.Drawing>
+					<DrawingGroup>
+						<GeometryDrawing Brush="Black">
+							<GeometryDrawing.Geometry>
+								<RectangleGeometry Rect="0,0,512,512" />
+							</GeometryDrawing.Geometry>
+						</GeometryDrawing>
+						<GeometryDrawing Brush="{StaticResource MahApps.Brushes.AccentBase}">
+							<GeometryDrawing.Geometry>
+								<RectangleGeometry Rect="256,0,256,512" />
+							</GeometryDrawing.Geometry>
+						</GeometryDrawing>
 					</DrawingGroup>
 				</DrawingImage.Drawing>
 			</DrawingImage>
