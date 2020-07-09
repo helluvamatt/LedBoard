@@ -90,6 +90,7 @@
     <Compile Include="Models\Transitions\CrossfadeTransition.cs" />
     <Compile Include="Models\Transitions\DipToBlackTransition.cs" />
     <Compile Include="Models\Transitions\DissolveTransition.cs" />
+    <Compile Include="Models\Transitions\SlideTransition.cs" />
     <Compile Include="Models\Transitions\WipeTransition.cs" />
     <Compile Include="Services\Export\GifExporter.cs" />
     <Compile Include="Services\Export\PngExporter.cs" />

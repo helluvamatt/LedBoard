@@ -69,9 +69,26 @@
 						</GeometryDrawing>
 						<GeometryDrawing Brush="{StaticResource MahApps.Brushes.AccentBase}">
 							<GeometryDrawing.Geometry>
-								<RectangleGeometry Rect="256,0,256,512" />
+								<RectangleGeometry Rect="0,0,256,512" />
 							</GeometryDrawing.Geometry>
 						</GeometryDrawing>
+					</DrawingGroup>
+				</DrawingImage.Drawing>
+			</DrawingImage>
+		</m:TransitionDescriptor.Icon>
+	</m:TransitionDescriptor>
+	<m:TransitionDescriptor x:Key="Slide" SortOrder="4" DisplayName="Slide"
+							Type="{x:Type mt:SlideTransition}">
+		<m:TransitionDescriptor.Icon>
+			<DrawingImage>
+				<DrawingImage.Drawing>
+					<DrawingGroup>
+						<GeometryDrawing Brush="Black">
+							<GeometryDrawing.Geometry>
+								<RectangleGeometry Rect="0,0,512,512" />
+							</GeometryDrawing.Geometry>
+						</GeometryDrawing>
+						<GeometryDrawing Brush="{StaticResource MahApps.Brushes.AccentBase}" Geometry="M 0 0 H 256 V 256 l -128 -128 v 64 h -128 v 128 h 128 v 64 l 128 -128 V 512 H 0 z" />
 					</DrawingGroup>
 				</DrawingImage.Drawing>
 			</DrawingImage>

@@ -88,5 +88,24 @@ namespace LedBoard.Models
 				}
 			}
 		}
+
+		public static void CopyTo(this IBoard source, IBoard destination, int dstX, int dstY)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (destination == null) throw new ArgumentNullException(nameof(destination));
+			int sourceWidth = source.Width;
+			int sourceHeight = source.Height;
+			int destWidth = destination.Width;
+			int destHeight = destination.Height;
+			for (int y = 0, dy = dstY; y < sourceHeight; y++, dy++)
+			{
+				if (dy < 0 || dy > destHeight - 1) continue;
+				for (int x = 0, dx = dstX; x < sourceWidth; x++, dx++)
+				{
+					if (dx < 0 || dx > destWidth - 1) continue;
+					destination[dx, dy] = source[x, y];
+				}
+			}
+		}
 	}
 }
