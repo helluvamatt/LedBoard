@@ -13,8 +13,6 @@ namespace LedBoard.Models.Transitions
 		public override void AnimateFrame(IBoard target, IBoard outgoing, IBoard incoming, TimeSpan frameTime)
 		{
 			double progress = frameTime.TotalMilliseconds / Length.TotalMilliseconds;
-
-			// Compute X and Y thresholds
 			int width = target.Width;
 			int height = target.Height;
 			for (int y = 0; y < height; y++)

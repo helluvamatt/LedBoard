@@ -18,7 +18,7 @@ namespace LedBoard.Controls
 		private const string PART_Canvas = "PART_Canvas";
 		private const string PART_ItemsPresenter = "PART_ItemsPresenter";
 
-		private TimelinePlaybackAdorner _PlaybackAdorner;
+		private readonly TimelinePlaybackAdorner _PlaybackAdorner;
 
 		private Canvas _Canvas;
 		private TimelineDropAdorner _DropAdorner;
