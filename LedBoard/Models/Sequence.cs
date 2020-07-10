@@ -12,31 +12,41 @@ namespace LedBoard.Models
 	{
 		private readonly Dispatcher _Dispatcher;
 		private readonly IResourcesService _ResourcesService;
-		private readonly int _BoardWidth;
-		private readonly int _BoardHeight;
-
-		private readonly IBoard _PrevBoard;
-		private readonly IBoard _NextBoard;
+		
+		private IBoard _PrevBoard;
+		private IBoard _NextBoard;
 
 		private bool _IsDirty;
 		private TimeSpan _CurrentTime;
 		private SequenceEntry _CurrentEntry;
 		private int _CurrentEntryIndex;
 
-		public Sequence(Dispatcher dispatcher, IResourcesService resourcesService, int boardWidth, int boardHeight, int frameDelay)
+		public Sequence(Dispatcher dispatcher, IResourcesService resourcesService)
 		{
 			_Dispatcher = dispatcher;
 			_ResourcesService = resourcesService;
-			_BoardWidth = boardWidth;
-			_BoardHeight = boardHeight;
-			_PrevBoard = new MemoryBoard(boardWidth, boardHeight);
-			_NextBoard = new MemoryBoard(boardWidth, boardHeight);
-			FrameDelay = TimeSpan.FromMilliseconds(frameDelay);
 			Steps = new ObservableCollection<SequenceEntry>();
 			Steps.CollectionChanged += OnStepsCollectionChanged;
 		}
 
-		public TimeSpan FrameDelay { get; }
+		public void Configure(int boardWidth, int boardHeight, int frameDelay)
+		{
+			BoardWidth = boardWidth;
+			BoardHeight = boardHeight;
+			FrameDelay = TimeSpan.FromMilliseconds(frameDelay);
+			_PrevBoard = new MemoryBoard(BoardWidth, BoardHeight);
+			_NextBoard = new MemoryBoard(BoardWidth, BoardHeight);
+			foreach (var entry in Steps)
+			{
+				// (Re)init step and transition
+				entry.InitStep(_Dispatcher, BoardWidth, BoardHeight, FrameDelay, _ResourcesService);
+			}
+		}
+
+		public int BoardWidth { get; private set; }
+		public int BoardHeight { get; private set; }
+		public TimeSpan FrameDelay { get; private set; }
+
 		public TimeSpan Length => TimeSpan.FromMilliseconds(Steps.Sum(step => step.Length.TotalMilliseconds));
 
 		#region IsDirty property
@@ -259,7 +269,7 @@ namespace LedBoard.Models
 			{
 				foreach (SequenceEntry entry in e.NewItems)
 				{
-					entry.InitStep(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay, _ResourcesService);
+					entry.InitStep(_Dispatcher, BoardWidth, BoardHeight, FrameDelay, _ResourcesService);
 					entry.PropertyChanged += OnSequenceEntryPropertyChanged;
 					entry.StepConfigurationChanged += OnSequenceEntryStepConfigurationChanged;
 					entry.TransitionConfigurationChanged += OnSequenceEntryTransitionConfigurationChanged;
@@ -277,7 +287,7 @@ namespace LedBoard.Models
 			var entry = (SequenceEntry)sender;
 
 			// Reinitialize on configuration changes
-			entry.InitStep(_Dispatcher, _BoardWidth, _BoardHeight, FrameDelay, _ResourcesService);
+			entry.InitStep(_Dispatcher, BoardWidth, BoardHeight, FrameDelay, _ResourcesService);
 
 			// Tell the sequencer to update the current frame
 			CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
@@ -322,7 +332,7 @@ namespace LedBoard.Models
 		private void OnTransitionChanged(SequenceEntry entry)
 		{
 			// Initialize the transition
-			entry.InitTransition(_BoardWidth, _BoardHeight, FrameDelay);
+			entry.InitTransition(BoardWidth, BoardHeight, FrameDelay);
 
 			// Recompute TransitionExtraLength for this entry, the one before, and the one after, looping around as necessary
 			RecomputeTransitionExtra(entry);

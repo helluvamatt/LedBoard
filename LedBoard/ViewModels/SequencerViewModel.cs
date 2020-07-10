@@ -47,12 +47,12 @@ namespace LedBoard.ViewModels
 		{
 			_DialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 			if (resourcesService == null) throw new ArgumentNullException(nameof(resourcesService));
-			CurrentBoard = new MemoryBoard(boardWidth, boardHeight);
-			Sequence = new Sequence(Dispatcher, resourcesService, boardWidth, boardHeight, frameDelay)
+			Sequence = new Sequence(Dispatcher, resourcesService)
 			{
 				IsDirty = true,
 			};
 			Sequence.CurrentFrameChanged += OnSequenceCurrentFrameChanged;
+			Configure(boardWidth, boardHeight, frameDelay);
 			StopCommand = new DelegateCommand(OnStop);
 			PlayPauseCommand = new DelegateCommand(OnPlayPause);
 			StepForwardCommand = new DelegateCommand(OnStepForward, () => !IsPlaying);
@@ -61,13 +61,31 @@ namespace LedBoard.ViewModels
 			DeleteItemCommand = new DelegateCommand(OnDeleteSelectedItem, () => !IsPlaying && SelectedItem != null);
 		}
 
-		public IBoard CurrentBoard { get; }
 		public Sequence Sequence { get; }
 
 		public IEnumerable<StepDescriptor> StepTypes => StepService.StepTypes;
 		public IEnumerable<TransitionDescriptor> TransitionTypes => StepService.TransitionTypes;
 
+		public void Configure(int boardWidth, int boardHeight, int frameDelay)
+		{
+			PauseSequence();
+			CurrentBoard = new MemoryBoard(boardWidth, boardHeight);
+			Sequence.Configure(boardWidth, boardHeight, frameDelay);
+		}
+
 		#region Dependency properties
+
+		#region CurrentBoard
+
+		public static readonly DependencyProperty CurrentBoardProperty = DependencyProperty.Register(nameof(CurrentBoard), typeof(IBoard), typeof(SequencerViewModel), new PropertyMetadata(null));
+
+		public IBoard CurrentBoard
+		{
+			get => (IBoard)GetValue(CurrentBoardProperty);
+			private set => SetValue(CurrentBoardProperty, value);
+		}
+
+		#endregion
 
 		#region IsPlaying
 
@@ -308,7 +326,7 @@ namespace LedBoard.ViewModels
 		{
 			try
 			{
-				var board = new MemoryBoard(CurrentBoard.Width, CurrentBoard.Height);
+				var board = new MemoryBoard(Sequence.BoardWidth, Sequence.BoardHeight);
 				for (TimeSpan ts = TimeSpan.Zero; ts < Sequence.Length; ts += Sequence.FrameDelay)
 				{
 					progress.Report(ts.TotalMilliseconds / Sequence.Length.TotalMilliseconds);
@@ -327,8 +345,8 @@ namespace LedBoard.ViewModels
 		{
 			return new ProjectModel
 			{
-				Width = CurrentBoard.Width,
-				Height = CurrentBoard.Height,
+				Width = Sequence.BoardWidth,
+				Height = Sequence.BoardHeight,
 				FrameDelay = (int)Sequence.FrameDelay.TotalMilliseconds,
 				Steps = Sequence.Steps.Select(entry => new ProjectStepModel
 				{

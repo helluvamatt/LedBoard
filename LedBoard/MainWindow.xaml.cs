@@ -35,7 +35,8 @@ namespace LedBoard
 		public MainWindow()
 		{
 			_ResourcesService = new ProjectResourcesService(Path.Combine(Path.GetTempPath(), "LedBoard"));
-			SaveProjectCommand = new DelegateCommand(DoSaveProject, () => Sequencer != null);
+			SaveProjectCommand = new DelegateCommand(async () => await OnSaveProject(), () => Sequencer != null && (Sequencer.Sequence.IsDirty || IsConfigurationDifferent()));
+			SaveProjectAsCommand = new DelegateCommand(async () => await OnSaveProjectAs(), () => Sequencer != null);
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Zoom < MaxZoom);
 			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Zoom > MinZoom);
 			ExportCommand = new DelegateCommand(() => IsExportOpen = true, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
@@ -47,6 +48,7 @@ namespace LedBoard
 		}
 
 		public ICommand SaveProjectCommand { get; }
+		public ICommand SaveProjectAsCommand { get; }
 		public ICommand ZoomInCommand { get; }
 		public ICommand ZoomOutCommand { get; }
 		public ICommand ExportCommand { get; }
@@ -331,12 +333,6 @@ namespace LedBoard
 			IsProjectSettingsOpen = true;
 		}
 
-		private async void OnSaveProjectAsClick(object sender, RoutedEventArgs e)
-		{
-			if (Sequencer == null) return;
-			await OnSaveProjectAs();
-		}
-
 		private async void OnNewProjectClick(object sender, RoutedEventArgs e)
 		{
 			if (IsDirty)
@@ -377,8 +373,8 @@ namespace LedBoard
 						{
 							Sequencer = new SequencerViewModel(this, _ResourcesService, project);
 							Sequencer.Sequence.GetCurrentFrame(Sequencer.CurrentBoard);
-							IsProjectSettingsOpen = false;
 							ProjectPath = result;
+							ResetConfigurationToSequencer();
 						});
 					}
 					catch (Exception ex)
@@ -394,29 +390,31 @@ namespace LedBoard
 		private void OnCancelClick(object sender, RoutedEventArgs e)
 		{
 			if (Sequencer == null) Close();
-			else IsProjectSettingsOpen = false;
-		}
-
-		private async void DoSaveProject()
-		{
-			await OnSaveProject();
+			else ResetConfigurationToSequencer();
 		}
 
 		private async Task<bool> OnSaveProject()
 		{
-			if (ProjectPath == null) return await OnSaveProjectAs();
-			else return await SaveProject(ProjectPath);
+			if (Sequencer == null) return false;
+			ConfigureSequencerIfNeeded();
+			bool result;
+			if (ProjectPath == null) result = await OnSaveProjectAs();
+			else result = await SaveProject(ProjectPath);
+			ResetConfigurationToSequencer();
+			return result;
 		}
 
 		private async Task<bool> OnSaveProjectAs()
 		{
 			if (Sequencer == null) return false;
+			ConfigureSequencerIfNeeded();
 			string result = SaveFileDialog("Save project as...", "LED Board project|*.ledproj|All files|*.*");
 			if (result != null)
 			{
 				if (await SaveProject(result))
 				{
 					ProjectPath = result;
+					ResetConfigurationToSequencer();
 					return true;
 				}
 			}
@@ -671,6 +669,24 @@ namespace LedBoard
 					await controller.CloseAsync();
 				});
 			}
+		}
+
+		private bool IsConfigurationDifferent() => Sequencer.Sequence.BoardWidth != NewBoardWidth || Sequencer.Sequence.BoardHeight != NewBoardHeight || Sequencer.Sequence.FrameDelay.TotalMilliseconds != NewFrameRate;
+
+		private void ConfigureSequencerIfNeeded()
+		{
+			if (IsConfigurationDifferent())
+			{
+				Sequencer.Configure(NewBoardWidth, NewBoardHeight, NewFrameRate);
+			}
+		}
+
+		private void ResetConfigurationToSequencer()
+		{
+			IsProjectSettingsOpen = false;
+			NewBoardWidth = Sequencer.Sequence.BoardWidth;
+			NewBoardHeight = Sequencer.Sequence.BoardHeight;
+			NewFrameRate = (int)Sequencer.Sequence.FrameDelay.TotalMilliseconds;
 		}
 
 		#endregion
