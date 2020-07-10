@@ -39,8 +39,13 @@ namespace LedBoard.Services.Rendering
 						for (int pixelX = 0; pixelX < pixelSize; pixelX++)
 						{
 							x = baseX + pixelX;
-							if (pixelSize > 2 && (pixelX == 0 || pixelX == pixelSize - 1) && (pixelY == 0 || pixelY == pixelSize - 1)) continue;
-							//if (pixelSize > 6) // TODO Logic for more rounded hi-res pixels
+							// Pixel Size: > 4: 1 pixel notch
+							if (pixelSize > 4 && (pixelX == 0 || pixelX == pixelSize - 1) && (pixelY == 0 || pixelY == pixelSize - 1)) continue;
+							// Pixel Size: > 9: 2x2 pixel notch + 1x2 pixel notch
+							if (pixelSize > 9 && (pixelX <= 1 || pixelX >= pixelSize - 2) && (pixelY <= 1 || pixelY >= pixelSize - 2)) continue;
+							if (pixelSize > 9 && (pixelX == 0 || pixelX == pixelSize - 1) && (pixelY <= 3 || pixelY >= pixelSize - 4)) continue;
+							if (pixelSize > 9 && (pixelX <= 3 || pixelX >= pixelSize - 4) && (pixelY == 0 || pixelY == pixelSize - 1)) continue;
+							// Set pixel
 							_Buffer[y * _CachedStride + x * 3 + 0] = (byte)((pixel >> 0) & 0xFF); // B
 							_Buffer[y * _CachedStride + x * 3 + 1] = (byte)((pixel >> 8) & 0xFF); // G
 							_Buffer[y * _CachedStride + x * 3 + 2] = (byte)((pixel >> 16) & 0xFF); // R
