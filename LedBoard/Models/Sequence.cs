@@ -138,10 +138,9 @@ namespace LedBoard.Models
 
 		#endregion
 
-		public bool Advance(IBoard board)
+		public bool Advance()
 		{
 			TimeSpan stepOffsetTime = _CurrentTime - _CurrentEntry.StartTime;
-			Render(board, _CurrentEntry, _CurrentEntryIndex, stepOffsetTime, Loop);
 			SetCurrentTime(_CurrentTime + FrameDelay, stepOffsetTime + FrameDelay >= _CurrentEntry.Length);
 			return _CurrentTime < Length;
 		}

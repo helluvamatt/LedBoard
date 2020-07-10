@@ -4,6 +4,7 @@ using LedBoard.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -283,7 +284,7 @@ namespace LedBoard.ViewModels
 
 		private void OnSequenceCurrentFrameChanged(object sender, EventArgs e)
 		{
-			Sequence.GetCurrentFrame(CurrentBoard);
+			Dispatcher.Invoke(() => Sequence.GetCurrentFrame(CurrentBoard));
 		}
 
 		private void PauseSequence()
@@ -303,14 +304,19 @@ namespace LedBoard.ViewModels
 		private async void Playing()
 		{
 			bool hasMore;
+			DateTime start;
+			DateTime end;
 			while (_CancelController != null && !_CancelController.IsCancellationRequested)
 			{
-				hasMore = Sequence.Advance(CurrentBoard);
+				start = DateTime.Now;
+				hasMore = Sequence.Advance();
+				end = DateTime.Now;
+				var renderDelay = end - start;
 				if (hasMore || Sequence.Loop)
 				{
 					try
 					{
-						await Task.Delay(Sequence.FrameDelay, _CancelController.Token);
+						await Task.Delay(Sequence.FrameDelay - renderDelay, _CancelController.Token);
 					}
 					catch (OperationCanceledException) { } // Eat, we are pausing
 					if (!hasMore && Sequence.Loop) Sequence.CurrentTime = 0;
