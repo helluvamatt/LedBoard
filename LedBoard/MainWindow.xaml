@@ -294,7 +294,12 @@
 								<DataTemplate DataType="{x:Type vmc:AlignmentPropertyViewModel}">
 									<StackPanel Orientation="Vertical">
 										<Label Content="{Binding Label}" />
-										<UniformGrid Columns="3" Rows="3">
+										<UniformGrid Columns="3" Rows="3" Margin="4,4,0,0">
+											<UniformGrid.Resources>
+												<Style TargetType="ToggleButton" BasedOn="{StaticResource MahApps.Styles.ToggleButton.Flat}">
+													<Setter Property="Margin" Value="0,0,4,4" />
+												</Style>
+											</UniformGrid.Resources>
 											<ToggleButton IsChecked="{Binding Alignment, Converter={StaticResource enumBoolConverter}, ConverterParameter=TopLeft}" />
 											<ToggleButton IsChecked="{Binding Alignment, Converter={StaticResource enumBoolConverter}, ConverterParameter=TopCenter}" />
 											<ToggleButton IsChecked="{Binding Alignment, Converter={StaticResource enumBoolConverter}, ConverterParameter=TopRight}" />
@@ -326,28 +331,39 @@
 											<RowDefinition Height="auto" />
 										</Grid.RowDefinitions>
 										<Grid.ColumnDefinitions>
-											<ColumnDefinition Width="1*" />
+											<ColumnDefinition Width="*" />
 											<ColumnDefinition Width="auto" />
-											<ColumnDefinition Width="1*" />
+											<ColumnDefinition Width="*" />
 											<ColumnDefinition Width="auto" />
-											<ColumnDefinition Width="1*" />
+											<ColumnDefinition Width="*" />
 											<ColumnDefinition Width="auto" />
-											<ColumnDefinition Width="2*" />
+											<ColumnDefinition Width="*" />
+											<ColumnDefinition Width="auto" />
 											<ColumnDefinition Width="auto" />
 										</Grid.ColumnDefinitions>
-										<Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="8" Content="{Binding Label}" />
+										<Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="9">
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="*" />
+												<ColumnDefinition Width="auto" />
+											</Grid.ColumnDefinitions>
+											<Label Grid.Column="0" Content="{Binding Label}" />
+											<Label Grid.Column="1" Visibility="{Binding ShowDefault, Converter={StaticResource BooleanToVisibilityConverter}}">
+												<Hyperlink FontWeight="Normal" Command="{Binding SetDefaultCommand}">Reset Default</Hyperlink>
+											</Label>
+										</Grid>
 										<ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Values12}" SelectedItem="{Binding Hours}" />
 										<TextBlock Grid.Row="1" Grid.Column="1" Margin="4,0" FontSize="16" VerticalAlignment="Bottom">:</TextBlock>
 										<ComboBox Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Values60}" SelectedItem="{Binding Minutes}" />
 										<TextBlock Grid.Row="1" Grid.Column="3" Margin="4,0" FontSize="16" VerticalAlignment="Bottom">:</TextBlock>
 										<ComboBox Grid.Row="1" Grid.Column="4" ItemsSource="{Binding Values60}" SelectedItem="{Binding Seconds}" />
 										<TextBlock Grid.Row="1" Grid.Column="5" Margin="4,0" FontSize="16" VerticalAlignment="Bottom">.</TextBlock>
-										<mah:NumericUpDown Grid.Row="1" Grid.Column="6" Minimum="0" Maximum="999" Value="{Binding Milliseconds}" />
-										<Button Grid.Row="1" Grid.Column="7" Margin="4,0,0,0" ToolTip="Reset to default"
-												Command="{Binding SetDefaultCommand}"
-												Visibility="{Binding ShowDefault, Converter={StaticResource BooleanToVisibilityConverter}}">
-											<ic:PackIconFontAwesome Kind="HistorySolid" />
-										</Button>
+										<TextBox Grid.Row="1" Grid.Column="6" Text="{Binding Milliseconds}" />
+										<controls:CountingRepeatButton Grid.Row="1" Grid.Column="7" Margin="4,0,0,0" Interval="20" Command="{Binding IncreaseCommand}" VerticalContentAlignment="Center" Style="{StaticResource MahApps.Styles.Button}">
+											<Path Width="14" Height="14" Data="F1 M 35,19L 41,19L 41,35L 57,35L 57,41L 41,41L 41,57L 35,57L 35,41L 19,41L 19,35L 35,35L 35,19 Z" Fill="{Binding Path=Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=RepeatButton}}" Stretch="Fill" />
+										</controls:CountingRepeatButton>
+										<controls:CountingRepeatButton Grid.Row="1" Grid.Column="8" Margin="4,0,0,0" Interval="20" Command="{Binding DecreaseCommand}" VerticalContentAlignment="Center" Style="{StaticResource MahApps.Styles.Button}">
+											<Path Width="14" Height="3" Data="F1 M 19,38L 57,38L 57,44L 19,44L 19,38 Z" Fill="{Binding Path=Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=RepeatButton}}" Stretch="Fill" />
+										</controls:CountingRepeatButton>
 									</Grid>
 								</DataTemplate>
 								<DataTemplate DataType="{x:Type vmc:ColorPropertyViewModel}">

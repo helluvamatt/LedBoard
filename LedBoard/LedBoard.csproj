@@ -60,6 +60,7 @@
     <Compile Include="Controls\ColorPicker.xaml.cs">
       <DependentUpon>ColorPicker.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CountingRepeatButton.cs" />
     <Compile Include="Controls\TimelineDropAdorner.cs" />
     <Compile Include="Controls\TimelineItem.cs" />
     <Compile Include="Controls\TimelineItemMoveAdorner.cs" />
