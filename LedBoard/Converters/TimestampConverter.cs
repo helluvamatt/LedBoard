@@ -1,0 +1,20 @@
+﻿using System;
+using System.Globalization;
+using System.Windows.Data;
+
+namespace LedBoard.Converters
+{
+	public class TimestampConverter : IValueConverter
+	{
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			TimeSpan ts = TimeSpan.FromMilliseconds((double)value);
+			return ts.ToString(@"hh\:mm\:ss\ fff");
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotImplementedException();
+		}
+	}
+}

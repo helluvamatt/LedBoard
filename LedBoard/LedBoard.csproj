@@ -75,6 +75,7 @@
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\PureHueConverter.cs" />
     <Compile Include="Converters\TimelineWidthConverter.cs" />
+    <Compile Include="Converters\TimestampConverter.cs" />
     <Compile Include="ICheckDirty.cs" />
     <Compile Include="Interop\User32.cs" />
     <Compile Include="Models\DoubleDescriptor.cs" />
@@ -179,6 +180,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <Resource Include="FontData\DSEG7ClassicMini-Regular.ttf" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
