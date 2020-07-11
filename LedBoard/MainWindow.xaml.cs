@@ -38,14 +38,15 @@ namespace LedBoard
 			_ResourcesService = new ProjectResourcesService(Path.Combine(Path.GetTempPath(), "LedBoard"));
 			SaveProjectCommand = new DelegateCommand(async () => await OnSaveProject(), () => Sequencer != null && (Sequencer.Sequence.IsDirty || IsConfigurationDifferent()));
 			SaveProjectAsCommand = new DelegateCommand(async () => await OnSaveProjectAs(), () => Sequencer != null);
-			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Zoom < MaxZoom);
-			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Zoom > MinZoom);
+			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Settings.Default.TimelineZoom < MaxZoom);
+			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Settings.Default.TimelineZoom > MinZoom);
 			ExportCommand = new DelegateCommand(() => IsExportOpen = true, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
 			ExportRenderCommand = new DelegateCommand(OnExportRender, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero && ExportFormat != null && !string.IsNullOrWhiteSpace(ExportPath));
 			ExportCancelCommand = new DelegateCommand(() => IsExportOpen = false);
 			InitializeComponent();
 			ExportFormat = ((ExportFormatDescriptor[])Resources["ExportFormatOptions"]).FirstOrDefault();
 			_ZoomValues = ((DoubleDescriptor[])Resources["BoardZoomOptions"]).Select(dd => dd.Value).ToArray();
+			Settings.Default.PropertyChanged += OnSettingsPropertyChanged;
 		}
 
 		#region Commands
@@ -59,6 +60,9 @@ namespace LedBoard
 		public ICommand ExportCancelCommand { get; }
 
 		#endregion
+
+		public double MinZoom => 0.05;
+		public double MaxZoom => 1;
 
 		#region Dependency properties
 
@@ -94,45 +98,10 @@ namespace LedBoard
 			}
 			if (e.NewValue is SequencerViewModel newSequencer)
 			{
+				newSequencer.Sequence.Loop = Settings.Default.IsLooping;
 				newSequencer.Sequence.PropertyChanged += window.OnSequencePropertyChanged;
 				newSequencer.SelectedItemChanged += window.OnSelectedItemChanged;
 			}
-		}
-
-		#endregion
-
-		#region NewBoardWidth
-
-		public static readonly DependencyProperty NewBoardWidthProperty = DependencyProperty.Register(nameof(NewBoardWidth), typeof(int), typeof(MainWindow), new PropertyMetadata(64));
-
-		public int NewBoardWidth
-		{
-			get => (int)GetValue(NewBoardWidthProperty);
-			set => SetValue(NewBoardWidthProperty, value);
-		}
-
-		#endregion
-
-		#region NewBoardHeight
-
-		public static readonly DependencyProperty NewBoardHeightProperty = DependencyProperty.Register(nameof(NewBoardHeight), typeof(int), typeof(MainWindow), new PropertyMetadata(16));
-
-		public int NewBoardHeight
-		{
-			get => (int)GetValue(NewBoardHeightProperty);
-			set => SetValue(NewBoardHeightProperty, value);
-		}
-
-		#endregion
-
-		#region NewFrameRate
-
-		public static readonly DependencyProperty NewFrameRateProperty = DependencyProperty.Register(nameof(NewFrameRate), typeof(int), typeof(MainWindow), new PropertyMetadata(50));
-
-		public int NewFrameRate
-		{
-			get => (int)GetValue(NewFrameRateProperty);
-			set => SetValue(NewFrameRateProperty, value);
 		}
 
 		#endregion
@@ -145,21 +114,6 @@ namespace LedBoard
 		{
 			get => (bool)GetValue(IsProjectSettingsOpenProperty);
 			set => SetValue(IsProjectSettingsOpenProperty, value);
-		}
-
-		#endregion
-
-		#region Zoom
-
-		public double MinZoom => 0.05;
-		public double MaxZoom => 1;
-
-		public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(MainWindow), new PropertyMetadata(0.2));
-
-		public double Zoom
-		{
-			get => (double)GetValue(ZoomProperty);
-			set => SetValue(ZoomProperty, value);
 		}
 
 		#endregion
@@ -184,18 +138,6 @@ namespace LedBoard
 		{
 			get => (double)GetValue(TransitionHeightProperty);
 			set => SetValue(TransitionHeightProperty, value);
-		}
-
-		#endregion
-
-		#region BoardZoom
-
-		public static readonly DependencyProperty BoardZoomProperty = DependencyProperty.Register(nameof(BoardZoom), typeof(double), typeof(MainWindow), new PropertyMetadata(1.0));
-
-		public double BoardZoom
-		{
-			get => (double)GetValue(BoardZoomProperty);
-			set => SetValue(BoardZoomProperty, value);
 		}
 
 		#endregion
@@ -309,6 +251,14 @@ namespace LedBoard
 			}
 		}
 
+		private void OnSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			if (e.PropertyName == nameof(Settings.IsLooping))
+			{
+				if (Sequencer != null) Sequencer.Sequence.Loop = Settings.Default.IsLooping;
+			}
+		}
+
 		private void OnProjectSettingsClick(object sender, RoutedEventArgs e)
 		{
 			IsProjectSettingsOpen = true;
@@ -322,7 +272,7 @@ namespace LedBoard
 				if ((!doSave.HasValue) || (doSave.Value && !await OnSaveProject())) return;
 			}
 
-			Sequencer = new SequencerViewModel(this, _ResourcesService, NewBoardWidth, NewBoardHeight, NewFrameRate);
+			Sequencer = new SequencerViewModel(this, _ResourcesService, Settings.Default.NewBoardWidth, Settings.Default.NewBoardHeight, Settings.Default.NewFrameRate);
 			IsProjectSettingsOpen = false;
 			ProjectPath = null;
 		}
@@ -479,17 +429,17 @@ namespace LedBoard
 
 		private void OnZoomOut()
 		{
-			Zoom = Math.Max(MinZoom, Zoom - 0.05);
+			Settings.Default.TimelineZoom = Math.Max(MinZoom, Settings.Default.TimelineZoom - 0.05);
 		}
 
 		private void OnZoomIn()
 		{
-			Zoom = Math.Min(MaxZoom, Zoom + 0.05);
+			Settings.Default.TimelineZoom = Math.Min(MaxZoom, Settings.Default.TimelineZoom + 0.05);
 		}
 
 		private void OnBoardContainerMouseWheel(object sender, MouseWheelEventArgs e)
 		{
-			int index = Array.IndexOf(_ZoomValues, BoardZoom);
+			int index = Array.IndexOf(_ZoomValues, Settings.Default.BoardZoom);
 			if (e.Delta > 0)
 			{
 				index++;
@@ -500,7 +450,7 @@ namespace LedBoard
 				index--;
 				if (index < 0) index = 0;
 			}
-			BoardZoom = _ZoomValues[index];
+			Settings.Default.BoardZoom = _ZoomValues[index];
 			e.Handled = true;
 		}
 
@@ -525,7 +475,7 @@ namespace LedBoard
 				{
 					// Compute the scroll offset
 					var widthConverter = (TimelineWidthConverter)Resources["timelineWidthConverter"];
-					double positionOfCaret = (double)widthConverter.Convert(new object[] { Sequencer.Sequence.CurrentTime, Zoom, }, typeof(double), null, null);
+					double positionOfCaret = (double)widthConverter.Convert(new object[] { Sequencer.Sequence.CurrentTime, Settings.Default.TimelineZoom, }, typeof(double), null, null);
 					double leftOffsetThreshold = positionOfCaret - timelineScroller.ViewportWidth * 0.9;
 					double rightOffsetThreshold = positionOfCaret - timelineScroller.ViewportWidth * 0.1;
 					if (timelineScroller.HorizontalOffset < leftOffsetThreshold) timelineScroller.ScrollToHorizontalOffset(leftOffsetThreshold);
@@ -652,22 +602,22 @@ namespace LedBoard
 			}
 		}
 
-		private bool IsConfigurationDifferent() => Sequencer.Sequence.BoardWidth != NewBoardWidth || Sequencer.Sequence.BoardHeight != NewBoardHeight || Sequencer.Sequence.FrameDelay.TotalMilliseconds != NewFrameRate;
+		private bool IsConfigurationDifferent() => Sequencer.Sequence.BoardWidth != Settings.Default.NewBoardWidth || Sequencer.Sequence.BoardHeight != Settings.Default.NewBoardHeight || Sequencer.Sequence.FrameDelay.TotalMilliseconds != Settings.Default.NewFrameRate;
 
 		private void ConfigureSequencerIfNeeded()
 		{
 			if (IsConfigurationDifferent())
 			{
-				Sequencer.Configure(NewBoardWidth, NewBoardHeight, NewFrameRate);
+				Sequencer.Configure(Settings.Default.NewBoardWidth, Settings.Default.NewBoardHeight, Settings.Default.NewFrameRate);
 			}
 		}
 
 		private void ResetConfigurationToSequencer()
 		{
 			IsProjectSettingsOpen = false;
-			NewBoardWidth = Sequencer.Sequence.BoardWidth;
-			NewBoardHeight = Sequencer.Sequence.BoardHeight;
-			NewFrameRate = (int)Sequencer.Sequence.FrameDelay.TotalMilliseconds;
+			Settings.Default.NewBoardWidth = Sequencer.Sequence.BoardWidth;
+			Settings.Default.NewBoardHeight = Sequencer.Sequence.BoardHeight;
+			Settings.Default.NewFrameRate = (int)Sequencer.Sequence.FrameDelay.TotalMilliseconds;
 		}
 
 		#endregion

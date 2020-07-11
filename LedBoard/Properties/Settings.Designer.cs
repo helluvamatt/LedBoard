@@ -94,5 +94,77 @@ namespace LedBoard.Properties {
                 this["DesktopHeight"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool IsLooping {
+            get {
+                return ((bool)(this["IsLooping"]));
+            }
+            set {
+                this["IsLooping"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("64")]
+        public int NewBoardWidth {
+            get {
+                return ((int)(this["NewBoardWidth"]));
+            }
+            set {
+                this["NewBoardWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("16")]
+        public int NewBoardHeight {
+            get {
+                return ((int)(this["NewBoardHeight"]));
+            }
+            set {
+                this["NewBoardHeight"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int NewFrameRate {
+            get {
+                return ((int)(this["NewFrameRate"]));
+            }
+            set {
+                this["NewFrameRate"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double BoardZoom {
+            get {
+                return ((double)(this["BoardZoom"]));
+            }
+            set {
+                this["BoardZoom"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.2")]
+        public double TimelineZoom {
+            get {
+                return ((double)(this["TimelineZoom"]));
+            }
+            set {
+                this["TimelineZoom"] = value;
+            }
+        }
     }
 }

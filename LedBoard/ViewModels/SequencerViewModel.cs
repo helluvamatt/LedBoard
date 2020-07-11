@@ -105,24 +105,6 @@ namespace LedBoard.ViewModels
 
 		#endregion
 
-		#region IsLooping
-
-		public static readonly DependencyProperty IsLoopingProperty = DependencyProperty.Register(nameof(IsLooping), typeof(bool), typeof(SequencerViewModel), new PropertyMetadata(false, OnIsLoopingChanged));
-
-		public bool IsLooping
-		{
-			get => (bool)GetValue(IsLoopingProperty);
-			set => SetValue(IsLoopingProperty, value);
-		}
-
-		private static void OnIsLoopingChanged(DependencyObject owner, DependencyPropertyChangedEventArgs e)
-		{
-			var vm = (SequencerViewModel)owner;
-			vm.Sequence.Loop = vm.IsLooping;
-		}
-
-		#endregion
-
 		#region SelectedStepType
 
 		public static readonly DependencyProperty SelectedStepTypeProperty = DependencyProperty.Register(nameof(SelectedStepType), typeof(StepDescriptor), typeof(SequencerViewModel), new PropertyMetadata(null));
