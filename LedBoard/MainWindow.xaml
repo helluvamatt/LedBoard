@@ -16,7 +16,7 @@
 	xmlns:vmc="clr-namespace:LedBoard.ViewModels.Config"
     mc:Ignorable="d"
 	DataContext="{Binding RelativeSource={RelativeSource Self}}"
-	Title="Led Board" ResizeMode="CanResizeWithGrip"
+	Title="Led Board" ResizeMode="CanResizeWithGrip" Icon="Assets/app.png"
 	Height="{Binding Source={x:Static p:Settings.Default}, Path=DesktopHeight, Mode=TwoWay}"
 	Width="{Binding Source={x:Static p:Settings.Default}, Path=DesktopWidth, Mode=TwoWay}"
 	Left="{Binding Source={x:Static p:Settings.Default}, Path=DesktopX, Mode=TwoWay}"
@@ -29,6 +29,7 @@
 		<c:NullToVisibilityConverter x:Key="notNullToVisibilityConverter" NotNullVisibility="Collapsed" NullVisibility="Visible" />
 		<c:EnumBoolConverter x:Key="enumBoolConverter" />
 		<c:TimestampConverter x:Key="timestampConverter" />
+		<c:FileNameConverter x:Key="filenameConverter" Mode="FileNameWithoutExtension" />
 		<x:Array x:Key="FrameRateOptions" Type="{x:Type m:IntDescriptor}">
 			<m:IntDescriptor Value="20" Text="Very Fast (50 fps)" />
 			<m:IntDescriptor Value="40" Text="Fast (25 fps)" />
@@ -120,7 +121,7 @@
 	</mah:MetroWindow.RightWindowCommands>
 	<mah:MetroWindow.Flyouts>
 		<mah:FlyoutsControl>
-			<mah:Flyout Position="Right" Theme="Light" IsModal="True" Width="300" TitleVisibility="Collapsed" CloseButtonVisibility="Collapsed" IsPinned="True" IsOpen="{Binding IsProjectSettingsOpen}">
+			<mah:Flyout Position="Left" Theme="Light" IsModal="True" Width="300" TitleVisibility="Collapsed" CloseButtonVisibility="Collapsed" IsPinned="True" IsOpen="{Binding IsProjectSettingsOpen}">
 				<DockPanel Margin="8">
 					<StackPanel Orientation="Vertical" DockPanel.Dock="Bottom">
 						<Button Margin="0,8,0,0" Command="{Binding SaveProjectCommand}" Style="{StaticResource MahApps.Styles.Button}" Visibility="{Binding Sequencer, Converter={StaticResource nullToVisibilityConverter}}">Save Project</Button>
@@ -129,8 +130,8 @@
 						<Button Margin="0,8,0,0" Click="OnLoadProjectClick" Style="{StaticResource MahApps.Styles.Button}">Open Project</Button>
 						<Button Margin="0,8,0,0" Click="OnCancelClick" Style="{StaticResource MahApps.Styles.Button}">Cancel</Button>
 					</StackPanel>
-					<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-						<StackPanel Orientation="Vertical">
+					<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+						<StackPanel Orientation="Vertical" Margin="0,0,8,0">
 							<mah:MetroHeader Header="Project Settings" mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}">
 								<StackPanel Orientation="Vertical">
 									<Label>Board Width</Label>
@@ -149,6 +150,52 @@
 									<mah:NumericUpDown Value="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="1" Maximum="20" />
 								</StackPanel>
 							</mah:MetroHeader>
+							<Grid Margin="0,8,0,0">
+								<Grid.RowDefinitions>
+									<RowDefinition Height="auto" />
+									<RowDefinition Height="auto" />
+								</Grid.RowDefinitions>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*" />
+									<ColumnDefinition Width="auto" />
+								</Grid.ColumnDefinitions>
+								<TextBlock Grid.Row="0" Grid.Column="0" Text="Recent Projects" FontSize="{StaticResource MahApps.Font.Size.Flyout.Header}" />
+								<mah:DropDownButton Grid.Row="0" Grid.Column="1" Margin="4,0,0,0">
+									<mah:DropDownButton.Icon>
+										<ic:PackIconFontAwesome Width="16" Height="16" Kind="CogSolid" />
+									</mah:DropDownButton.Icon>
+									<mah:DropDownButton.Items>
+										<MenuItem Header="Add LedBoard Project Association" Click="AddAssociationMenuItemClick" />
+										<MenuItem Header="Remove LedBoard Project Association" Click="RemoveAssociationMenuItemClick" />
+									</mah:DropDownButton.Items>
+								</mah:DropDownButton>
+								<ItemsControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,4,0,0" ItemsSource="{Binding Source={x:Static p:Settings.Default}, Path=MostRecentlyUsedProjects}">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<StackPanel Orientation="Vertical" />
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+									<ItemsControl.ItemTemplate>
+										<DataTemplate DataType="{x:Type sys:String}">
+											<Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}, Path=DataContext.OpenRecentCommand}" CommandParameter="{Binding}">
+												<Grid>
+													<Grid.ColumnDefinitions>
+														<ColumnDefinition Width="auto" />
+														<ColumnDefinition Width="*" />
+													</Grid.ColumnDefinitions>
+													<Grid.RowDefinitions>
+														<RowDefinition Height="auto" />
+														<RowDefinition Height="auto" />
+													</Grid.RowDefinitions>
+													<Image Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Source="Assets/document.png" Margin="4" />
+													<TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Converter={StaticResource filenameConverter}}" FontSize="14" FontWeight="Bold" />
+													<TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding}" Margin="0,4,0,0" />
+												</Grid>
+											</Button>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</Grid>
 						</StackPanel>
 					</ScrollViewer>
 				</DockPanel>

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 
 [assembly: AssemblyTitle("LedBoard")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("LedBoard application")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("SCHNEENET")]
 [assembly: AssemblyProduct("LedBoard")]

@@ -12,8 +12,11 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -38,6 +41,7 @@ namespace LedBoard
 			_ResourcesService = new ProjectResourcesService(Path.Combine(Path.GetTempPath(), "LedBoard"));
 			SaveProjectCommand = new DelegateCommand(async () => await OnSaveProject(), () => Sequencer != null && (Sequencer.Sequence.IsDirty || IsConfigurationDifferent()));
 			SaveProjectAsCommand = new DelegateCommand(async () => await OnSaveProjectAs(), () => Sequencer != null);
+			OpenRecentCommand = new DelegateCommand<string>(OnLoadProject);
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Settings.Default.TimelineZoom < MaxZoom);
 			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Settings.Default.TimelineZoom > MinZoom);
 			ExportCommand = new DelegateCommand(() => IsExportOpen = true, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
@@ -49,10 +53,16 @@ namespace LedBoard
 			Settings.Default.PropertyChanged += OnSettingsPropertyChanged;
 		}
 
+		public async void LoadProjectOnStartup(string project)
+		{
+			await LoadProject(project);
+		}
+
 		#region Commands
 
 		public ICommand SaveProjectCommand { get; }
 		public ICommand SaveProjectAsCommand { get; }
+		public ICommand OpenRecentCommand { get; }
 		public ICommand ZoomInCommand { get; }
 		public ICommand ZoomOutCommand { get; }
 		public ICommand ExportCommand { get; }
@@ -288,40 +298,64 @@ namespace LedBoard
 			string result = OpenFileDialog("Open Project...", "LED Board project|*.ledproj|All files|*.*");
 			if (result != null)
 			{
-				// Open progress dialog
-				var controller = await this.ShowProgressAsync("Please wait...", "Loading project...", false);
-				controller.SetIndeterminate();
-
-				await Task.Run(async () =>
-				{
-					try
-					{
-						// Asynchronously load project
-						ProjectModel project = new ProjectService(_ResourcesService).LoadProject(result);
-
-						// Back to the UI thread, create the SequencerViewModel from the project
-						Dispatcher.Invoke(() =>
-						{
-							Sequencer = new SequencerViewModel(this, _ResourcesService, project);
-							Sequencer.Sequence.GetCurrentFrame(Sequencer.CurrentBoard);
-							ProjectPath = result;
-							ResetConfigurationToSequencer();
-						});
-					}
-					catch (Exception ex)
-					{
-						ShowMessageDialog("Error", $"Failed to load project: {ex.Message}", MessageDialogIconType.Error, ex.ToString());
-					}
-
-					await controller.CloseAsync();
-				});
+				await LoadProject(result);
 			}
+		}
+
+		private async void OnLoadProject(string projectPath)
+		{
+			if (IsDirty)
+			{
+				bool? doSave = await ShowConfirmDialogCancelable("Save Project?", "You have unsaved changes to your project. Would you like to save?");
+				if ((!doSave.HasValue) || (doSave.Value && !await OnSaveProject())) return;
+			}
+
+			await LoadProject(projectPath);
+		}
+
+		private async Task LoadProject(string projectPath)
+		{
+			// Close project settings, for now
+			IsProjectSettingsOpen = false;
+
+			// Open progress dialog
+			var controller = await this.ShowProgressAsync("Please wait...", "Loading project...", false);
+			controller.SetIndeterminate();
+
+			await Task.Run(async () =>
+			{
+				try
+				{
+					// Asynchronously load project
+					ProjectModel project = new ProjectService(_ResourcesService).LoadProject(projectPath);
+
+					// Back to the UI thread, create the SequencerViewModel from the project
+					Dispatcher.Invoke(() =>
+					{
+						Sequencer = new SequencerViewModel(this, _ResourcesService, project);
+						Sequencer.Sequence.GetCurrentFrame(Sequencer.CurrentBoard);
+						ProjectPath = projectPath;
+						ResetConfigurationToSequencer();
+					});
+				}
+				catch (Exception ex)
+				{
+					IsProjectSettingsOpen = true;
+					ShowMessageDialog("Error", $"Failed to load project: {ex.Message}", MessageDialogIconType.Error, ex.ToString());
+				}
+
+				await controller.CloseAsync();
+			});
 		}
 
 		private void OnCancelClick(object sender, RoutedEventArgs e)
 		{
 			if (Sequencer == null) Close();
-			else ResetConfigurationToSequencer();
+			else
+			{
+				IsProjectSettingsOpen = false;
+				ResetConfigurationToSequencer();
+			}
 		}
 
 		private async Task<bool> OnSaveProject()
@@ -331,6 +365,7 @@ namespace LedBoard
 			bool result;
 			if (ProjectPath == null) result = await OnSaveProjectAs();
 			else result = await SaveProject(ProjectPath);
+			IsProjectSettingsOpen = false;
 			ResetConfigurationToSequencer();
 			return result;
 		}
@@ -345,6 +380,7 @@ namespace LedBoard
 				if (await SaveProject(result))
 				{
 					ProjectPath = result;
+					IsProjectSettingsOpen = false;
 					ResetConfigurationToSequencer();
 					return true;
 				}
@@ -614,7 +650,6 @@ namespace LedBoard
 
 		private void ResetConfigurationToSequencer()
 		{
-			IsProjectSettingsOpen = false;
 			Settings.Default.NewBoardWidth = Sequencer.Sequence.BoardWidth;
 			Settings.Default.NewBoardHeight = Sequencer.Sequence.BoardHeight;
 			Settings.Default.NewFrameRate = (int)Sequencer.Sequence.FrameDelay.TotalMilliseconds;
@@ -639,7 +674,12 @@ namespace LedBoard
 				};
 				_CurrentDialog = (BaseMetroDialog)Resources["MessageDialog"];
 				_CurrentDialog.DataContext = vm;
-				await this.ShowMetroDialogAsync(_CurrentDialog);
+				var settings = new MetroDialogSettings
+				{
+					AnimateShow = false,
+					AnimateHide = false,
+				};
+				await this.ShowMetroDialogAsync(_CurrentDialog, settings);
 			});
 		}
 
@@ -685,7 +725,12 @@ namespace LedBoard
 		{
 			if (_CurrentDialog != null)
 			{
-				await this.HideMetroDialogAsync(_CurrentDialog);
+				var settings = new MetroDialogSettings
+				{
+					AnimateShow = false,
+					AnimateHide = false,
+				};
+				await this.HideMetroDialogAsync(_CurrentDialog, settings);
 				_CurrentDialog = null;
 			}
 		}
@@ -748,6 +793,79 @@ namespace LedBoard
 			{
 				_Controller.SetProgress(value);
 			}
+		}
+
+		#endregion
+
+		#region Associations
+
+		private void AddAssociationMenuItemClick(object sender, RoutedEventArgs e)
+		{
+			Task.Run(() => RunAssociation(false));
+		}
+
+		private void RemoveAssociationMenuItemClick(object sender, RoutedEventArgs e)
+		{
+			Task.Run(() => RunAssociation(true));
+		}
+
+		private void RunAssociation(bool remove)
+		{
+			var lines = new List<string>();
+			bool hasError = false;
+			try
+			{
+				string pipeName = $"LedBoard_{Guid.NewGuid()}";
+				using (var s = new NamedPipeServerStream(pipeName, PipeDirection.In))
+				{
+					StringBuilder argumentBuilder = new StringBuilder();
+					if (remove) argumentBuilder.Append("--remove ");
+					argumentBuilder.Append($"--pipe \"{pipeName}\"");
+
+					var psi = new ProcessStartInfo("LedBoard.RegistryTool.exe")
+					{
+						Verb = "runas",
+						UseShellExecute = true,
+						WindowStyle = ProcessWindowStyle.Hidden,
+						Arguments = argumentBuilder.ToString()
+					};
+					using (var process = Process.Start(psi))
+					{
+						s.WaitForConnection();
+						using (var reader = new StreamReader(s))
+						{
+							string line;
+							while ((line = reader.ReadLine()) != null)
+							{
+								if (line.StartsWith("E:"))
+								{
+									lines.Add(line.Substring(2));
+									hasError = true;
+								}
+								else lines.Add(line);
+							}
+						}
+						process.WaitForExit();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				lines.Add($"Failed to run association utility: {ex.Message}");
+				hasError = true;
+			}
+			string message;
+			if (remove)
+			{
+				if (hasError) message = "There was a problem removing the project association from the registry.";
+				else message = "Successfully removed the project association from the registry.";
+			}
+			else
+			{
+				if (hasError) message = "There was a problem setting the project association in the registry.";
+				else message = "Successfully set the project associatiion in the registry.";
+			}
+			ShowMessageDialog(hasError ? "Error" : "Success", message, hasError ? MessageDialogIconType.Error : MessageDialogIconType.Info, string.Join("\r\n", lines));
 		}
 
 		#endregion
