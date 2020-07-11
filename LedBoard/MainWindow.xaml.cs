@@ -1,6 +1,7 @@
 ﻿using LedBoard.Converters;
 using LedBoard.Models;
 using LedBoard.Models.Serialization;
+using LedBoard.Properties;
 using LedBoard.Services;
 using LedBoard.Services.Export;
 using LedBoard.Services.Resources;
@@ -47,6 +48,8 @@ namespace LedBoard
 			_ZoomValues = ((DoubleDescriptor[])Resources["BoardZoomOptions"]).Select(dd => dd.Value).ToArray();
 		}
 
+		#region Commands
+
 		public ICommand SaveProjectCommand { get; }
 		public ICommand SaveProjectAsCommand { get; }
 		public ICommand ZoomInCommand { get; }
@@ -54,6 +57,8 @@ namespace LedBoard
 		public ICommand ExportCommand { get; }
 		public ICommand ExportRenderCommand { get; }
 		public ICommand ExportCancelCommand { get; }
+
+		#endregion
 
 		#region Dependency properties
 
@@ -191,30 +196,6 @@ namespace LedBoard
 		{
 			get => (double)GetValue(BoardZoomProperty);
 			set => SetValue(BoardZoomProperty, value);
-		}
-
-		#endregion
-
-		#region DotPitch
-
-		public static readonly DependencyProperty DotPitchProperty = DependencyProperty.Register(nameof(DotPitch), typeof(int), typeof(MainWindow), new PropertyMetadata(2));
-
-		public int DotPitch
-		{
-			get => (int)GetValue(DotPitchProperty);
-			set => SetValue(DotPitchProperty, value);
-		}
-
-		#endregion
-
-		#region PixelSize
-
-		public static readonly DependencyProperty PixelSizeProperty = DependencyProperty.Register(nameof(PixelSize), typeof(int), typeof(MainWindow), new PropertyMetadata(5));
-
-		public int PixelSize
-		{
-			get => (int)GetValue(PixelSizeProperty);
-			set => SetValue(PixelSizeProperty, value);
 		}
 
 		#endregion
@@ -626,8 +607,8 @@ namespace LedBoard
 			// Extract properties to locals
 			var exportPath = ExportPath;
 			var exportZoom = ExportZoom;
-			var dotPitch = DotPitch;
-			var pixelSize = PixelSize;
+			var dotPitch = Properties.Settings.Default.DotPitch;
+			var pixelSize = Properties.Settings.Default.PixelSize;
 			var frameDelay = Sequencer.Sequence.FrameDelay;
 			var exportFormat = ExportFormat.Value;
 
