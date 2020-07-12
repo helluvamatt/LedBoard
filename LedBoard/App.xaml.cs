@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using LedBoard.ViewModels;
+using System.Windows;
 
 namespace LedBoard
 {
@@ -10,10 +11,10 @@ namespace LedBoard
 		protected override void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
-			MainWindow = new MainWindow();
+			MainWindow = new MasterWindow();
 			if (e.Args.Length > 0)
 			{
-				((MainWindow)MainWindow).LoadProjectOnStartup(e.Args[0]);
+				((ShellViewModel)MainWindow.DataContext).LoadProjectOnStartup(e.Args[0]);
 			}
 			MainWindow.Show();
 		}

@@ -698,13 +698,15 @@ namespace LedBoard
 			});
 		}
 
-		public string SaveFileDialog(string title, string filters, string initialDirectory = null)
+		public string SaveFileDialog(string title, string filters, string defaultExt = null, bool overwritePrompt = true, string initialDirectory = null)
 		{
 			return Dispatcher.Invoke(() =>
 			{
 				var sfd = new SaveFileDialog
 				{
 					Filter = filters,
+					DefaultExt = defaultExt,
+					OverwritePrompt = overwritePrompt,
 					InitialDirectory = initialDirectory,
 					Title = title,
 				};
@@ -748,7 +750,7 @@ namespace LedBoard
 			return (await this.ShowMessageAsync(title, message, MessageDialogStyle.AffirmativeAndNegative, settings)) == MessageDialogResult.Affirmative;
 		}
 
-		private async Task<bool?> ShowConfirmDialogCancelable(string title, string message, string affirmativeBtnText = null, string negativeBtnText = null, string auxBtnText = null)
+		public async Task<bool?> ShowConfirmDialogCancelable(string title, string message, string affirmativeBtnText = null, string negativeBtnText = null, string auxBtnText = null)
 		{
 			var settings = new MetroDialogSettings
 			{
@@ -764,6 +766,50 @@ namespace LedBoard
 			return result == MessageDialogResult.Affirmative;
 		}
 
+		public async Task<IProgressController> ShowProgressDialogAsync(string title, string message, bool cancelable)
+		{
+			// Open progress dialog
+			var settings = new MetroDialogSettings
+			{
+				AnimateShow = false,
+				AnimateHide = false,
+				NegativeButtonText = "Cancel"
+			};
+			var controller = await this.ShowProgressAsync(title, message, cancelable, settings);
+			return new ProgressHandler(controller);
+		}
+
+		private class ProgressHandler : IProgressController
+		{
+			private readonly ProgressDialogController _Controller;
+
+			public ProgressHandler(ProgressDialogController controller)
+			{
+				_Controller = controller;
+			}
+
+			public event EventHandler Canceled
+			{
+				add => _Controller.Canceled += value;
+				remove => _Controller.Canceled -= value;
+			}
+
+			public async Task CloseAsync()
+			{
+				await _Controller.CloseAsync();
+			}
+
+			public void Report(double value)
+			{
+				_Controller.SetProgress(value);
+			}
+
+			public void SetIndeterminate()
+			{
+				_Controller.SetIndeterminate();
+			}
+		}
+
 		#endregion
 
 		#region ICheckDirty impl
@@ -774,25 +820,6 @@ namespace LedBoard
 		{
 			bool? doSave = await ShowConfirmDialogCancelable("Save Project?", "You have unsaved changes to your project. Would you like to save?");
 			if ((!doSave.HasValue) || (doSave.Value && !await OnSaveProject())) return;
-		}
-
-		#endregion
-
-		#region Export handler
-
-		private class ProgressHandler : IProgress<double>
-		{
-			private readonly ProgressDialogController _Controller;
-
-			public ProgressHandler(ProgressDialogController controller)
-			{
-				_Controller = controller;
-			}
-
-			public void Report(double value)
-			{
-				_Controller.SetProgress(value);
-			}
 		}
 
 		#endregion

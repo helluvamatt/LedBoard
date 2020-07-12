@@ -60,6 +60,18 @@ namespace LedBoard.Controls
 
 		public DataTemplate TransitionTemplate { get; set; }
 
+		#region DeleteCommand
+
+		public static readonly DependencyProperty DeleteCommandProperty = DependencyProperty.Register(nameof(DeleteCommand), typeof(ICommand), typeof(TimelineControl), new PropertyMetadata(null));
+
+		public ICommand DeleteCommand
+		{
+			get => (ICommand)GetValue(DeleteCommandProperty);
+			set => SetValue(DeleteCommandProperty, value);
+		}
+
+		#endregion
+
 		#region AdornerColor
 
 		public static readonly DependencyProperty AdornerColorProperty = DependencyProperty.Register(nameof(AdornerColor), typeof(Color), typeof(TimelineControl), new PropertyMetadata(Colors.Black));
@@ -445,6 +457,16 @@ namespace LedBoard.Controls
 		{
 			base.OnRenderSizeChanged(sizeInfo);
 			_PlaybackAdorner.Height = ActualHeight;
+		}
+
+		protected override void OnPreviewKeyUp(KeyEventArgs e)
+		{
+			if (e.Key == Key.Delete)
+			{
+				DeleteCommand?.Execute(null);
+				e.Handled = true;
+			}
+			base.OnPreviewKeyUp(e);
 		}
 
 		#endregion
