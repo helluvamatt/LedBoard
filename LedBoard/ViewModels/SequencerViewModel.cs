@@ -288,19 +288,23 @@ namespace LedBoard.ViewModels
 			bool hasMore;
 			DateTime start;
 			DateTime end;
+			TimeSpan renderDelay;
 			while (_CancelController != null && !_CancelController.IsCancellationRequested)
 			{
 				start = DateTime.Now;
 				hasMore = Sequence.Advance();
 				end = DateTime.Now;
-				var renderDelay = end - start;
+				renderDelay = Sequence.FrameDelay - (end - start);
 				if (hasMore || Sequence.Loop)
 				{
-					try
+					if (renderDelay > TimeSpan.Zero)
 					{
-						await Task.Delay(Sequence.FrameDelay - renderDelay, _CancelController.Token);
+						try
+						{
+							await Task.Delay(renderDelay, _CancelController.Token);
+						}
+						catch (OperationCanceledException) { } // Eat, we are pausing
 					}
-					catch (OperationCanceledException) { } // Eat, we are pausing
 					if (!hasMore && Sequence.Loop) Sequence.CurrentTime = 0;
 				}
 				else break;

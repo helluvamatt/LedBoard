@@ -51,7 +51,9 @@ namespace LedBoard.Services.Rendering
 							r = (byte)((pixel >> 0) & 0xFF); // B
 							g = (byte)((pixel >> 8) & 0xFF); // G
 							b = (byte)((pixel >> 16) & 0xFF); // R
-							if (r < minPixelBrightness && g < minPixelBrightness && b < minPixelBrightness) r = g = b = minPixelBrightness;
+							if (r < minPixelBrightness) r = minPixelBrightness;
+							if (g < minPixelBrightness) g = minPixelBrightness;
+							if (b < minPixelBrightness) b = minPixelBrightness;
 							_Buffer[y * _CachedStride + x * 3 + 0] = r;
 							_Buffer[y * _CachedStride + x * 3 + 1] = g;
 							_Buffer[y * _CachedStride + x * 3 + 2] = b;
