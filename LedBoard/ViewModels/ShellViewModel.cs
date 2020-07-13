@@ -105,7 +105,7 @@ namespace LedBoard.ViewModels
 
 		#endregion
 
-		public event PropertyChangedEventHandler SequencerPropertyChanged;
+		public event PropertyChangedEventHandler SequencePropertyChanged;
 
 		public double MinZoom => 0.05;
 		public double MaxZoom => 1;
@@ -159,6 +159,9 @@ namespace LedBoard.ViewModels
 				newSequencer.Sequence.Loop = Settings.Default.IsLooping;
 				newSequencer.Sequence.PropertyChanged += vm.OnSequencePropertyChanged;
 				newSequencer.SelectedItemChanged += vm.OnSelectedItemChanged;
+
+				// Inform application of IsDirty status immediately
+				vm.OnSequencePropertyChanged(vm, new PropertyChangedEventArgs(nameof(Sequence.IsDirty)));
 			}
 		}
 
@@ -267,7 +270,7 @@ namespace LedBoard.ViewModels
 
 		private void OnSequencePropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			SequencerPropertyChanged?.Invoke(sender, e);
+			SequencePropertyChanged?.Invoke(sender, e);
 		}
 
 		private void Navigate(string uri)
@@ -362,7 +365,6 @@ namespace LedBoard.ViewModels
 			bool result;
 			if (ProjectPath == null) result = await OnSaveProjectAs();
 			else result = await SaveProject(ProjectPath);
-			Navigate("Views/ProjectPage.xaml");
 			ResetConfigurationToSequencer();
 			return result;
 		}
@@ -377,7 +379,6 @@ namespace LedBoard.ViewModels
 				if (await SaveProject(result))
 				{
 					ProjectPath = result;
-					Navigate("Views/ProjectPage.xaml");
 					ResetConfigurationToSequencer();
 					return true;
 				}

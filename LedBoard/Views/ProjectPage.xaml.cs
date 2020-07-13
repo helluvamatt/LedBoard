@@ -38,8 +38,8 @@ namespace LedBoard.Views
 
 		private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
 		{
-			if (e.OldValue is ShellViewModel oldVm) oldVm.SequencerPropertyChanged -= OnSequencePropertyChanged;
-			if (e.NewValue is ShellViewModel newVm) newVm.SequencerPropertyChanged += OnSequencePropertyChanged;
+			if (e.OldValue is ShellViewModel oldVm) oldVm.SequencePropertyChanged -= OnSequencePropertyChanged;
+			if (e.NewValue is ShellViewModel newVm) newVm.SequencePropertyChanged += OnSequencePropertyChanged;
 		}
 
 		private void OnSequencePropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -56,22 +56,6 @@ namespace LedBoard.Views
 					double rightOffsetThreshold = positionOfCaret - timelineScroller.ViewportWidth * 0.1;
 					if (timelineScroller.HorizontalOffset < leftOffsetThreshold) timelineScroller.ScrollToHorizontalOffset(leftOffsetThreshold);
 					else if (timelineScroller.HorizontalOffset > rightOffsetThreshold) timelineScroller.ScrollToHorizontalOffset(rightOffsetThreshold);
-				});
-			}
-			else if (e.PropertyName == nameof(Sequence.IsDirty))
-			{
-				Dispatcher.Invoke(() =>
-				{
-					var dc = (ShellViewModel)DataContext;
-					var window = this.TryFindParent<Window>();
-					if (dc.IsDirty)
-					{
-						Interop.User32.ShutdownBlockReasonCreate(new WindowInteropHelper(window).Handle, "You have unsaved changes to your project.");
-					}
-					else
-					{
-						Interop.User32.ShutdownBlockReasonDestroy(new WindowInteropHelper(window).Handle);
-					}
 				});
 			}
 

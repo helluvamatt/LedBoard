@@ -1,4 +1,5 @@
-﻿using LedBoard.Services;
+﻿using LedBoard.Models;
+using LedBoard.Services;
 using LedBoard.Services.Resources;
 using LedBoard.ViewModels;
 using MahApps.Metro.Controls;
@@ -6,6 +7,7 @@ using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,6 +17,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -32,6 +35,7 @@ namespace LedBoard
 		{
 			_ResourcesService = new ProjectResourcesService(Path.Combine(Path.GetTempPath(), "LedBoard"));
 			DataContext = new ShellViewModel(this, _ResourcesService);
+			((ShellViewModel)DataContext).SequencePropertyChanged += OnSequencePropertyChanged;
 			InitializeComponent();
 		}
 
@@ -47,6 +51,25 @@ namespace LedBoard
 			if (frame.Content is FrameworkElement content)
 			{
 				content.DataContext = DataContext;
+			}
+		}
+
+		private void OnSequencePropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			if (e.PropertyName == nameof(Sequence.IsDirty))
+			{
+				Dispatcher.Invoke(() =>
+				{
+					var dc = (ShellViewModel)DataContext;
+					if (dc.IsDirty)
+					{
+						Interop.User32.ShutdownBlockReasonCreate(new WindowInteropHelper(this).Handle, "You have unsaved changes to your project.");
+					}
+					else
+					{
+						Interop.User32.ShutdownBlockReasonDestroy(new WindowInteropHelper(this).Handle);
+					}
+				});
 			}
 		}
 
