@@ -91,8 +91,8 @@
     <Compile Include="ICheckDirty.cs" />
     <Compile Include="Interop\Shell32.cs" />
     <Compile Include="Interop\User32.cs" />
-    <Compile Include="MasterWindow.xaml.cs">
-      <DependentUpon>MasterWindow.xaml</DependentUpon>
+    <Compile Include="AppWindow.xaml.cs">
+      <DependentUpon>AppWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\DoubleDescriptor.cs" />
     <Compile Include="Models\ExportFormatDescriptor.cs" />
@@ -171,21 +171,13 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="E131Server.cs" />
     <Compile Include="Controls\LedBoardControl.cs" />
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Page Include="MasterWindow.xaml">
+    <Page Include="AppWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

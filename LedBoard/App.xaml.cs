@@ -11,7 +11,7 @@ namespace LedBoard
 		protected override void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
-			MainWindow = new MasterWindow();
+			MainWindow = new AppWindow();
 			if (e.Args.Length > 0)
 			{
 				((ShellViewModel)MainWindow.DataContext).LoadProjectOnStartup(e.Args[0]);

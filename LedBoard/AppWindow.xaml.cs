@@ -24,11 +24,11 @@ namespace LedBoard
 	/// <summary>
 	/// Interaction logic for MasterWindow.xaml
 	/// </summary>
-	public partial class MasterWindow : MetroWindow, IDialogService
+	public partial class AppWindow : MetroWindow, IDialogService
 	{
 		private readonly ProjectResourcesService _ResourcesService;
 
-		public MasterWindow()
+		public AppWindow()
 		{
 			_ResourcesService = new ProjectResourcesService(Path.Combine(Path.GetTempPath(), "LedBoard"));
 			DataContext = new ShellViewModel(this, _ResourcesService);
