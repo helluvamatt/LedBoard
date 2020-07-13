@@ -19,7 +19,9 @@
 		<Border Grid.Row="0" Background="Black">
 			<controls:LedBoardControl Margin="8" Stretch="Uniform" StretchDirection="Both" ZoomMode="FitContentToSize"
 									  RenderOptions.BitmapScalingMode="NearestNeighbor"
-									  DotPitch="{Binding Source={x:Static p:Settings.Default}, Path=DotPitch}" PixelSize="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}"
+									  DotPitch="{Binding Source={x:Static p:Settings.Default}, Path=DotPitch}"
+									  PixelSize="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}"
+									  MinPixelBrightness="{Binding Source={x:Static p:Settings.Default}, Path=MinPixelBrightness}"
 									  CurrentBoard="{Binding Sequencer.CurrentBoard}" />
 		</Border>
 		<Border Grid.Row="1" Background="{StaticResource MahApps.Brushes.Gray1}">

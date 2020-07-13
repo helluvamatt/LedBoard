@@ -16,16 +16,18 @@ namespace LedBoard.Services.Export
 		private readonly int _Scale;
 		private readonly int _DotPitch;
 		private readonly int _PixelSize;
+		private readonly byte _MinPixelBrightness;
 
 		private int _FrameIndex;
 
-		public PngExporter(string filePath, int scale, int dotPitch, int pixelSize)
+		public PngExporter(string filePath, int scale, int dotPitch, int pixelSize, byte minPixelBrightness)
 		{
 			_Renderer = new BoardRenderer();
 			_FilePath = filePath;
 			_Scale = scale;
 			_DotPitch = dotPitch;
 			_PixelSize = pixelSize;
+			_MinPixelBrightness = minPixelBrightness;
 			_FrameIndex = 0;
 		}
 
@@ -33,7 +35,7 @@ namespace LedBoard.Services.Export
 		{
 			// Render frame
 			var bitmap = _Renderer.CreateWriteableBitmap(frame.Width, frame.Height, _DotPitch, _PixelSize);
-			_Renderer.RenderBoard(frame, bitmap, _DotPitch, _PixelSize);
+			_Renderer.RenderBoard(frame, bitmap, _DotPitch, _PixelSize, _MinPixelBrightness);
 
 			// Resize if necessary
 			BitmapSource resized = bitmap;

@@ -69,6 +69,18 @@ namespace LedBoard.Controls
 
 		#endregion
 
+		#region MinPixelBrightness
+
+		public static readonly DependencyProperty MinPixelBrightnessProperty = DependencyProperty.Register(nameof(MinPixelBrightness), typeof(byte), typeof(LedBoardControl), new PropertyMetadata((byte)0));
+
+		public byte MinPixelBrightness
+		{
+			get => (byte)GetValue(MinPixelBrightnessProperty);
+			set => SetValue(MinPixelBrightnessProperty, value);
+		}
+
+		#endregion
+
 		#region Zoom
 
 		public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(LedBoardControl), new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
@@ -175,7 +187,7 @@ namespace LedBoard.Controls
 				{
 					Source = _Bitmap = _Renderer.CreateWriteableBitmap(CurrentBoard.Width, CurrentBoard.Height, DotPitch, PixelSize);
 				}
-				_Renderer.RenderBoard(CurrentBoard, _Bitmap, DotPitch, PixelSize);
+				_Renderer.RenderBoard(CurrentBoard, _Bitmap, DotPitch, PixelSize, MinPixelBrightness);
 			}
 			else
 			{

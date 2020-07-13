@@ -577,6 +577,7 @@ namespace LedBoard.ViewModels
 			var exportZoom = ExportZoom;
 			var dotPitch = Settings.Default.DotPitch;
 			var pixelSize = Settings.Default.PixelSize;
+			var minPixelBrightness = Settings.Default.MinPixelBrightness;
 			var frameDelay = Sequencer.Sequence.FrameDelay;
 			var exportFormat = ExportFormat.Value;
 
@@ -595,10 +596,10 @@ namespace LedBoard.ViewModels
 						switch (exportFormat)
 						{
 							case Models.ExportFormat.GIF:
-								exporter = new GifExporter(exportPath, exportZoom, dotPitch, pixelSize, frameDelay);
+								exporter = new GifExporter(exportPath, exportZoom, dotPitch, pixelSize, minPixelBrightness, frameDelay);
 								break;
 							case Models.ExportFormat.PNGSeries:
-								exporter = new PngExporter(exportPath, exportZoom, dotPitch, pixelSize);
+								exporter = new PngExporter(exportPath, exportZoom, dotPitch, pixelSize, minPixelBrightness);
 								break;
 							default:
 								throw new NotImplementedException($"Unsupported export format: {exportFormat}");

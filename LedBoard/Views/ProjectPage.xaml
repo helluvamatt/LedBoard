@@ -313,7 +313,9 @@
 					<Border Background="Black" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="6">
 						<controls:LedBoardControl Margin="8" Stretch="Uniform" StretchDirection="Both" ZoomMode="FitSizeToContent" Zoom="{Binding Source={x:Static p:Settings.Default}, Path=BoardZoom}"
 												  RenderOptions.BitmapScalingMode="NearestNeighbor"
-												  DotPitch="{Binding Source={x:Static p:Settings.Default}, Path=DotPitch}" PixelSize="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}"
+												  DotPitch="{Binding Source={x:Static p:Settings.Default}, Path=DotPitch}"
+												  PixelSize="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}"
+												  MinPixelBrightness="{Binding Source={x:Static p:Settings.Default}, Path=MinPixelBrightness}"
 												  CurrentBoard="{Binding Sequencer.CurrentBoard}" />
 					</Border>
 				</ScrollViewer>

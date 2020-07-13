@@ -45,12 +45,13 @@ namespace LedBoard.Services.Export
 		private readonly int _Scale;
 		private readonly int _DotPitch;
 		private readonly int _PixelSize;
+		private readonly byte _MinPixelBrightness;
 		private readonly ushort _GifDelay;
 
 		private bool _LsdWritten;
 		private bool _AppExtWritten;
 
-		public GifExporter(string filePath, int scale, int dotPitch, int pixelSize, TimeSpan frameDelay)
+		public GifExporter(string filePath, int scale, int dotPitch, int pixelSize, byte minPixelBrightess, TimeSpan frameDelay)
 		{
 			_Renderer = new BoardRenderer();
 			_Stream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
@@ -58,6 +59,7 @@ namespace LedBoard.Services.Export
 			_Scale = scale;
 			_DotPitch = dotPitch;
 			_PixelSize = pixelSize;
+			_MinPixelBrightness = minPixelBrightess;
 			_GifDelay = (ushort)(frameDelay.TotalSeconds * 100);
 
 			// Write GIF header
@@ -81,7 +83,7 @@ namespace LedBoard.Services.Export
 
 			// Render frame
 			var bitmap = _Renderer.CreateWriteableBitmap(frame.Width, frame.Height, _DotPitch, _PixelSize);
-			_Renderer.RenderBoard(frame, bitmap, _DotPitch, _PixelSize);
+			_Renderer.RenderBoard(frame, bitmap, _DotPitch, _PixelSize, _MinPixelBrightness);
 
 			// Resize if necessary
 			BitmapSource resized = bitmap;

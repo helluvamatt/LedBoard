@@ -13,11 +13,12 @@
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
 	  d:DataContext="{d:DesignInstance Type={x:Type vm:ShellViewModel}}"
-      Title="Settings" Background="White">
+      Title="Settings">
 	<Page.Resources>
 		<c:NullToVisibilityConverter x:Key="nullToVisibilityConverter" />
 		<c:NullToVisibilityConverter x:Key="notNullToVisibilityConverter" NotNullVisibility="Collapsed" NullVisibility="Visible" />
 		<c:FileNameConverter x:Key="filenameConverter" Mode="FileNameWithoutExtension" />
+		<c:ByteToBrushConverter x:Key="byteToBrushConverter" />
 		<x:Array x:Key="FrameRateOptions" Type="{x:Type m:IntDescriptor}">
 			<m:IntDescriptor Value="20" Text="Very Fast (50 fps)" />
 			<m:IntDescriptor Value="40" Text="Fast (25 fps)" />
@@ -30,12 +31,29 @@
 		<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Left">
 			<StackPanel Orientation="Vertical" MaxWidth="300">
 				<mah:MetroHeader Header="View Settings" mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}">
-					<StackPanel Orientation="Vertical">
-						<Label>Dot Pitch</Label>
-						<mah:NumericUpDown Value="{Binding Source={x:Static p:Settings.Default}, Path=DotPitch}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" Maximum="20" />
-						<Label>Pixel Size</Label>
-						<mah:NumericUpDown Value="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="1" Maximum="20" />
-					</StackPanel>
+					<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+						<Grid>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="auto" />
+								<RowDefinition Height="auto" />
+								<RowDefinition Height="auto" />
+								<RowDefinition Height="auto" />
+								<RowDefinition Height="auto" />
+								<RowDefinition Height="auto" />
+							</Grid.RowDefinitions>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*" />
+								<ColumnDefinition Width="auto" />
+							</Grid.ColumnDefinitions>
+							<Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">Dot Pitch</Label>
+							<mah:NumericUpDown Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding Source={x:Static p:Settings.Default}, Path=DotPitch}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" Maximum="20" />
+							<Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">Pixel Size</Label>
+							<mah:NumericUpDown Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="1" Maximum="20" />
+							<Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">Minimum Pixel Brightness</Label>
+							<mah:NumericUpDown Grid.Row="5" Grid.Column="0" Value="{Binding Source={x:Static p:Settings.Default}, Path=MinPixelBrightness}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" Maximum="255" />
+							<Ellipse Grid.Row="5" Grid.Column="1" Width="16" Height="16" StrokeThickness="2" VerticalAlignment="Center" Margin="4,0" Stroke="Black" Fill="{Binding Source={x:Static p:Settings.Default}, Path=MinPixelBrightness, Converter={StaticResource byteToBrushConverter}}" />
+						</Grid>
+					</ScrollViewer>
 				</mah:MetroHeader>
 				<mah:MetroHeader Header="File Associations" mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}" Margin="0,8,0,0">
 					<StackPanel Orientation="Vertical">

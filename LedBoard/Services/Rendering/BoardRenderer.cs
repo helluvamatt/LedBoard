@@ -1,4 +1,5 @@
 ﻿using LedBoard.Models;
+using System;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -12,7 +13,7 @@ namespace LedBoard.Services.Rendering
 		private int _CachedImageHeight;
 		private int _CachedStride;
 
-		public void RenderBoard(IBoard board, WriteableBitmap bitmap, int dotPitch, int pixelSize)
+		public void RenderBoard(IBoard board, WriteableBitmap bitmap, int dotPitch, int pixelSize, byte minPixelBrightness)
 		{
 			int imageWidth = GetPixelLength(board.Width, dotPitch, pixelSize);
 			int imageHeight = GetPixelLength(board.Height, dotPitch, pixelSize);
@@ -26,6 +27,7 @@ namespace LedBoard.Services.Rendering
 			int boardWidth = board.Width;
 			int boardHeight = board.Height;
 			int baseX, baseY, x, y, pixel;
+			byte r, g, b;
 			for (int boardY = 0; boardY < boardHeight; boardY++)
 			{
 				baseY = GetPixelLength(boardY, dotPitch, pixelSize);
@@ -46,9 +48,13 @@ namespace LedBoard.Services.Rendering
 							if (pixelSize > 9 && (pixelX == 0 || pixelX == pixelSize - 1) && (pixelY <= 3 || pixelY >= pixelSize - 4)) continue;
 							if (pixelSize > 9 && (pixelX <= 3 || pixelX >= pixelSize - 4) && (pixelY == 0 || pixelY == pixelSize - 1)) continue;
 							// Set pixel
-							_Buffer[y * _CachedStride + x * 3 + 0] = (byte)((pixel >> 0) & 0xFF); // B
-							_Buffer[y * _CachedStride + x * 3 + 1] = (byte)((pixel >> 8) & 0xFF); // G
-							_Buffer[y * _CachedStride + x * 3 + 2] = (byte)((pixel >> 16) & 0xFF); // R
+							r = (byte)((pixel >> 0) & 0xFF); // B
+							g = (byte)((pixel >> 8) & 0xFF); // G
+							b = (byte)((pixel >> 16) & 0xFF); // R
+							if (r < minPixelBrightness && g < minPixelBrightness && b < minPixelBrightness) r = g = b = minPixelBrightness;
+							_Buffer[y * _CachedStride + x * 3 + 0] = r;
+							_Buffer[y * _CachedStride + x * 3 + 1] = g;
+							_Buffer[y * _CachedStride + x * 3 + 2] = b;
 						}
 					}
 				}

@@ -166,5 +166,17 @@ namespace LedBoard.Properties {
                 this["TimelineZoom"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public byte MinPixelBrightness {
+            get {
+                return ((byte)(this["MinPixelBrightness"]));
+            }
+            set {
+                this["MinPixelBrightness"] = value;
+            }
+        }
     }
 }
