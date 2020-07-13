@@ -30,30 +30,17 @@ namespace LedBoard
 
 		public MasterWindow()
 		{
-			InitializeComponent();
 			_ResourcesService = new ProjectResourcesService(Path.Combine(Path.GetTempPath(), "LedBoard"));
 			DataContext = new ShellViewModel(this, _ResourcesService);
-			Loaded += OnLoaded;
-		}
-
-		private void OnLoaded(object sender, RoutedEventArgs e)
-		{
-			((ShellViewModel)DataContext).CurrentPage = new Uri("Views/SettingsPage.xaml", UriKind.RelativeOrAbsolute);
-		}
-
-		private void OnMenuItemInvoked(object sender, HamburgerMenuItemInvokedEventArgs args)
-		{
-			if (args.InvokedItem is MenuItemViewModel item)
-			{
-				((ShellViewModel)DataContext).CurrentPage = item.NavigationTarget;
-			}
+			InitializeComponent();
 		}
 
 		private void OnFrameNavigated(object sender, NavigationEventArgs e)
 		{
-			// Update the hamburger menu's selected item
-			hamburgerMenu.SelectedItem = ((MenuItemViewModel[])Resources["MenuItems"]).FirstOrDefault(item => item.NavigationType == e.Content?.GetType());
-			hamburgerMenu.SelectedOptionsItem = ((MenuItemViewModel[])Resources["OptionsMenuItems"]).FirstOrDefault(item => item.NavigationType == e.Content?.GetType());
+			// Sync state of Hamburger Menu
+			hamburgerMenu.IsPaneOpen = false;
+			hamburgerMenu.SelectedItem = hamburgerMenu.Items.OfType<MenuItemViewModel>().FirstOrDefault(item => item.NavigationType == e.Content.GetType());
+			hamburgerMenu.SelectedOptionsItem = hamburgerMenu.OptionsItems.OfType<MenuItemViewModel>().FirstOrDefault(item => item.NavigationType == e.Content.GetType());
 
 			// Make sure the child view gets our DataContext
 			var frame = (Frame)sender;

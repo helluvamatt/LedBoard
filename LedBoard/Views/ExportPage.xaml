@@ -1,0 +1,59 @@
+﻿<Page x:Class="LedBoard.Views.ExportPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+	  xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
+	  xmlns:sys="clr-namespace:System;assembly=mscorlib"
+	  xmlns:m="clr-namespace:LedBoard.Models"
+      xmlns:vm="clr-namespace:LedBoard.ViewModels"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+	  d:DataContext="{d:DesignInstance Type={x:Type vm:ShellViewModel}, IsDesignTimeCreatable=False}"
+      Title="Export">
+	<Page.Resources>
+		<x:Array x:Key="ExportFormatOptions" Type="{x:Type m:ExportFormatDescriptor}">
+			<m:ExportFormatDescriptor Value="GIF" Text="Animated GIF" DefaultExt="gif" Filters="GIF images|*.gif|All files|*.*" />
+			<m:ExportFormatDescriptor Value="PNGSeries" Text="Multiple PNG files" DefaultExt="png" Filters="PNG images|*.png|All files|*.*" />
+		</x:Array>
+		<x:Array x:Key="ExportZoomOptions" Type="{x:Type m:IntDescriptor}">
+			<m:IntDescriptor Value="1" Text="Normal (1x)" />
+			<m:IntDescriptor Value="2" Text="Large (2x)" />
+			<m:IntDescriptor Value="4" Text="Very Large (4x)" />
+			<m:IntDescriptor Value="8" Text="Huge (8x)" />
+		</x:Array>
+		<sys:String x:Key="DefaultExportFileText">Please select a file...</sys:String>
+	</Page.Resources>
+	<DockPanel Margin="8">
+		<Grid DockPanel.Dock="Bottom">
+			<Button Margin="8" Padding="16" HorizontalAlignment="Center" Style="{StaticResource MahApps.Styles.Button}" Command="{Binding ExportRenderCommand}">
+				<StackPanel Orientation="Horizontal">
+					<ic:PackIconFontAwesome Width="16" Height="16" Kind="FileExportSolid" Margin="0,0,4,0" />
+					<mah:ContentControlEx ContentCharacterCasing="Upper" VerticalAlignment="Center">Render</mah:ContentControlEx>
+				</StackPanel>
+			</Button>
+		</Grid>
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="auto" />
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="auto" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="auto" />
+				<RowDefinition Height="auto" />
+				<RowDefinition Height="auto" />
+			</Grid.RowDefinitions>
+			<Label Grid.Row="0" Grid.Column="0" Margin="8">Format</Label>
+			<ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportFormatOptions}" SelectedItem="{Binding ExportFormat}" DisplayMemberPath="Text" />
+			<Label Grid.Row="1" Grid.Column="0" Margin="8">Scaling</Label>
+			<ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportZoomOptions}" SelectedValue="{Binding ExportZoom}" SelectedValuePath="Value" DisplayMemberPath="Text" />
+			<Label Grid.Row="2" Grid.Column="0" Margin="8">File</Label>
+			<TextBox Grid.Row="2" Grid.Column="1" Margin="0,8,8,8" Text="{Binding ExportPath, TargetNullValue={StaticResource DefaultExportFileText}}" IsReadOnly="True" />
+			<Button Grid.Row="2" Grid.Column="2" Margin="0,8,8,8" Command="{Binding ExportBrowseCommand}">
+				<ic:PackIconFontAwesome Kind="FolderOpenRegular" />
+			</Button>
+		</Grid>
+	</DockPanel>
+</Page>

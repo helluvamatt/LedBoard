@@ -5,6 +5,7 @@ using LedBoard.Properties;
 using LedBoard.Services;
 using LedBoard.Services.Export;
 using LedBoard.Services.Resources;
+using LedBoard.Views;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -29,19 +30,31 @@ namespace LedBoard.ViewModels
 		{
 			_ResourcesService = resourceService;
 			_DialogService = dialogService;
+			Navigate("Views/ProjectSettingsPage.xaml");
+
+			NavigateProjectSettingsCommand = new DelegateCommand(() => Navigate("Views/ProjectSettingsPage.xaml"));
+			NavigateProjectEditorCommand = new DelegateCommand(() => Navigate("Views/ProjectPage.xaml"), () => Sequencer != null);
+			//NavigateViewerCommand = new DelegateCommand(() => Navigate("Views/ViewerPage.xaml"), () => Sequencer != null);
+			NavigateExportCommand = new DelegateCommand(() => Navigate("Views/ExportPage.xaml"), () => Sequencer != null);
+			NavigateSettingsCommand = new DelegateCommand(() => Navigate("Views/SettingsPage.xaml"));
+
+			NavigateNewProjectCommand = new DelegateCommand(OnNavigateNewProject);
 			NewProjectCommand = new DelegateCommand(OnNewProject);
 			LoadProjectCommand = new DelegateCommand(OnLoadProject);
 			SaveProjectCommand = new DelegateCommand(async () => await OnSaveProject(), () => Sequencer != null && (Sequencer.Sequence.IsDirty || IsConfigurationDifferent()));
 			SaveProjectAsCommand = new DelegateCommand(async () => await OnSaveProjectAs(), () => Sequencer != null);
 			OpenRecentCommand = new DelegateCommand<string>(OnLoadProject);
+			
 			AddAssociationCommand = new DelegateCommand(OnAddAssociation);
 			RemoveAssociationCommand = new DelegateCommand(OnRemoveAssociation);
+			
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Settings.Default.TimelineZoom < MaxZoom);
 			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Settings.Default.TimelineZoom > MinZoom);
 			DeleteSelectedItemCommand = new DelegateCommand(OnDeleteSelectedItem, () => Sequencer?.SelectedItem != null);
-			ExportCommand = new DelegateCommand(() => IsExportOpen = true, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
+			
+			ExportBrowseCommand = new DelegateCommand(OnExportBrowse, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
 			ExportRenderCommand = new DelegateCommand(OnExportRender, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero && ExportFormat != null && !string.IsNullOrWhiteSpace(ExportPath));
-			ExportCancelCommand = new DelegateCommand(() => IsExportOpen = false);
+			
 			Settings.Default.PropertyChanged += OnSettingsPropertyChanged;
 		}
 
@@ -51,6 +64,17 @@ namespace LedBoard.ViewModels
 		}
 
 		#region Commands
+
+		#region Navigation commands
+
+		public ICommand NavigateProjectSettingsCommand { get; }
+		public ICommand NavigateNewProjectCommand { get; }
+		public ICommand NavigateProjectEditorCommand { get; }
+		public ICommand NavigateViewerCommand { get; }
+		public ICommand NavigateExportCommand { get; }
+		public ICommand NavigateSettingsCommand { get; }
+
+		#endregion
 
 		#region Settings commands
 
@@ -74,9 +98,8 @@ namespace LedBoard.ViewModels
 
 		#region Export commands
 
-		public ICommand ExportCommand { get; }
+		public ICommand ExportBrowseCommand { get; }
 		public ICommand ExportRenderCommand { get; }
-		public ICommand ExportCancelCommand { get; }
 
 		#endregion
 
@@ -194,18 +217,6 @@ namespace LedBoard.ViewModels
 
 		#endregion
 
-		#region IsExportOpen
-
-		public static readonly DependencyProperty IsExportOpenProperty = DependencyProperty.Register(nameof(IsExportOpen), typeof(bool), typeof(ShellViewModel), new PropertyMetadata(false));
-
-		public bool IsExportOpen
-		{
-			get => (bool)GetValue(IsExportOpenProperty);
-			set => SetValue(IsExportOpenProperty, value);
-		}
-
-		#endregion
-
 		#region ExportFormat
 
 		public static readonly DependencyProperty ExportFormatProperty = DependencyProperty.Register(nameof(ExportFormat), typeof(ExportFormatDescriptor), typeof(ShellViewModel), new PropertyMetadata(null));
@@ -264,7 +275,7 @@ namespace LedBoard.ViewModels
 			CurrentPage = new Uri(uri, UriKind.RelativeOrAbsolute);
 		}
 
-		private async void OnNewProject()
+		private async void OnNavigateNewProject()
 		{
 			if (IsDirty)
 			{
@@ -272,6 +283,11 @@ namespace LedBoard.ViewModels
 				if ((!doSave.HasValue) || (doSave.Value && !await OnSaveProject())) return;
 			}
 
+			Navigate("Views/NewProjectPage.xaml");
+		}
+
+		private void OnNewProject()
+		{
 			Sequencer = new SequencerViewModel(_DialogService, _ResourcesService, Settings.Default.NewBoardWidth, Settings.Default.NewBoardHeight, Settings.Default.NewFrameRate);
 			Navigate("Views/ProjectPage.xaml");
 			ProjectPath = null;
@@ -541,7 +557,7 @@ namespace LedBoard.ViewModels
 			Sequencer?.OnDeleteSelectedItem();
 		}
 
-		private void OnExportBrowseClick(object sender, RoutedEventArgs e)
+		private void OnExportBrowse()
 		{
 			string result = _DialogService.SaveFileDialog("Export image(s)...", ExportFormat?.Filters, ExportFormat?.DefaultExt);
 			if (!string.IsNullOrWhiteSpace(result)) ExportPath = result;
@@ -551,9 +567,6 @@ namespace LedBoard.ViewModels
 		{
 			// Validation
 			if (Sequencer == null || ExportFormat == null || string.IsNullOrWhiteSpace(ExportPath)) return;
-
-			// Close export dialog
-			IsExportOpen = false;
 
 			// Open progress dialog
 			var controller = await _DialogService.ShowProgressDialogAsync("Please wait...", "Exporting image...", true);

@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MahApps.Metro.Controls;
+using System;
 using System.Windows;
 
 namespace LedBoard.ViewModels
 {
-	public class MenuItemViewModel : DependencyObject
+	public class MenuItemViewModel : HamburgerMenuIconItem
 	{
 		public static readonly DependencyProperty NavigationTypeProperty = DependencyProperty.Register(nameof(NavigationType), typeof(Type), typeof(MenuItemViewModel), new PropertyMetadata(null));
 
@@ -25,20 +22,20 @@ namespace LedBoard.ViewModels
 			set => SetValue(NavigationTargetProperty, value);
 		}
 
-		public static readonly DependencyProperty IconProperty = DependencyProperty.Register(nameof(Icon), typeof(object), typeof(MenuItemViewModel), new PropertyMetadata(null));
+		//public static readonly DependencyProperty IconProperty = DependencyProperty.Register(nameof(Icon), typeof(object), typeof(MenuItemViewModel), new PropertyMetadata(null));
 
-		public object Icon
-		{
-			get => (object)GetValue(IconProperty);
-			set => SetValue(IconProperty, value);
-		}
+		//public object Icon
+		//{
+		//	get => (object)GetValue(IconProperty);
+		//	set => SetValue(IconProperty, value);
+		//}
 
-		public static readonly DependencyProperty LabelProperty = DependencyProperty.Register(nameof(Label), typeof(string), typeof(MenuItemViewModel), new PropertyMetadata(null));
+		//public static readonly DependencyProperty LabelProperty = DependencyProperty.Register(nameof(Label), typeof(string), typeof(MenuItemViewModel), new PropertyMetadata(null));
 
-		public string Label
-		{
-			get => (string)GetValue(LabelProperty);
-			set => SetValue(LabelProperty, value);
-		}
+		//public string Label
+		//{
+		//	get => (string)GetValue(LabelProperty);
+		//	set => SetValue(LabelProperty, value);
+		//}
 	}
 }

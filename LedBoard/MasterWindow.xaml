@@ -23,6 +23,7 @@
 	Top="{Binding Source={x:Static p:Settings.Default}, Path=DesktopY, Mode=TwoWay}">
 	<mah:MetroWindow.Resources>
 		<c:NullToVisibilityConverter x:Key="nullToVisibilityConverter" />
+		<c:IsNullConverter x:Key="isNullConverter" />
 		<DataTemplate x:Key="MenuItemTemplate" DataType="{x:Type vm:MenuItemViewModel}">
 			<Grid Height="48">
 				<Grid.ColumnDefinitions>
@@ -33,32 +34,6 @@
 				<TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="16" Text="{Binding Label}" />
 			</Grid>
 		</DataTemplate>
-		<x:Array x:Key="MenuItems" Type="{x:Type vm:MenuItemViewModel}">
-			<vm:MenuItemViewModel NavigationTarget="Views/ProjectPage.xaml" Label="Edit Project" NavigationType="{x:Type v:ProjectPage}">
-				<vm:MenuItemViewModel.Icon>
-					<ic:PackIconFontAwesome Width="28" Height="28" Kind="EditSolid" />
-				</vm:MenuItemViewModel.Icon>
-			</vm:MenuItemViewModel>
-			<!--
-			<vm:MenuItemViewModel NavigationTarget="Views/ViewerPage.xaml" Label="Viewer" NavigationType="{x:Type v:ViewerPage}">
-				<vm:MenuItemViewModel.Icon>
-					<ic:PackIconFontAwesome Width="28" Height="28" Kind="DesktopSolid" />
-				</vm:MenuItemViewModel.Icon>
-			</vm:MenuItemViewModel>
-			<vm:MenuItemViewModel NavigationTarget="Views/ExportPage.xaml" Label="Export" NavigationType="{x:Type v:ExportPage}">
-				<vm:MenuItemViewModel.Icon>
-					<ic:PackIconFontAwesome Width="28" Height="28" Kind="FileExportSolid" />
-				</vm:MenuItemViewModel.Icon>
-			</vm:MenuItemViewModel>
-			-->
-		</x:Array>
-		<x:Array x:Key="OptionsMenuItems" Type="{x:Type vm:MenuItemViewModel}">
-			<vm:MenuItemViewModel NavigationTarget="Views/SettingsPage.xaml" Label="Settings" NavigationType="{x:Type v:SettingsPage}">
-				<vm:MenuItemViewModel.Icon>
-					<ic:PackIconFontAwesome Width="28" Height="28" Kind="CogSolid" />
-				</vm:MenuItemViewModel.Icon>
-			</vm:MenuItemViewModel>
-		</x:Array>
 		<mah:CustomDialog x:Key="MessageDialog" d:DataContext="{d:DesignInstance Type={x:Type vm:MessageDialogViewModel}}" Title="{Binding Title}">
 			<Grid>
 				<Grid.ColumnDefinitions>
@@ -109,11 +84,43 @@
 		</mah:CustomDialog>
 	</mah:MetroWindow.Resources>
 	<mah:HamburgerMenu x:Name="hamburgerMenu" DisplayMode="CompactOverlay"
-					   ItemInvoked="OnMenuItemInvoked"
 					   ItemTemplate="{StaticResource MenuItemTemplate}"
-					   ItemsSource="{StaticResource MenuItems}"
-					   OptionsItemTemplate="{StaticResource MenuItemTemplate}"
-					   OptionsItemsSource="{StaticResource OptionsMenuItems}">
+					   OptionsItemTemplate="{StaticResource MenuItemTemplate}">
+		<mah:HamburgerMenu.ItemsSource>
+			<mah:HamburgerMenuItemCollection>
+				<vm:MenuItemViewModel Label="Project Settings" NavigationType="{x:Type v:ProjectSettingsPage}" Command="{Binding NavigateProjectSettingsCommand}">
+					<vm:MenuItemViewModel.Icon>
+						<ic:PackIconFontAwesome Width="28" Height="28" Kind="FileRegular" />
+					</vm:MenuItemViewModel.Icon>
+				</vm:MenuItemViewModel>
+				<vm:MenuItemViewModel Label="Timeline" NavigationType="{x:Type v:ProjectPage}" Command="{Binding NavigateProjectEditorCommand}">
+					<vm:MenuItemViewModel.Icon>
+						<ic:PackIconFontAwesome Width="28" Height="28" Kind="FilmSolid" RotationAngle="90" />
+					</vm:MenuItemViewModel.Icon>
+				</vm:MenuItemViewModel>
+				<!--
+				<vm:MenuItemViewModel Label="Viewer" NavigationType="{x:Type v:ViewerPage}" IsEnabled="{Binding Sequencer, Converter={StaticResource isNullConverter}}">
+					<vm:MenuItemViewModel.Icon>
+						<ic:PackIconFontAwesome Width="28" Height="28" Kind="DesktopSolid" />
+					</vm:MenuItemViewModel.Icon>
+				</vm:MenuItemViewModel>
+				-->
+				<vm:MenuItemViewModel Label="Export" NavigationType="{x:Type v:ExportPage}" Command="{Binding NavigateExportCommand}">
+					<vm:MenuItemViewModel.Icon>
+						<ic:PackIconFontAwesome Width="28" Height="28" Kind="FileExportSolid" />
+					</vm:MenuItemViewModel.Icon>
+				</vm:MenuItemViewModel>
+			</mah:HamburgerMenuItemCollection>
+		</mah:HamburgerMenu.ItemsSource>
+		<mah:HamburgerMenu.OptionsItemsSource>
+			<mah:HamburgerMenuItemCollection>
+				<vm:MenuItemViewModel Label="Settings" NavigationType="{x:Type v:SettingsPage}" Command="{Binding NavigateSettingsCommand}">
+					<vm:MenuItemViewModel.Icon>
+						<ic:PackIconFontAwesome Width="28" Height="28" Kind="WrenchSolid" />
+					</vm:MenuItemViewModel.Icon>
+				</vm:MenuItemViewModel>
+			</mah:HamburgerMenuItemCollection>
+		</mah:HamburgerMenu.OptionsItemsSource>
 		<mah:HamburgerMenu.Content>
 			<Frame Source="{Binding CurrentPage}" Navigated="OnFrameNavigated">
 				<Frame.Style>
@@ -123,7 +130,7 @@
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<mah:TransitioningContentControl Content="{Binding}" RestartTransitionOnContentChange="True" Transition="Normal" />
+									<mah:TransitioningContentControl Content="{Binding}" RestartTransitionOnContentChange="True" Transition="Default" />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>

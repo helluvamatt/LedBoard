@@ -1,0 +1,52 @@
+﻿<Page x:Class="LedBoard.Views.NewProjectPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+	  xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
+	  xmlns:m="clr-namespace:LedBoard.Models"
+	  xmlns:p="clr-namespace:LedBoard.Properties"
+	  xmlns:vm="clr-namespace:LedBoard.ViewModels"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+	  d:DataContext="{d:DesignInstance Type={x:Type vm:ShellViewModel}, IsDesignTimeCreatable=False}"
+      Title="NewProjectPage">
+	<Page.Resources>
+		<x:Array x:Key="FrameRateOptions" Type="{x:Type m:IntDescriptor}">
+			<m:IntDescriptor Value="20" Text="Very Fast (50 fps)" />
+			<m:IntDescriptor Value="40" Text="Fast (25 fps)" />
+			<m:IntDescriptor Value="50" Text="Normal (20 fps)" />
+			<m:IntDescriptor Value="100" Text="Slow (10 fps)" />
+			<m:IntDescriptor Value="200" Text="Very Slow (5 fps)" />
+		</x:Array>
+	</Page.Resources>
+	<DockPanel>
+		<ContentControl DockPanel.Dock="Bottom" Margin="8">
+			<Button Padding="16" Command="{Binding NewProjectCommand}" Style="{StaticResource MahApps.Styles.Button}" HorizontalAlignment="Left">
+				<StackPanel Orientation="Vertical">
+					<ic:PackIconFontAwesome Width="24" Height="24" Kind="FileRegular" HorizontalAlignment="Center" Margin="0,0,0,8" />
+					<mah:ContentControlEx ContentCharacterCasing="Upper">New Project</mah:ContentControlEx>
+				</StackPanel>
+			</Button>
+		</ContentControl>
+		<mah:MetroHeader Margin="8" HorizontalAlignment="Left">
+			<mah:MetroHeader.Header>
+				<StackPanel Orientation="Horizontal">
+					<Button Style="{StaticResource MahApps.Styles.Button.Circle}" Margin="0,0,8,0" Padding="6" VerticalAlignment="Center" Command="{Binding NavigateProjectSettingsCommand}">
+						<ic:PackIconFontAwesome Width="18" Height="18" Kind="ArrowLeftSolid" />
+					</Button>
+					<TextBlock FontSize="{StaticResource MahApps.Font.Size.Flyout.Header}" VerticalAlignment="Center">New Project...</TextBlock>
+				</StackPanel>
+			</mah:MetroHeader.Header>
+			<StackPanel Orientation="Vertical" Width="300" MaxWidth="300">
+				<Label>Board Width</Label>
+				<mah:NumericUpDown Value="{Binding Source={x:Static p:Settings.Default}, Path=NewBoardWidth}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" />
+				<Label>Board Height</Label>
+				<mah:NumericUpDown Value="{Binding Source={x:Static p:Settings.Default}, Path=NewBoardHeight}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" />
+				<Label>Frame Rate</Label>
+				<ComboBox ItemsSource="{StaticResource FrameRateOptions}" SelectedValue="{Binding Source={x:Static p:Settings.Default}, Path=NewFrameRate}" SelectedValuePath="Value" DisplayMemberPath="Text" />
+			</StackPanel>
+		</mah:MetroHeader>
+	</DockPanel>
+</Page>
