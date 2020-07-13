@@ -21,7 +21,7 @@ namespace LedBoard
 
 		protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
 		{
-			if (MainWindow is ICheckDirty checkDirty)
+			if (MainWindow.DataContext is ICheckDirty checkDirty)
 			{
 				if (checkDirty.IsDirty)
 				{
