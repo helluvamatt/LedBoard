@@ -526,15 +526,18 @@ namespace LedBoard.Controls
 
 		public void UpdateItemLayout()
 		{
-			foreach (var item in Items)
+			if (Items != null)
 			{
-				var uiItem = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
-				if (uiItem != null)
+				foreach (var item in Items)
 				{
-					uiItem.UpdateBounds();
+					var uiItem = (TimelineItem)ItemContainerGenerator.ContainerFromItem(item);
+					if (uiItem != null)
+					{
+						uiItem.UpdateBounds();
+					}
 				}
+				UpdateCanvasWidth();
 			}
-			UpdateCanvasWidth();
 		}
 
 		private void SetAdornerHitTestVisible(bool value)

@@ -44,11 +44,11 @@ namespace LedBoard.Views
 
 		private void OnSequencePropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			var dc = (ShellViewModel)DataContext;
 			if (e.PropertyName == nameof(Sequence.CurrentTime))
 			{
 				Dispatcher.Invoke(() =>
 				{
+					var dc = (ShellViewModel)DataContext;
 					// Compute the scroll offset
 					var widthConverter = (TimelineWidthConverter)Resources["timelineWidthConverter"];
 					double positionOfCaret = (double)widthConverter.Convert(new object[] { dc.Sequencer.Sequence.CurrentTime, Settings.Default.TimelineZoom, }, typeof(double), null, null);
@@ -62,6 +62,7 @@ namespace LedBoard.Views
 			{
 				Dispatcher.Invoke(() =>
 				{
+					var dc = (ShellViewModel)DataContext;
 					var window = this.TryFindParent<Window>();
 					if (dc.IsDirty)
 					{
