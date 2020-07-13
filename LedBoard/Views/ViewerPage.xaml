@@ -3,16 +3,18 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
 	  xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
 	  xmlns:controls="clr-namespace:LedBoard.Controls"
+	  xmlns:c="clr-namespace:LedBoard.Converters"
 	  xmlns:p="clr-namespace:LedBoard.Properties"
       xmlns:vm="clr-namespace:LedBoard.ViewModels"
-	  xmlns:interop="clr-namespace:LedBoard.Interop"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
 	  d:DataContext="{d:DesignInstance Type={x:Type vm:ShellViewModel}, IsDesignTimeCreatable=False}"
       Title="ViewerPage">
+	<Page.Resources>
+		<c:BoolToVisibilityConverter x:Key="invertedBoolToVisibilityConverter" TrueVisibility="Collapsed" FalseVisibility="Visible" />
+	</Page.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*" />
@@ -24,7 +26,8 @@
 									  DotPitch="{Binding Source={x:Static p:Settings.Default}, Path=DotPitch}"
 									  PixelSize="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}"
 									  MinPixelBrightness="{Binding Source={x:Static p:Settings.Default}, Path=MinPixelBrightness}"
-									  CurrentBoard="{Binding Sequencer.CurrentBoard}" />
+									  CurrentBoard="{Binding Sequencer.CurrentBoard}"
+									  Visibility="{Binding FullscreenVisible, Converter={StaticResource invertedBoolToVisibilityConverter}}"/>
 		</Border>
 		<Border Grid.Row="1" Background="{StaticResource MahApps.Brushes.Gray1}">
 			<Grid>
@@ -61,9 +64,11 @@
 						<ic:PackIconFontAwesome Kind="StepForwardSolid" />
 					</Button>
 				</StackPanel>
-				<Button Grid.Column="2" Margin="8" HorizontalAlignment="Right" ToolTip="Show Fullscreen" Command="{Binding ShowFullscreenCommand}">
+				<ToggleButton Grid.Column="2" Margin="8" HorizontalAlignment="Right" ToolTip="Toggle Fullscreen"
+							  IsChecked="{Binding FullscreenVisible}"
+							  Style="{StaticResource MahApps.Styles.ToggleButton}">
 					<ic:PackIconFontAwesome Kind="ExpandSolid" Margin="4,0" />
-				</Button>
+				</ToggleButton>
 			</Grid>
 		</Border>
 	</Grid>

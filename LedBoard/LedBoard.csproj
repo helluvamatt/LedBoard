@@ -78,6 +78,7 @@
     <Compile Include="Controls\TimelineItemTransitionAdorner.cs" />
     <Compile Include="Controls\TimelinePlaybackAdorner.cs" />
     <Compile Include="Controls\TimelineTransitionDropAdorner.cs" />
+    <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\ByteToBrushConverter.cs" />
     <Compile Include="Converters\ColorConverter.cs" />
     <Compile Include="Converters\EnumBoolConverter.cs" />

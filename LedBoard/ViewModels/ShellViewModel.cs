@@ -26,6 +26,8 @@ namespace LedBoard.ViewModels
 		private readonly IDialogService _DialogService;
 		private readonly ProjectResourcesService _ResourcesService;
 
+		private FullscreenWindow _FullscreenWindow;
+
 		public ShellViewModel(IDialogService dialogService, ProjectResourcesService resourceService)
 		{
 			_ResourcesService = resourceService;
@@ -51,8 +53,6 @@ namespace LedBoard.ViewModels
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Settings.Default.TimelineZoom < MaxZoom);
 			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Settings.Default.TimelineZoom > MinZoom);
 			DeleteSelectedItemCommand = new DelegateCommand(OnDeleteSelectedItem, () => Sequencer?.SelectedItem != null);
-
-			ShowFullscreenCommand = new DelegateCommand(OnShowFullscreen, () => Sequencer != null);
 			
 			ExportBrowseCommand = new DelegateCommand(OnExportBrowse, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
 			ExportRenderCommand = new DelegateCommand(OnExportRender, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero && ExportFormat != null && !string.IsNullOrWhiteSpace(ExportPath));
@@ -115,12 +115,6 @@ namespace LedBoard.ViewModels
 
 		public ICommand ExportBrowseCommand { get; }
 		public ICommand ExportRenderCommand { get; }
-
-		#endregion
-
-		#region Viewer commands
-
-		public ICommand ShowFullscreenCommand { get; }
 
 		#endregion
 
@@ -275,6 +269,48 @@ namespace LedBoard.ViewModels
 		{
 			get => (string)GetValue(ExportPathProperty);
 			set => SetValue(ExportPathProperty, value);
+		}
+
+		#endregion
+
+		#region FullscreenVisible
+
+		public static readonly DependencyProperty FullscreenVisibleProperty = DependencyProperty.Register(nameof(FullscreenVisible), typeof(bool), typeof(ShellViewModel), new PropertyMetadata(false, OnFullscreenVisibleChanged));
+
+		public bool FullscreenVisible
+		{
+			get => (bool)GetValue(FullscreenVisibleProperty);
+			set => SetValue(FullscreenVisibleProperty, value);
+		}
+
+		private static void OnFullscreenVisibleChanged(DependencyObject owner, DependencyPropertyChangedEventArgs e)
+		{
+			var vm = (ShellViewModel)owner;
+			if (vm.FullscreenVisible) vm.OnShowFullscreen();
+			else vm.OnHideFullscreen();
+		}
+
+		private void OnShowFullscreen()
+		{
+			if (_FullscreenWindow == null)
+			{
+				var selectedMonitor = Monitors.FirstOrDefault(mi => mi.DeviceName == Settings.Default.FullscreenMonitorName);	
+				if (selectedMonitor != null)
+				{
+					var vm = new FullscreenViewModel(Sequencer);
+					_FullscreenWindow = new FullscreenWindow(selectedMonitor.Left, selectedMonitor.Top, selectedMonitor.Width, selectedMonitor.Height)
+					{
+						DataContext = vm,
+					};
+				}
+			}
+			_FullscreenWindow?.Show();
+		}
+
+		private void OnHideFullscreen()
+		{
+			_FullscreenWindow?.Close();
+			_FullscreenWindow = null;
 		}
 
 		#endregion
@@ -655,20 +691,6 @@ namespace LedBoard.ViewModels
 			Settings.Default.NewBoardWidth = Sequencer.Sequence.BoardWidth;
 			Settings.Default.NewBoardHeight = Sequencer.Sequence.BoardHeight;
 			Settings.Default.NewFrameRate = (int)Sequencer.Sequence.FrameDelay.TotalMilliseconds;
-		}
-
-		private void OnShowFullscreen()
-		{
-			var selectedMonitor = Monitors.FirstOrDefault(mi => mi.DeviceName == Settings.Default.FullscreenMonitorName);
-			if (selectedMonitor != null)
-			{
-				var vm = new FullscreenViewModel(Sequencer);
-				var window = new FullscreenWindow(selectedMonitor.Left, selectedMonitor.Top, selectedMonitor.Width, selectedMonitor.Height)
-				{
-					DataContext = vm,
-				};
-				window.Show();
-			}
 		}
 
 		#endregion
