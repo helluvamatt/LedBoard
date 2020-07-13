@@ -80,6 +80,7 @@
 							<DataTemplate DataType="{x:Type interop:MonitorInfo}">
 								<StackPanel Orientation="Horizontal">
 									<TextBlock Text="{Binding Number, StringFormat=#{0}}" />
+									<TextBlock Margin="4,0,0,0">(<Run Text="{Binding Width, Mode=OneWay}" />x<Run Text="{Binding Height, Mode=OneWay}" />)</TextBlock>
 									<TextBlock Visibility="{Binding IsPrimary, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="4,0,0,0">(Primary)</TextBlock>
 								</StackPanel>
 							</DataTemplate>
