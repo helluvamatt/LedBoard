@@ -98,13 +98,11 @@
 						<ic:PackIconFontAwesome Width="28" Height="28" Kind="FilmSolid" RotationAngle="90" />
 					</vm:MenuItemViewModel.Icon>
 				</vm:MenuItemViewModel>
-				<!--
-				<vm:MenuItemViewModel Label="Viewer" NavigationType="{x:Type v:ViewerPage}" IsEnabled="{Binding Sequencer, Converter={StaticResource isNullConverter}}">
+				<vm:MenuItemViewModel Label="Viewer" NavigationType="{x:Type v:ViewerPage}" Command="{Binding NavigateViewerCommand}">
 					<vm:MenuItemViewModel.Icon>
 						<ic:PackIconFontAwesome Width="28" Height="28" Kind="DesktopSolid" />
 					</vm:MenuItemViewModel.Icon>
 				</vm:MenuItemViewModel>
-				-->
 				<vm:MenuItemViewModel Label="Export" NavigationType="{x:Type v:ExportPage}" Command="{Binding NavigateExportCommand}">
 					<vm:MenuItemViewModel.Icon>
 						<ic:PackIconFontAwesome Width="28" Height="28" Kind="FileExportSolid" />

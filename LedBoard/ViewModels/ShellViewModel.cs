@@ -34,7 +34,7 @@ namespace LedBoard.ViewModels
 
 			NavigateProjectSettingsCommand = new DelegateCommand(() => Navigate("Views/ProjectSettingsPage.xaml"));
 			NavigateProjectEditorCommand = new DelegateCommand(() => Navigate("Views/ProjectPage.xaml"), () => Sequencer != null);
-			//NavigateViewerCommand = new DelegateCommand(() => Navigate("Views/ViewerPage.xaml"), () => Sequencer != null);
+			NavigateViewerCommand = new DelegateCommand(() => Navigate("Views/ViewerPage.xaml"), () => Sequencer != null);
 			NavigateExportCommand = new DelegateCommand(() => Navigate("Views/ExportPage.xaml"), () => Sequencer != null);
 			NavigateSettingsCommand = new DelegateCommand(() => Navigate("Views/SettingsPage.xaml"));
 
