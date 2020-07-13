@@ -1,13 +1,13 @@
-﻿using LedBoard.Converters;
+﻿using LedBoard.Interop;
 using LedBoard.Models;
 using LedBoard.Models.Serialization;
 using LedBoard.Properties;
 using LedBoard.Services;
 using LedBoard.Services.Export;
 using LedBoard.Services.Resources;
-using LedBoard.Views;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -51,11 +51,26 @@ namespace LedBoard.ViewModels
 			ZoomInCommand = new DelegateCommand(OnZoomIn, () => Settings.Default.TimelineZoom < MaxZoom);
 			ZoomOutCommand = new DelegateCommand(OnZoomOut, () => Settings.Default.TimelineZoom > MinZoom);
 			DeleteSelectedItemCommand = new DelegateCommand(OnDeleteSelectedItem, () => Sequencer?.SelectedItem != null);
+
+			ShowFullscreenCommand = new DelegateCommand(OnShowFullscreen, () => Sequencer != null);
 			
 			ExportBrowseCommand = new DelegateCommand(OnExportBrowse, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
 			ExportRenderCommand = new DelegateCommand(OnExportRender, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero && ExportFormat != null && !string.IsNullOrWhiteSpace(ExportPath));
 			
 			Settings.Default.PropertyChanged += OnSettingsPropertyChanged;
+
+			// Get monitors for fullscreen
+			Monitors = new ObservableCollection<MonitorInfo>();
+			foreach (var monitor in User32.GetMonitors())
+			{
+				Monitors.Add(monitor);
+			}
+
+			// Default setting to primary monitor
+			if (Monitors.FirstOrDefault(mi => mi.DeviceName == Settings.Default.FullscreenMonitorName) == null)
+			{
+				Settings.Default.FullscreenMonitorName = Monitors.FirstOrDefault(mi => mi.IsPrimary)?.DeviceName;
+			}
 		}
 
 		public async void LoadProjectOnStartup(string project)
@@ -103,12 +118,20 @@ namespace LedBoard.ViewModels
 
 		#endregion
 
+		#region Viewer commands
+
+		public ICommand ShowFullscreenCommand { get; }
+
+		#endregion
+
 		#endregion
 
 		public event PropertyChangedEventHandler SequencePropertyChanged;
 
 		public double MinZoom => 0.05;
 		public double MaxZoom => 1;
+
+		public ObservableCollection<MonitorInfo> Monitors { get; }
 
 		#region Dependency properties
 
@@ -632,6 +655,20 @@ namespace LedBoard.ViewModels
 			Settings.Default.NewBoardWidth = Sequencer.Sequence.BoardWidth;
 			Settings.Default.NewBoardHeight = Sequencer.Sequence.BoardHeight;
 			Settings.Default.NewFrameRate = (int)Sequencer.Sequence.FrameDelay.TotalMilliseconds;
+		}
+
+		private void OnShowFullscreen()
+		{
+			var selectedMonitor = Monitors.FirstOrDefault(mi => mi.DeviceName == Settings.Default.FullscreenMonitorName);
+			if (selectedMonitor != null)
+			{
+				var vm = new FullscreenViewModel(Sequencer);
+				var window = new FullscreenWindow(selectedMonitor.Left, selectedMonitor.Top, selectedMonitor.Width, selectedMonitor.Height)
+				{
+					DataContext = vm,
+				};
+				window.Show();
+			}
 		}
 
 		#endregion

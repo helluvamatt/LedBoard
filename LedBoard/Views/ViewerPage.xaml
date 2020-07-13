@@ -3,10 +3,12 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
 	  xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
 	  xmlns:controls="clr-namespace:LedBoard.Controls"
 	  xmlns:p="clr-namespace:LedBoard.Properties"
       xmlns:vm="clr-namespace:LedBoard.ViewModels"
+	  xmlns:interop="clr-namespace:LedBoard.Interop"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
 	  d:DataContext="{d:DesignInstance Type={x:Type vm:ShellViewModel}, IsDesignTimeCreatable=False}"
@@ -25,34 +27,44 @@
 									  CurrentBoard="{Binding Sequencer.CurrentBoard}" />
 		</Border>
 		<Border Grid.Row="1" Background="{StaticResource MahApps.Brushes.Gray1}">
-			<StackPanel Orientation="Horizontal" Margin="8" HorizontalAlignment="Center">
-				<Button Command="{Binding Sequencer.StepBackwardCommand}" Style="{StaticResource MahApps.Styles.Button}" Padding="16,8" Margin="2,0">
-					<ic:PackIconFontAwesome Kind="StepBackwardSolid" />
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="1*" />
+					<ColumnDefinition Width="4*" />
+					<ColumnDefinition Width="1*" />
+				</Grid.ColumnDefinitions>
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8" HorizontalAlignment="Center">
+					<Button Command="{Binding Sequencer.StepBackwardCommand}" Style="{StaticResource MahApps.Styles.Button}" Padding="16,8" Margin="2,0">
+						<ic:PackIconFontAwesome Kind="StepBackwardSolid" />
+					</Button>
+					<Button Command="{Binding Sequencer.StopCommand}" Style="{StaticResource MahApps.Styles.Button}" Padding="16,8" Margin="2,0">
+						<ic:PackIconFontAwesome Kind="StopSolid" />
+					</Button>
+					<Button Command="{Binding Sequencer.PlayPauseCommand}" Style="{StaticResource MahApps.Styles.Button}" Padding="16,8" Margin="2,0">
+						<ic:PackIconFontAwesome>
+							<ic:PackIconFontAwesome.Style>
+								<Style TargetType="ic:PackIconFontAwesome">
+									<Setter Property="Kind" Value="PlaySolid" />
+									<Style.Triggers>
+										<DataTrigger Binding="{Binding Sequencer.IsPlaying}" Value="True">
+											<Setter Property="Kind" Value="PauseSolid" />
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</ic:PackIconFontAwesome.Style>
+						</ic:PackIconFontAwesome>
+					</Button>
+					<ToggleButton IsChecked="{Binding Source={x:Static p:Settings.Default}, Path=IsLooping}" Style="{StaticResource MahApps.Styles.ToggleButton}" Padding="16,8" Margin="2,0">
+						<ic:PackIconFontAwesome Kind="SyncAltSolid" />
+					</ToggleButton>
+					<Button Command="{Binding Sequencer.StepForwardCommand}" Style="{StaticResource MahApps.Styles.Button}" Padding="16,8" Margin="2,0">
+						<ic:PackIconFontAwesome Kind="StepForwardSolid" />
+					</Button>
+				</StackPanel>
+				<Button Grid.Column="2" Margin="8" HorizontalAlignment="Right" ToolTip="Show Fullscreen" Command="{Binding ShowFullscreenCommand}">
+					<ic:PackIconFontAwesome Kind="ExpandSolid" Margin="4,0" />
 				</Button>
-				<Button Command="{Binding Sequencer.StopCommand}" Style="{StaticResource MahApps.Styles.Button}" Padding="16,8" Margin="2,0">
-					<ic:PackIconFontAwesome Kind="StopSolid" />
-				</Button>
-				<Button Command="{Binding Sequencer.PlayPauseCommand}" Style="{StaticResource MahApps.Styles.Button}" Padding="16,8" Margin="2,0">
-					<ic:PackIconFontAwesome>
-						<ic:PackIconFontAwesome.Style>
-							<Style TargetType="ic:PackIconFontAwesome">
-								<Setter Property="Kind" Value="PlaySolid" />
-								<Style.Triggers>
-									<DataTrigger Binding="{Binding Sequencer.IsPlaying}" Value="True">
-										<Setter Property="Kind" Value="PauseSolid" />
-									</DataTrigger>
-								</Style.Triggers>
-							</Style>
-						</ic:PackIconFontAwesome.Style>
-					</ic:PackIconFontAwesome>
-				</Button>
-				<ToggleButton IsChecked="{Binding Source={x:Static p:Settings.Default}, Path=IsLooping}" Style="{StaticResource MahApps.Styles.ToggleButton}" Padding="16,8" Margin="2,0">
-					<ic:PackIconFontAwesome Kind="SyncAltSolid" />
-				</ToggleButton>
-				<Button Command="{Binding Sequencer.StepForwardCommand}" Style="{StaticResource MahApps.Styles.Button}" Padding="16,8" Margin="2,0">
-					<ic:PackIconFontAwesome Kind="StepForwardSolid" />
-				</Button>
-			</StackPanel>
+			</Grid>
 		</Border>
 	</Grid>
 </Page>

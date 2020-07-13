@@ -89,6 +89,9 @@
     <Compile Include="Converters\PureHueConverter.cs" />
     <Compile Include="Converters\TimelineWidthConverter.cs" />
     <Compile Include="Converters\TimestampConverter.cs" />
+    <Compile Include="FullscreenWindow.xaml.cs">
+      <DependentUpon>FullscreenWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ICheckDirty.cs" />
     <Compile Include="Interop\Shell32.cs" />
     <Compile Include="Interop\User32.cs" />
@@ -141,6 +144,7 @@
     <Compile Include="ViewModels\Config\TimeSpanAdvancedPropertyViewModel.cs" />
     <Compile Include="ViewModels\Config\TimeSpanPropertyViewModel.cs" />
     <Compile Include="ViewModels\DelegateCommand.cs" />
+    <Compile Include="ViewModels\FullscreenViewModel.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\MessageDialogViewModel.cs" />
     <Compile Include="ViewModels\SequencerViewModel.cs" />
@@ -179,6 +183,10 @@
     <Compile Include="E131Server.cs" />
     <Compile Include="Controls\LedBoardControl.cs" />
     <Page Include="AppWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FullscreenWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

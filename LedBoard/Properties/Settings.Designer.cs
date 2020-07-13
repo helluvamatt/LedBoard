@@ -178,5 +178,17 @@ namespace LedBoard.Properties {
                 this["MinPixelBrightness"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string FullscreenMonitorName {
+            get {
+                return ((string)(this["FullscreenMonitorName"]));
+            }
+            set {
+                this["FullscreenMonitorName"] = value;
+            }
+        }
     }
 }

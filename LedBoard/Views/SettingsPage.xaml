@@ -4,8 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 	  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-	  xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
-	  xmlns:sys="clr-namespace:System;assembly=mscorlib"
+	  xmlns:interop="clr-namespace:LedBoard.Interop"
 	  xmlns:c="clr-namespace:LedBoard.Converters"
 	  xmlns:p="clr-namespace:LedBoard.Properties"
 	  xmlns:m="clr-namespace:LedBoard.Models"
@@ -27,49 +26,65 @@
 			<m:IntDescriptor Value="200" Text="Very Slow (5 fps)" />
 		</x:Array>
 	</Page.Resources>
-	<Grid Margin="8">
-		<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Left">
-			<StackPanel Orientation="Vertical" MaxWidth="300">
+	<Grid Margin="16">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" MaxWidth="300" />
+		</Grid.ColumnDefinitions>
+		<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+			<StackPanel Orientation="Vertical">
 				<mah:MetroHeader Header="View Settings" mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}">
-					<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="auto" />
-								<RowDefinition Height="auto" />
-								<RowDefinition Height="auto" />
-								<RowDefinition Height="auto" />
-								<RowDefinition Height="auto" />
-								<RowDefinition Height="auto" />
-							</Grid.RowDefinitions>
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*" />
-								<ColumnDefinition Width="auto" />
-							</Grid.ColumnDefinitions>
-							<Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">Dot Pitch</Label>
-							<mah:NumericUpDown Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding Source={x:Static p:Settings.Default}, Path=DotPitch}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" Maximum="20" />
-							<Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">Pixel Size</Label>
-							<mah:NumericUpDown Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="1" Maximum="20" />
-							<Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">Minimum Pixel Brightness</Label>
-							<mah:NumericUpDown Grid.Row="5" Grid.Column="0" Value="{Binding Source={x:Static p:Settings.Default}, Path=MinPixelBrightness}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" Maximum="255" />
-							<Ellipse Grid.Row="5" Grid.Column="1" Width="16" Height="16" StrokeThickness="2" VerticalAlignment="Center" Margin="4,0" Stroke="Black" Fill="{Binding Source={x:Static p:Settings.Default}, Path=MinPixelBrightness, Converter={StaticResource byteToBrushConverter}}" />
-						</Grid>
-					</ScrollViewer>
+					<Grid>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="auto" />
+							<RowDefinition Height="auto" />
+							<RowDefinition Height="auto" />
+							<RowDefinition Height="auto" />
+							<RowDefinition Height="auto" />
+							<RowDefinition Height="auto" />
+						</Grid.RowDefinitions>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*" />
+							<ColumnDefinition Width="auto" />
+						</Grid.ColumnDefinitions>
+						<Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">Dot Pitch</Label>
+						<mah:NumericUpDown Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding Source={x:Static p:Settings.Default}, Path=DotPitch}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" Maximum="20" />
+						<Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">Pixel Size</Label>
+						<mah:NumericUpDown Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding Source={x:Static p:Settings.Default}, Path=PixelSize}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="1" Maximum="20" />
+						<Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">Minimum Pixel Brightness</Label>
+						<mah:NumericUpDown Grid.Row="5" Grid.Column="0" Value="{Binding Source={x:Static p:Settings.Default}, Path=MinPixelBrightness}" TextAlignment="Left" ButtonsAlignment="Left" Interval="1" Minimum="0" Maximum="255" />
+						<Ellipse Grid.Row="5" Grid.Column="1" Width="16" Height="16" StrokeThickness="2" VerticalAlignment="Center" Margin="4,0" Stroke="Black" Fill="{Binding Source={x:Static p:Settings.Default}, Path=MinPixelBrightness, Converter={StaticResource byteToBrushConverter}}" />
+					</Grid>
 				</mah:MetroHeader>
-				<mah:MetroHeader Header="File Associations" mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}" Margin="0,8,0,0">
+				<mah:MetroHeader Header="File Associations" mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}" Margin="0,16,0,0">
 					<StackPanel Orientation="Vertical">
-						<Button Command="{Binding AddAssociationCommand}" Margin="4" HorizontalContentAlignment="Left">
+						<Button Command="{Binding AddAssociationCommand}" Margin="0,4">
 							<StackPanel Orientation="Horizontal">
 								<Image Width="16" Height="16" Source="../Assets/document.png" Margin="0,0,8,0" />
 								<mah:ContentControlEx ContentCharacterCasing="Upper">Add Project Association</mah:ContentControlEx>
 							</StackPanel>
 						</Button>
-						<Button Command="{Binding RemoveAssociationCommand}" Margin="4" HorizontalContentAlignment="Left">
+						<Button Command="{Binding RemoveAssociationCommand}" Margin="0,4">
 							<StackPanel Orientation="Horizontal">
 								<Image Width="16" Height="16" Source="../Assets/document.png" Margin="0,0,8,0" />
 								<mah:ContentControlEx ContentCharacterCasing="Upper">Remove Project Association</mah:ContentControlEx>
 							</StackPanel>
 						</Button>
 					</StackPanel>
+				</mah:MetroHeader>
+				<mah:MetroHeader Header="Fullscreen Window" mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}" Margin="0,16,0,0">
+					<ComboBox Grid.Column="0"
+							  ItemsSource="{Binding Monitors}"
+							  SelectedValuePath="DeviceName"
+							  SelectedValue="{Binding Source={x:Static p:Settings.Default}, Path=FullscreenMonitorName}">
+						<ComboBox.ItemTemplate>
+							<DataTemplate DataType="{x:Type interop:MonitorInfo}">
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="{Binding Number, StringFormat=#{0}}" />
+									<TextBlock Visibility="{Binding IsPrimary, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="4,0,0,0">(Primary)</TextBlock>
+								</StackPanel>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
 				</mah:MetroHeader>
 			</StackPanel>
 		</ScrollViewer>
