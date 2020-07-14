@@ -48,7 +48,7 @@ namespace LedBoard.ViewModels
 		{
 			_DialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 			if (resourcesService == null) throw new ArgumentNullException(nameof(resourcesService));
-			Sequence = new Sequence(Dispatcher, resourcesService)
+			Sequence = new Sequence(resourcesService)
 			{
 				IsDirty = true,
 			};

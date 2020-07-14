@@ -4,13 +4,11 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows.Threading;
 
 namespace LedBoard.Models
 {
 	public class Sequence : INotifyPropertyChanged
 	{
-		private readonly Dispatcher _Dispatcher;
 		private readonly IResourcesService _ResourcesService;
 		
 		private IBoard _PrevBoard;
@@ -21,9 +19,8 @@ namespace LedBoard.Models
 		private SequenceEntry _CurrentEntry;
 		private int _CurrentEntryIndex;
 
-		public Sequence(Dispatcher dispatcher, IResourcesService resourcesService)
+		public Sequence(IResourcesService resourcesService)
 		{
-			_Dispatcher = dispatcher;
 			_ResourcesService = resourcesService;
 			Steps = new ObservableCollection<SequenceEntry>();
 			Steps.CollectionChanged += OnStepsCollectionChanged;
@@ -39,7 +36,7 @@ namespace LedBoard.Models
 			foreach (var entry in Steps)
 			{
 				// (Re)init step and transition
-				entry.InitStep(_Dispatcher, BoardWidth, BoardHeight, FrameDelay, _ResourcesService);
+				entry.InitStep(BoardWidth, BoardHeight, FrameDelay, _ResourcesService);
 			}
 		}
 
@@ -268,7 +265,7 @@ namespace LedBoard.Models
 			{
 				foreach (SequenceEntry entry in e.NewItems)
 				{
-					entry.InitStep(_Dispatcher, BoardWidth, BoardHeight, FrameDelay, _ResourcesService);
+					entry.InitStep(BoardWidth, BoardHeight, FrameDelay, _ResourcesService);
 					entry.PropertyChanged += OnSequenceEntryPropertyChanged;
 					entry.StepConfigurationChanged += OnSequenceEntryStepConfigurationChanged;
 					entry.TransitionConfigurationChanged += OnSequenceEntryTransitionConfigurationChanged;
@@ -286,7 +283,7 @@ namespace LedBoard.Models
 			var entry = (SequenceEntry)sender;
 
 			// Reinitialize on configuration changes
-			entry.InitStep(_Dispatcher, BoardWidth, BoardHeight, FrameDelay, _ResourcesService);
+			entry.InitStep(BoardWidth, BoardHeight, FrameDelay, _ResourcesService);
 
 			// Tell the sequencer to update the current frame
 			CurrentFrameChanged?.Invoke(this, EventArgs.Empty);
@@ -436,15 +433,12 @@ namespace LedBoard.Models
 		public TimeSpan StartTransitionLength { get; set; }
 		public TimeSpan EndTransitionLength { get; set; }
 
-		public void InitStep(Dispatcher dispatcher, int boardWidth, int boardHeight, TimeSpan frameDelay, IResourcesService resourcesService)
+		public void InitStep(int boardWidth, int boardHeight, TimeSpan frameDelay, IResourcesService resourcesService)
 		{
 			Step.Init(boardWidth, boardHeight, frameDelay, resourcesService);
 			InitTransition(boardWidth, boardHeight, frameDelay);
-			dispatcher.Invoke(() =>
-			{
-				IsReady = true;
-				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Length)));
-			});
+			IsReady = true;
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Length)));
 		}
 
 		public void InitTransition(int boardWidth, int boardHeight, TimeSpan frameDelay)
