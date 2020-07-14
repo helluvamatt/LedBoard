@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
@@ -290,6 +292,7 @@
   <PropertyGroup>
     <PostBuildEvent>xcopy /Y /D "$(SolutionDir)Debug\LedBoard.Resources.dll" "$(TargetDir)"
 xcopy /Y /D "$(SolutionDir)LedBoard.RegistryTool\$(OutDir)LedBoard.RegistryTool.*" "$(TargetDir)"
-xcopy /Y /D "$(SolutionDir)LedBoard.RegistryTool\$(OutDir)*.dll" "$(TargetDir)"</PostBuildEvent>
+xcopy /Y /D "$(SolutionDir)LedBoard.RegistryTool\$(OutDir)*.dll" "$(TargetDir)"
+xcopy /Y /D "$(SolutionDir)LedBoard.Screensaver\$(OutDir)LedBoard.scr" "$(TargetDir)"</PostBuildEvent>
   </PropertyGroup>
 </Project>

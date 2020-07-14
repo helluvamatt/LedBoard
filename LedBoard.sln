@@ -7,11 +7,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LedBoard", "LedBoard\LedBoa
 	ProjectSection(ProjectDependencies) = postProject
 		{777FD616-8835-443A-B8A4-2EFD12715218} = {777FD616-8835-443A-B8A4-2EFD12715218}
 		{A47C4C7D-90B2-4253-8060-E1650A478784} = {A47C4C7D-90B2-4253-8060-E1650A478784}
+		{385CBEEB-33E0-4702-AE30-DF779E937AFA} = {385CBEEB-33E0-4702-AE30-DF779E937AFA}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LedBoard.Resources", "LedBoard.Resources\LedBoard.Resources.vcxproj", "{A47C4C7D-90B2-4253-8060-E1650A478784}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LedBoard.RegistryTool", "LedBoard.RegistryTool\LedBoard.RegistryTool.csproj", "{777FD616-8835-443A-B8A4-2EFD12715218}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LedBoard.Screensaver", "LedBoard.Screensaver\LedBoard.Screensaver.csproj", "{385CBEEB-33E0-4702-AE30-DF779E937AFA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +34,10 @@ Global
 		{777FD616-8835-443A-B8A4-2EFD12715218}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{777FD616-8835-443A-B8A4-2EFD12715218}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{777FD616-8835-443A-B8A4-2EFD12715218}.Release|Any CPU.Build.0 = Release|Any CPU
+		{385CBEEB-33E0-4702-AE30-DF779E937AFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{385CBEEB-33E0-4702-AE30-DF779E937AFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{385CBEEB-33E0-4702-AE30-DF779E937AFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{385CBEEB-33E0-4702-AE30-DF779E937AFA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

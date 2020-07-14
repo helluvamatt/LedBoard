@@ -7,23 +7,42 @@ namespace LedBoard.Services
 {
 	internal class RegistrySettingsProvider : SettingsProvider
 	{
-		public RegistrySettingsProvider()
+		#region Statics
+
+		public const string AppPathValueName = "AppPath";
+		public const string AppName = "LedBoard";
+
+		private readonly static string _ExeName;
+		private readonly static string _AppKeyName;
+		private readonly static string _ExeKeyName;
+
+		static RegistrySettingsProvider()
 		{
-            ApplicationVendorName = GetType().Assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company;
+			var assembly = typeof(RegistrySettingsProvider).Assembly;
+			string vendorName = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company;
+			_ExeName = assembly.GetName().Name;
+			if (string.IsNullOrWhiteSpace(vendorName)) _AppKeyName = $"Software\\{AppName}";
+			else _AppKeyName = $"Software\\{vendorName}\\{AppName}";
+			_ExeKeyName = $"{_AppKeyName}\\{_ExeName}";
 		}
+
+		public static RegistryKey OpenAppSettingsKey(bool writable)
+		{
+			return Registry.CurrentUser.CreateSubKey(_AppKeyName, writable);
+		}
+
+		#endregion
 
 		public override string ApplicationName
 		{
-			get => GetType().Assembly.GetName().Name;
+			get => _ExeName;
 			set { } // Do nothing
 		}
-
-		public string ApplicationVendorName { get; }
 
         public override SettingsPropertyValueCollection GetPropertyValues(SettingsContext context, SettingsPropertyCollection props)
         {
             SettingsPropertyValueCollection values = new SettingsPropertyValueCollection();
-            using (RegistryKey key = OpenKey(false))
+            using (RegistryKey key = OpenSettingsKey(false))
             {
                 foreach (SettingsProperty setting in props)
                 {
@@ -39,7 +58,7 @@ namespace LedBoard.Services
 
         public override void SetPropertyValues(SettingsContext context, SettingsPropertyValueCollection properties)
         {
-            using (RegistryKey key = OpenKey(true))
+            using (RegistryKey key = OpenSettingsKey(true))
             {
                 foreach (SettingsPropertyValue value in properties)
                 {
@@ -53,12 +72,9 @@ namespace LedBoard.Services
 			base.Initialize(GetType().Name, config);
 		}
 
-		private RegistryKey OpenKey(bool writable)
+		private RegistryKey OpenSettingsKey(bool writable)
 		{
-            string keyName;
-            if (string.IsNullOrWhiteSpace(ApplicationVendorName)) keyName = $"Software\\{ApplicationName}";
-            else keyName = $"Software\\{ApplicationVendorName}\\{ApplicationName}";
-			return Registry.CurrentUser.CreateSubKey(keyName, writable);
+			return Registry.CurrentUser.CreateSubKey(_ExeKeyName, writable);
 		}
 	}
 }

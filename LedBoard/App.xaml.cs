@@ -1,4 +1,7 @@
-﻿using LedBoard.ViewModels;
+﻿using LedBoard.Services;
+using LedBoard.ViewModels;
+using System;
+using System.IO;
 using System.Windows;
 
 namespace LedBoard
@@ -11,6 +14,15 @@ namespace LedBoard
 		protected override void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
+
+			// Store current app path in registry
+			using (var key = RegistrySettingsProvider.OpenAppSettingsKey(true))
+			{
+				string localAppPath = new Uri(GetType().Assembly.CodeBase).LocalPath;
+				key.SetValue(RegistrySettingsProvider.AppPathValueName, localAppPath);
+			}
+
+			// Launch main window
 			MainWindow = new AppWindow();
 			if (e.Args.Length > 0)
 			{
