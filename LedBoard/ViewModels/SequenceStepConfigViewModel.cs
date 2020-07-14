@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
-using System.Runtime;
 using System.Windows;
 
 namespace LedBoard.ViewModels

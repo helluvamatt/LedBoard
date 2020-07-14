@@ -21,21 +21,5 @@ namespace LedBoard.ViewModels
 			get => (Uri)GetValue(NavigationTargetProperty);
 			set => SetValue(NavigationTargetProperty, value);
 		}
-
-		//public static readonly DependencyProperty IconProperty = DependencyProperty.Register(nameof(Icon), typeof(object), typeof(MenuItemViewModel), new PropertyMetadata(null));
-
-		//public object Icon
-		//{
-		//	get => (object)GetValue(IconProperty);
-		//	set => SetValue(IconProperty, value);
-		//}
-
-		//public static readonly DependencyProperty LabelProperty = DependencyProperty.Register(nameof(Label), typeof(string), typeof(MenuItemViewModel), new PropertyMetadata(null));
-
-		//public string Label
-		//{
-		//	get => (string)GetValue(LabelProperty);
-		//	set => SetValue(LabelProperty, value);
-		//}
 	}
 }
