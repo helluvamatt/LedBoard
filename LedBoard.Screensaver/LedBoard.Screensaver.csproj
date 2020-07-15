@@ -49,9 +49,6 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LedBoard\Services\RegistrySettingsProvider.cs">
-      <Link>RegistrySettingsProvider.cs</Link>
-    </Compile>
     <Compile Include="AppContext.cs" />
     <Compile Include="ConfigForm.cs">
       <SubType>Form</SubType>
@@ -101,6 +98,7 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
+  <Import Project="..\LedBoard.Shared\LedBoard.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)LedBoard.scr" />

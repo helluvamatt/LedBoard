@@ -16,7 +16,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LedBoard.RegistryTool", "Le
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LedBoard.Screensaver", "LedBoard.Screensaver\LedBoard.Screensaver.csproj", "{385CBEEB-33E0-4702-AE30-DF779E937AFA}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "LedBoard.Shared", "LedBoard.Shared\LedBoard.Shared.shproj", "{6A44CF7D-8EA7-47B8-B314-877A6D7B52E7}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		LedBoard.Shared\LedBoard.Shared.projitems*{37e53829-60b3-43df-bd82-859cbc80b100}*SharedItemsImports = 4
+		LedBoard.Shared\LedBoard.Shared.projitems*{385cbeeb-33e0-4702-ae30-df779e937afa}*SharedItemsImports = 4
+		LedBoard.Shared\LedBoard.Shared.projitems*{6a44cf7d-8ea7-47b8-b314-877a6d7b52e7}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
