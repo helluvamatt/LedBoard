@@ -26,24 +26,12 @@ namespace LedBoard.Screensaver.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string GifPath {
+        public string ImagePath {
             get {
-                return ((string)(this["GifPath"]));
+                return ((string)(this["ImagePath"]));
             }
             set {
-                this["GifPath"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ProjectPath {
-            get {
-                return ((string)(this["ProjectPath"]));
-            }
-            set {
-                this["ProjectPath"] = value;
+                this["ImagePath"] = value;
             }
         }
     }

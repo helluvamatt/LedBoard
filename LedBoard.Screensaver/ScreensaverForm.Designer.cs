@@ -28,7 +28,9 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			this.pb = new System.Windows.Forms.PictureBox();
+			this.animationTimer = new System.Windows.Forms.Timer(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.pb)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -43,6 +45,10 @@
 			this.pb.TabStop = false;
 			this.pb.MouseClick += new System.Windows.Forms.MouseEventHandler(this.OnMouseClick);
 			this.pb.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnMouseMove);
+			// 
+			// animationTimer
+			// 
+			this.animationTimer.Tick += new System.EventHandler(this.OnAnimationTimerTick);
 			// 
 			// ScreensaverForm
 			// 
@@ -64,5 +70,6 @@
 		#endregion
 
 		private System.Windows.Forms.PictureBox pb;
+		private System.Windows.Forms.Timer animationTimer;
 	}
 }

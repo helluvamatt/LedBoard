@@ -66,7 +66,7 @@
 			// fldPath
 			// 
 			resources.ApplyResources(this.fldPath, "fldPath");
-			this.fldPath.DataBindings.Add(new System.Windows.Forms.Binding("Text", this, "GifPath", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+			this.fldPath.DataBindings.Add(new System.Windows.Forms.Binding("Text", this, "ImagePath", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 			this.fldPath.Name = "fldPath";
 			// 
 			// btnBrowse

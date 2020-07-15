@@ -8,5 +8,5 @@
 		public string Filters { get; set; }
 	}
 
-	public enum ExportFormat { GIF, PNGSeries }
+	public enum ExportFormat { GIF, PNGSeries, APNG }
 }

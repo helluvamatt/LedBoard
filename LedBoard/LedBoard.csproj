@@ -117,6 +117,7 @@
     <Compile Include="Models\Transitions\DissolveTransition.cs" />
     <Compile Include="Models\Transitions\SlideTransition.cs" />
     <Compile Include="Models\Transitions\WipeTransition.cs" />
+    <Compile Include="Services\Export\ApngExporter.cs" />
     <Compile Include="Services\Export\GifExporter.cs" />
     <Compile Include="Services\Export\PngExporter.cs" />
     <Compile Include="Services\IExportService.cs" />

@@ -10,13 +10,13 @@ namespace LedBoard.Screensaver
 		public AppContext(string[] args)
 		{
 			// Process command-line arguments
-			LaunchMode launch = LaunchMode.Screensaver;
+			LaunchMode launch = LaunchMode.Config;
 			IntPtr previewHwnd = IntPtr.Zero;
 			var optionSet = new OptionSet()
 			{
-				{ "s", "Launch screensaver", s => launch = LaunchMode.Screensaver },
-				{ "c", "Configure screensaver", c => launch = LaunchMode.Config },
-				{ "p=", "Preview mode", p => { previewHwnd = new IntPtr(long.Parse(p)); launch = LaunchMode.Preview; } }
+				{ "s|S", "Launch screensaver", s => launch = LaunchMode.Screensaver },
+				{ "c|C", "Configure screensaver", c => launch = LaunchMode.Config },
+				{ "p|P=", "Preview mode", p => { previewHwnd = new IntPtr(long.Parse(p)); launch = LaunchMode.Preview; } }
 			};
 			try
 			{

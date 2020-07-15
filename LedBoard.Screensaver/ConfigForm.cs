@@ -11,12 +11,12 @@ namespace LedBoard.Screensaver
 	{
 		private readonly string _AppPath;
 
-		private string _GifPath = null;
+		private string _ImagePath = null;
 
 		public ConfigForm()
 		{
 			InitializeComponent();
-			if (!string.IsNullOrWhiteSpace(Settings.Default.GifPath)) GifPath = Settings.Default.GifPath;
+			if (!string.IsNullOrWhiteSpace(Settings.Default.ImagePath)) ImagePath = Settings.Default.ImagePath;
 
 			// Read the registry to find where LedBoard.exe is located
 			using (var key = RegistrySettingsProvider.OpenAppSettingsKey(false))
@@ -26,15 +26,15 @@ namespace LedBoard.Screensaver
 			}
 		}
 
-		public string GifPath
+		public string ImagePath
 		{
-			get => _GifPath ?? Resources.DefaultBrowseStr;
+			get => _ImagePath ?? Resources.DefaultBrowseStr;
 			set
 			{
-				if (_GifPath != value)
+				if (_ImagePath != value)
 				{
-					_GifPath = value;
-					OnPropertyChanged(nameof(GifPath));
+					_ImagePath = value;
+					OnPropertyChanged(nameof(ImagePath));
 				}
 			}
 		}
@@ -44,7 +44,7 @@ namespace LedBoard.Screensaver
 		private void OnOkClick(object sender, EventArgs e)
 		{
 			// Save settings
-			Settings.Default.GifPath = _GifPath;
+			Settings.Default.ImagePath = _ImagePath;
 			Settings.Default.Save();
 
 			DialogResult = DialogResult.OK;
@@ -61,7 +61,7 @@ namespace LedBoard.Screensaver
 		{
 			if (openFileDialog.ShowDialog(this) == DialogResult.OK)
 			{
-				GifPath = openFileDialog.FileName;
+				ImagePath = openFileDialog.FileName;
 			}
 		}
 

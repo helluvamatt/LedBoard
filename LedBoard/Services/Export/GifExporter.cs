@@ -41,7 +41,6 @@ namespace LedBoard.Services.Export
 		private readonly BoardRenderer _Renderer;
 		private readonly Stream _Stream;
 
-		private readonly string _FilePath;
 		private readonly int _Scale;
 		private readonly int _DotPitch;
 		private readonly int _PixelSize;
@@ -55,7 +54,6 @@ namespace LedBoard.Services.Export
 		{
 			_Renderer = new BoardRenderer();
 			_Stream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-			_FilePath = filePath;
 			_Scale = scale;
 			_DotPitch = dotPitch;
 			_PixelSize = pixelSize;

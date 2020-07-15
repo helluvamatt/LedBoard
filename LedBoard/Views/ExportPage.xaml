@@ -16,6 +16,7 @@
 		<x:Array x:Key="ExportFormatOptions" Type="{x:Type m:ExportFormatDescriptor}">
 			<m:ExportFormatDescriptor Value="GIF" Text="Animated GIF" DefaultExt="gif" Filters="GIF images|*.gif|All files|*.*" />
 			<m:ExportFormatDescriptor Value="PNGSeries" Text="Multiple PNG files" DefaultExt="png" Filters="PNG images|*.png|All files|*.*" />
+			<m:ExportFormatDescriptor Value="APNG" Text="Animated PNG" DefaultExt="png" Filters="Animated PNG images|*.png;*.apng|All files|*.*" />
 		</x:Array>
 		<x:Array x:Key="ExportZoomOptions" Type="{x:Type m:IntDescriptor}">
 			<m:IntDescriptor Value="1" Text="Normal (1x)" />
@@ -46,7 +47,7 @@
 				<RowDefinition Height="auto" />
 			</Grid.RowDefinitions>
 			<Label Grid.Row="0" Grid.Column="0" Margin="8">Format</Label>
-			<ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportFormatOptions}" SelectedItem="{Binding ExportFormat}" DisplayMemberPath="Text" />
+			<ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportFormatOptions}" SelectedItem="{Binding ExportFormat}" SelectedIndex="0" DisplayMemberPath="Text" />
 			<Label Grid.Row="1" Grid.Column="0" Margin="8">Scaling</Label>
 			<ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,8,8" ItemsSource="{StaticResource ExportZoomOptions}" SelectedValue="{Binding ExportZoom}" SelectedValuePath="Value" DisplayMemberPath="Text" />
 			<Label Grid.Row="2" Grid.Column="0" Margin="8">File</Label>

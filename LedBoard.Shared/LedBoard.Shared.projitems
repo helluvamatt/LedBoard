@@ -9,6 +9,7 @@
     <Import_RootNamespace>LedBoard.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)PNG\AnimatedPng.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RegistrySettingsProvider.cs" />
   </ItemGroup>
 </Project>

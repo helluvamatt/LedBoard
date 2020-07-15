@@ -2,10 +2,7 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="LedBoard.Screensaver.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="GifPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="ProjectPath" Type="System.String" Scope="User">
+    <Setting Name="ImagePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

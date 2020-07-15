@@ -660,6 +660,9 @@ namespace LedBoard.ViewModels
 							case Models.ExportFormat.PNGSeries:
 								exporter = new PngExporter(exportPath, exportZoom, dotPitch, pixelSize, minPixelBrightness);
 								break;
+							case Models.ExportFormat.APNG:
+								exporter = new ApngExporter(exportPath, exportZoom, dotPitch, pixelSize, minPixelBrightness, frameDelay);
+								break;
 							default:
 								throw new NotImplementedException($"Unsupported export format: {exportFormat}");
 						}
