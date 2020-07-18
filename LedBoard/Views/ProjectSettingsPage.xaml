@@ -70,7 +70,7 @@
 		</DockPanel>
 		<mah:MetroHeader Margin="8" Grid.Column="1" Grid.Row="1" Header="Recent Projects" mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}">
 			<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
-				<ItemsControl Margin="4" ItemsSource="{Binding Source={x:Static p:Settings.Default}, Path=MostRecentlyUsedProjects}">
+				<ItemsControl Margin="8,8,8,0" ItemsSource="{Binding Source={x:Static p:Settings.Default}, Path=MostRecentlyUsedProjects}">
 					<ItemsControl.ItemsPanel>
 						<ItemsPanelTemplate>
 							<StackPanel Orientation="Vertical" />
@@ -78,7 +78,7 @@
 					</ItemsControl.ItemsPanel>
 					<ItemsControl.ItemTemplate>
 						<DataTemplate DataType="{x:Type sys:String}">
-							<Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}, Path=DataContext.OpenRecentCommand}" CommandParameter="{Binding}">
+							<Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}, Path=DataContext.OpenRecentCommand}" CommandParameter="{Binding}" Margin="0,0,0,8">
 								<Grid>
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="auto" />

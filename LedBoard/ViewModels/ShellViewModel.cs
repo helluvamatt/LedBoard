@@ -401,6 +401,7 @@ namespace LedBoard.ViewModels
 						Sequencer.Sequence.GetCurrentFrame(Sequencer.CurrentBoard);
 						ProjectPath = projectPath;
 						ResetConfigurationToSequencer();
+						Navigate("Views/ProjectPage.xaml");
 					});
 				}
 				catch (Exception ex)
@@ -409,11 +410,6 @@ namespace LedBoard.ViewModels
 				}
 
 				await controller.CloseAsync();
-
-				Dispatcher.Invoke(() =>
-				{
-					Navigate("Views/ProjectPage.xaml");
-				});
 			});
 		}
 

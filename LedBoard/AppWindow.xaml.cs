@@ -34,9 +34,10 @@ namespace LedBoard
 		public AppWindow()
 		{
 			_ResourcesService = new ProjectResourcesService(Path.Combine(Path.GetTempPath(), "LedBoard"));
-			DataContext = new ShellViewModel(this, _ResourcesService);
-			((ShellViewModel)DataContext).SequencePropertyChanged += OnSequencePropertyChanged;
+			var vm = new ShellViewModel(this, _ResourcesService);
+			vm.SequencePropertyChanged += OnSequencePropertyChanged;
 			InitializeComponent();
+			DataContext = vm;
 		}
 
 		private void OnFrameNavigated(object sender, NavigationEventArgs e)

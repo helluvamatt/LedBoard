@@ -82,59 +82,75 @@
 				<Button Margin="0,0,8,8" HorizontalAlignment="Right" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" Click="OnCloseMessageDialog" Style="{StaticResource MahApps.Styles.Button.Dialogs}">OK</Button>
 			</Grid>
 		</mah:CustomDialog>
+		<x:Array x:Key="MenuItems" Type="{x:Type vm:MenuItemViewModel}">
+			<vm:MenuItemViewModel Label="Project Settings" NavigationType="{x:Type v:ProjectSettingsPage}" Command="{Binding Source={x:Reference hamburgerMenu}, Path=DataContext.NavigateProjectSettingsCommand}">
+				<vm:MenuItemViewModel.Icon>
+					<ic:PackIconFontAwesome Width="28" Height="28" Kind="FileRegular" />
+				</vm:MenuItemViewModel.Icon>
+			</vm:MenuItemViewModel>
+			<vm:MenuItemViewModel Label="Timeline" NavigationType="{x:Type v:ProjectPage}" Command="{Binding Source={x:Reference hamburgerMenu}, Path=DataContext.NavigateProjectEditorCommand}">
+				<vm:MenuItemViewModel.Icon>
+					<ic:PackIconFontAwesome Width="28" Height="28" Kind="FilmSolid" RotationAngle="90" />
+				</vm:MenuItemViewModel.Icon>
+			</vm:MenuItemViewModel>
+			<vm:MenuItemViewModel Label="Viewer" NavigationType="{x:Type v:ViewerPage}" Command="{Binding Source={x:Reference hamburgerMenu}, Path=DataContext.NavigateViewerCommand}">
+				<vm:MenuItemViewModel.Icon>
+					<ic:PackIconFontAwesome Width="28" Height="28" Kind="DesktopSolid" />
+				</vm:MenuItemViewModel.Icon>
+			</vm:MenuItemViewModel>
+			<vm:MenuItemViewModel Label="Export" NavigationType="{x:Type v:ExportPage}" Command="{Binding Source={x:Reference hamburgerMenu}, Path=DataContext.NavigateExportCommand}">
+				<vm:MenuItemViewModel.Icon>
+					<ic:PackIconFontAwesome Width="28" Height="28" Kind="FileExportSolid" />
+				</vm:MenuItemViewModel.Icon>
+			</vm:MenuItemViewModel>
+		</x:Array>
+		<x:Array x:Key="OptionsMenuItems" Type="{x:Type vm:MenuItemViewModel}">
+			<vm:MenuItemViewModel Label="Settings" NavigationType="{x:Type v:SettingsPage}" Command="{Binding Source={x:Reference hamburgerMenu}, Path=DataContext.NavigateSettingsCommand}">
+				<vm:MenuItemViewModel.Icon>
+					<ic:PackIconFontAwesome Width="28" Height="28" Kind="WrenchSolid" />
+				</vm:MenuItemViewModel.Icon>
+			</vm:MenuItemViewModel>
+		</x:Array>
 	</mah:MetroWindow.Resources>
 	<mah:HamburgerMenu x:Name="hamburgerMenu" DisplayMode="CompactOverlay"
 					   ItemTemplate="{StaticResource MenuItemTemplate}"
-					   OptionsItemTemplate="{StaticResource MenuItemTemplate}">
-		<mah:HamburgerMenu.ItemsSource>
-			<mah:HamburgerMenuItemCollection>
-				<vm:MenuItemViewModel Label="Project Settings" NavigationType="{x:Type v:ProjectSettingsPage}" Command="{Binding NavigateProjectSettingsCommand}">
-					<vm:MenuItemViewModel.Icon>
-						<ic:PackIconFontAwesome Width="28" Height="28" Kind="FileRegular" />
-					</vm:MenuItemViewModel.Icon>
-				</vm:MenuItemViewModel>
-				<vm:MenuItemViewModel Label="Timeline" NavigationType="{x:Type v:ProjectPage}" Command="{Binding NavigateProjectEditorCommand}">
-					<vm:MenuItemViewModel.Icon>
-						<ic:PackIconFontAwesome Width="28" Height="28" Kind="FilmSolid" RotationAngle="90" />
-					</vm:MenuItemViewModel.Icon>
-				</vm:MenuItemViewModel>
-				<vm:MenuItemViewModel Label="Viewer" NavigationType="{x:Type v:ViewerPage}" Command="{Binding NavigateViewerCommand}">
-					<vm:MenuItemViewModel.Icon>
-						<ic:PackIconFontAwesome Width="28" Height="28" Kind="DesktopSolid" />
-					</vm:MenuItemViewModel.Icon>
-				</vm:MenuItemViewModel>
-				<vm:MenuItemViewModel Label="Export" NavigationType="{x:Type v:ExportPage}" Command="{Binding NavigateExportCommand}">
-					<vm:MenuItemViewModel.Icon>
-						<ic:PackIconFontAwesome Width="28" Height="28" Kind="FileExportSolid" />
-					</vm:MenuItemViewModel.Icon>
-				</vm:MenuItemViewModel>
-			</mah:HamburgerMenuItemCollection>
-		</mah:HamburgerMenu.ItemsSource>
-		<mah:HamburgerMenu.OptionsItemsSource>
-			<mah:HamburgerMenuItemCollection>
-				<vm:MenuItemViewModel Label="Settings" NavigationType="{x:Type v:SettingsPage}" Command="{Binding NavigateSettingsCommand}">
-					<vm:MenuItemViewModel.Icon>
-						<ic:PackIconFontAwesome Width="28" Height="28" Kind="WrenchSolid" />
-					</vm:MenuItemViewModel.Icon>
-				</vm:MenuItemViewModel>
-			</mah:HamburgerMenuItemCollection>
-		</mah:HamburgerMenu.OptionsItemsSource>
+					   ItemsSource="{StaticResource MenuItems}"
+					   OptionsItemTemplate="{StaticResource MenuItemTemplate}"
+					   OptionsItemsSource="{StaticResource OptionsMenuItems}">
 		<mah:HamburgerMenu.Content>
-			<Frame Source="{Binding CurrentPage}" Navigated="OnFrameNavigated">
-				<Frame.Style>
-					<Style BasedOn="{StaticResource {x:Type Frame}}" TargetType="{x:Type Frame}">
-						<Setter Property="ClipToBounds" Value="True" />
-						<Setter Property="NavigationUIVisibility" Value="Hidden" />
-						<Setter Property="ContentTemplate">
-							<Setter.Value>
-								<DataTemplate>
-									<mah:TransitioningContentControl Content="{Binding}" RestartTransitionOnContentChange="True" Transition="Default" />
-								</DataTemplate>
-							</Setter.Value>
-						</Setter>
-					</Style>
-				</Frame.Style>
-			</Frame>
+			<DockPanel LastChildFill="True">
+				<StatusBar DockPanel.Dock="Bottom" Style="{StaticResource MahApps.Styles.StatusBar}" Visibility="{Binding ProjectPath, Converter={StaticResource nullToVisibilityConverter}}">
+					<StatusBarItem Content="{Binding ProjectPath}" />
+					<Separator Style="{StaticResource MahApps.Styles.Separator.StatusBar}" />
+					<StatusBarItem>
+						<StatusBarItem.Style>
+							<Style TargetType="StatusBarItem" BasedOn="{StaticResource MahApps.Styles.StatusBarItem}">
+								<Setter Property="Content" Value="All changes saved" />
+								<Style.Triggers>
+									<DataTrigger Binding="{Binding IsDirty}" Value="True">
+										<Setter Property="Content" Value="Project has unsaved changes" />
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</StatusBarItem.Style>
+					</StatusBarItem>
+				</StatusBar>
+				<Frame Source="{Binding CurrentPage}" Navigated="OnFrameNavigated">
+					<Frame.Style>
+						<Style BasedOn="{StaticResource {x:Type Frame}}" TargetType="{x:Type Frame}">
+							<Setter Property="ClipToBounds" Value="True" />
+							<Setter Property="NavigationUIVisibility" Value="Hidden" />
+							<Setter Property="ContentTemplate">
+								<Setter.Value>
+									<DataTemplate>
+										<mah:TransitioningContentControl Content="{Binding}" RestartTransitionOnContentChange="True" Transition="Default" />
+									</DataTemplate>
+								</Setter.Value>
+							</Setter>
+						</Style>
+					</Frame.Style>
+				</Frame>
+			</DockPanel>
 		</mah:HamburgerMenu.Content>
 	</mah:HamburgerMenu>
 </mah:MetroWindow>
