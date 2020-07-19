@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 	  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
 	  xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
+	  xmlns:c="clr-namespace:LedBoard.Controls"
 	  xmlns:m="clr-namespace:LedBoard.Models"
 	  xmlns:p="clr-namespace:LedBoard.Properties"
 	  xmlns:vm="clr-namespace:LedBoard.ViewModels"
@@ -23,12 +24,7 @@
 	</Page.Resources>
 	<DockPanel>
 		<ContentControl DockPanel.Dock="Bottom" Margin="8">
-			<Button Padding="16" Command="{Binding NewProjectCommand}" Style="{StaticResource MahApps.Styles.Button}" HorizontalAlignment="Left">
-				<StackPanel Orientation="Vertical">
-					<ic:PackIconFontAwesome Width="24" Height="24" Kind="FileRegular" HorizontalAlignment="Center" Margin="0,0,0,8" />
-					<mah:ContentControlEx ContentCharacterCasing="Upper">New Project</mah:ContentControlEx>
-				</StackPanel>
-			</Button>
+			<Button Command="{Binding NewProjectCommand}" Style="{StaticResource ToolbarImageButtonStyle}" c:ControlHelpers.Icon="FileRegular" HorizontalAlignment="Left">New Project</Button>
 		</ContentControl>
 		<mah:MetroHeader Margin="8" HorizontalAlignment="Left">
 			<mah:MetroHeader.Header>

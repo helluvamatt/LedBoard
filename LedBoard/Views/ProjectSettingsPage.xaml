@@ -4,9 +4,9 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 	  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-	  xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
 	  xmlns:sys="clr-namespace:System;assembly=mscorlib"
 	  xmlns:c="clr-namespace:LedBoard.Converters"
+	  xmlns:cn="clr-namespace:LedBoard.Controls"
 	  xmlns:p="clr-namespace:LedBoard.Properties"
 	  xmlns:m="clr-namespace:LedBoard.Models"
 	  xmlns:vm="clr-namespace:LedBoard.ViewModels"
@@ -26,7 +26,7 @@
 			<m:IntDescriptor Value="200" Text="Very Slow (5 fps)" />
 		</x:Array>
 	</Page.Resources>
-	<Grid Margin="8">
+	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="*" />
 			<ColumnDefinition Width="*" />
@@ -35,20 +35,12 @@
 			<RowDefinition Height="auto" />
 			<RowDefinition Height="*" />
 		</Grid.RowDefinitions>
-		<StackPanel Grid.Row="0" Grid.Column="0" Margin="8" Grid.ColumnSpan="2" Orientation="Horizontal">
-			<Button Padding="16" Command="{Binding NavigateNewProjectCommand}" Style="{StaticResource MahApps.Styles.Button}">
-				<StackPanel Orientation="Vertical">
-					<ic:PackIconFontAwesome Width="24" Height="24" Kind="FileRegular" HorizontalAlignment="Center" Margin="0,0,0,8" />
-					<mah:ContentControlEx ContentCharacterCasing="Upper">New Project</mah:ContentControlEx>
-				</StackPanel>
-			</Button>
-			<Button Padding="16" Command="{Binding LoadProjectCommand}" Style="{StaticResource MahApps.Styles.Button}" Margin="8,0,0,0">
-				<StackPanel Orientation="Vertical">
-					<ic:PackIconFontAwesome Width="24" Height="24" Kind="FolderOpenRegular" HorizontalAlignment="Center" Margin="0,0,0,8" />
-					<mah:ContentControlEx ContentCharacterCasing="Upper">Open Project</mah:ContentControlEx>
-				</StackPanel>
-			</Button>
-		</StackPanel>
+		<Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="{StaticResource MahApps.Brushes.Gray5}">
+			<StackPanel Margin="2" Orientation="Horizontal">
+				<Button Command="{Binding NavigateNewProjectCommand}" Style="{StaticResource ToolbarImageButtonStyle}" cn:ControlHelpers.Icon="FileRegular" Margin="2">New Project</Button>
+				<Button Command="{Binding LoadProjectCommand}" Style="{StaticResource ToolbarImageButtonStyle}" cn:ControlHelpers.Icon="FolderOpenRegular" Margin="2">Open Project</Button>
+			</StackPanel>
+		</Border>
 		<DockPanel Grid.Column="0" Grid.Row="1" Margin="8">
 			<UniformGrid Columns="2" Rows="1" DockPanel.Dock="Bottom" Margin="-4,0" Visibility="{Binding Sequencer, Converter={StaticResource nullToVisibilityConverter}}">
 				<Button Margin="4" Command="{Binding SaveProjectCommand}" Style="{StaticResource MahApps.Styles.Button}">Save Project</Button>
