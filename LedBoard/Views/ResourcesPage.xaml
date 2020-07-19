@@ -20,6 +20,7 @@
 		<c:ExtensionDescriptionConverter x:Key="extDescConverter" />
 		<c:NullToVisibilityConverter x:Key="nullToVisibilityConverter" NullVisibility="Collapsed" NotNullVisibility="Visible" />
 		<c:NullToVisibilityConverter x:Key="notNullToVisibilityConverter" NullVisibility="Visible" NotNullVisibility="Collapsed" />
+		<c:Base64ToHexConverter x:Key="base64ToHexConverter" />
 	</Page.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
@@ -74,13 +75,16 @@
 			<Grid>
 				<Grid.Resources>
 					<Style TargetType="Label" BasedOn="{StaticResource MahApps.Styles.Label}">
-						<Setter Property="FontWeight" Value="Bold" />
 						<Setter Property="HorizontalAlignment" Value="Right" />
+						<Setter Property="VerticalAlignment" Value="Top" />
+						<Setter Property="Padding" Value="4" />
+						<Setter Property="FontWeight" Value="Bold" />
 					</Style>
 					<Style TargetType="TextBlock" x:Key="fieldStyle" BasedOn="{StaticResource MahApps.Styles.TextBlock}">
-						<Setter Property="TextTrimming" Value="CharacterEllipsis" />
-						<Setter Property="VerticalAlignment" Value="Center" />
+						<Setter Property="VerticalAlignment" Value="Top" />
+						<Setter Property="Padding" Value="4" />
 						<Setter Property="Margin" Value="4,0,0,0" />
+						<Setter Property="TextTrimming" Value="CharacterEllipsis" />
 					</Style>
 				</Grid.Resources>
 				<Grid.ColumnDefinitions>
@@ -107,7 +111,7 @@
 				<Label Grid.Column="0" Grid.Row="4">Used</Label>
 				<TextBlock Grid.Column="1" Grid.Row="1" Style="{StaticResource fieldStyle}" Text="{Binding SelectedResource.Path, Converter={StaticResource extDescConverter}}" />
 				<TextBlock Grid.Column="1" Grid.Row="2" Style="{StaticResource fieldStyle}" Text="{Binding SelectedResource.Filesize, Converter={StaticResource fileSizeConverter}}" />
-				<TextBlock Grid.Column="1" Grid.Row="3" Style="{StaticResource fieldStyle}" Text="{Binding SelectedResource.Signature}" />
+				<TextBlock Grid.Column="1" Grid.Row="3" Style="{StaticResource fieldStyle}" Text="{Binding SelectedResource.Signature, Converter={StaticResource base64ToHexConverter}}" TextWrapping="Wrap" />
 				<TextBlock Grid.Column="1" Grid.Row="4" Style="{StaticResource fieldStyle}" Text="{Binding SelectedResourceUsage}" />
 			</Grid>
 		</mah:MetroHeader>
