@@ -1,7 +1,9 @@
 ﻿using LedBoard.Models.Serialization;
 using LedBoard.Services.Resources;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Windows.Markup;
 
@@ -41,18 +43,13 @@ namespace LedBoard.Services
 			}
 		}
 
-		public void SaveProject(ProjectModel project, string path)
+		public IEnumerable<string> SaveProject(ProjectModel project, IDictionary<string, IEnumerable<string>> requiredResources, string path)
 		{
 			using (var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write))
 			{
 				using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Create))
 				{
-					var projectEntry = archive.CreateEntry("project.xml");
-					using (var pomXmlStream = projectEntry.Open())
-					{
-						SerializeProject(project, pomXmlStream);
-					}
-					_ResourcesService.SaveProject(project, (localPath, src) =>
+					var errors = _ResourcesService.SaveProject(project, requiredResources, (localPath, src) =>
 					{
 						localPath = localPath.Replace(Path.DirectorySeparatorChar, '/');
 						var resourceEntry = archive.CreateEntry($"resources/{localPath}");
@@ -61,6 +58,17 @@ namespace LedBoard.Services
 							src.CopyTo(zipStream);
 						}
 					});
+
+					if (!errors.Any())
+					{
+						var projectEntry = archive.CreateEntry("project.xml");
+						using (var pomXmlStream = projectEntry.Open())
+						{
+							SerializeProject(project, pomXmlStream);
+						}
+					}
+
+					return errors;
 				}
 			}
 		}

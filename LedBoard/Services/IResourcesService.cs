@@ -1,16 +1,32 @@
-﻿using System.IO;
+﻿using LedBoard.Models;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 
 namespace LedBoard.Services
 {
 	public interface IResourcesService
 	{
 		Stream OpenResource(string uri);
-		string SaveResource(Stream stream, string filename);
+		Resource SaveResource(Stream stream, string filename);
 		bool DeleteResource(string uri);
+		bool CleanupResources(ISet<string> requiredResources);
 
-		bool TryGetResourceMeta(string uri, out long filesize, out string signature);
-		bool VerifyResource(string uri, long filesize, string signature);
+		bool TryGetResource(string uri, out Resource resource);
+		IEnumerable<Resource> Resources { get; }
+		event EventHandler<ResourcesChangedEventArgs> ResourceAdded;
+		event EventHandler<ResourcesChangedEventArgs> ResourceRemoved;
+		event EventHandler ResourcesRefreshed;
+	}
 
-		bool TryGetResourceFileName(string uri, out string filename);
+	public class ResourcesChangedEventArgs : EventArgs
+	{
+		public ResourcesChangedEventArgs(Resource subject)
+		{
+			Subject = subject;
+		}
+
+		public Resource Subject { get; }
 	}
 }

@@ -99,6 +99,11 @@
 					<ic:PackIconFontAwesome Width="28" Height="28" Kind="FileExportSolid" />
 				</vm:MenuItemViewModel.Icon>
 			</vm:MenuItemViewModel>
+			<vm:MenuItemViewModel Label="Resources" NavigationType="{x:Type v:ResourcesPage}" Command="{Binding Source={x:Reference hamburgerMenu}, Path=DataContext.NavigateResourcesCommand}">
+				<vm:MenuItemViewModel.Icon>
+					<ic:PackIconFontAwesome Width="28" Height="28" Kind="FolderOpenSolid" />
+				</vm:MenuItemViewModel.Icon>
+			</vm:MenuItemViewModel>
 		</x:Array>
 		<x:Array x:Key="OptionsMenuItems" Type="{x:Type vm:MenuItemViewModel}">
 			<vm:MenuItemViewModel Label="Settings" NavigationType="{x:Type v:SettingsPage}" Command="{Binding Source={x:Reference hamburgerMenu}, Path=DataContext.NavigateSettingsCommand}">

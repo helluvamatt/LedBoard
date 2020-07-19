@@ -1,5 +1,7 @@
-﻿using LedBoard.Services;
+﻿using LedBoard.Models;
+using LedBoard.Services;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -14,66 +16,76 @@ namespace LedBoard.ViewModels.Config
 		private readonly IResourcesService _ResourcesService;
 		private readonly string _FileFilters;
 
-		private string _Uri;
-
 		public FileResourcePropertyViewModel(PropertyInfo property, string label, string initialValue, string fileFilter, IDialogService dialogService, IResourcesService resourcesService) : base(property, label)
 		{
 			_DialogService = dialogService;
 			_ResourcesService = resourcesService;
 			_FileFilters = fileFilter;
 			PickFileCommand = new DelegateCommand(OnPickFile);
-			_Uri = initialValue;
-			if (_ResourcesService.TryGetResourceFileName(initialValue, out string filename))
+			CurrentResources = new ObservableCollection<Resource>();
+			PopulateResources();
+			if (_ResourcesService.TryGetResource(initialValue, out Resource resource))
 			{
-				FilePath = filename;
+				Resource = resource;
 			}
 		}
 
-		public override object Value => _Uri;
+		public override object Value => Resource.Uri.AbsoluteUri;
 
 		public ICommand PickFileCommand { get; }
 
-		public static readonly DependencyProperty FilePathProperty = DependencyProperty.Register(nameof(FilePath), typeof(string), typeof(FileResourcePropertyViewModel), new PropertyMetadata(null));
+		public ObservableCollection<Resource> CurrentResources { get; }
 
-		public string FilePath
+		public static readonly DependencyProperty ResourceProperty = DependencyProperty.Register(nameof(Resource), typeof(Resource), typeof(FileResourcePropertyViewModel), new PropertyMetadata(null, OnResourceChanged));
+
+		public Resource Resource
 		{
-			get => (string)GetValue(FilePathProperty);
-			set => SetValue(FilePathProperty, value);
+			get => (Resource)GetValue(ResourceProperty);
+			set => SetValue(ResourceProperty, value);
+		}
+
+		private static void OnResourceChanged(DependencyObject owner, DependencyPropertyChangedEventArgs e)
+		{
+			var vm = (FileResourcePropertyViewModel)owner;
+			vm.OnValueChanged();
 		}
 
 		private void OnPickFile()
 		{
-			string result = _DialogService.OpenFileDialog("Choose file...", _FileFilters, FilePath != null ? Path.GetDirectoryName(FilePath) : null);
+			string result = _DialogService.OpenFileDialog("Choose file...", _FileFilters, null);
 			if (result != null)
 			{
 				Task.Run(() =>
 				{
 					try
 					{
-						if (_Uri != null)
-						{
-							_ResourcesService.DeleteResource(_Uri);
-							_Uri = null;
-						}
-
-						string filename;
 						using (var stream = new FileStream(result, FileMode.Open, FileAccess.Read))
 						{
-							filename = Path.GetFileName(result);
-							_Uri = _ResourcesService.SaveResource(stream, filename);
+							Resource newResource = _ResourcesService.SaveResource(stream, Path.GetFileName(result));
+							if (newResource != null)
+							{
+								Dispatcher.Invoke(() =>
+								{
+									PopulateResources();
+									Resource = newResource;
+								});
+							}
 						}
-						Dispatcher.Invoke(() =>
-						{
-							FilePath = filename;
-							OnValueChanged();
-						});
 					}
 					catch (Exception ex)
 					{
 						_DialogService.ShowMessageDialog("Error", $"Failed to save resource: {ex.Message}", MessageDialogIconType.Error, ex.ToString());
 					}
 				});
-				
+			}
+		}
+
+		private void PopulateResources()
+		{
+			CurrentResources.Clear();
+			foreach (var resource in _ResourcesService.Resources)
+			{
+				CurrentResources.Add(resource);
 			}
 		}
 	}

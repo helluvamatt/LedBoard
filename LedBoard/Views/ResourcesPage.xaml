@@ -1,0 +1,116 @@
+﻿<Page x:Class="LedBoard.Views.ResourcesPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+	  xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
+	  xmlns:sys="clr-namespace:System;assembly=mscorlib"
+	  xmlns:c="clr-namespace:LedBoard.Converters"
+	  xmlns:cn="clr-namespace:LedBoard.Controls"
+	  xmlns:m="clr-namespace:LedBoard.Models"
+      xmlns:vm="clr-namespace:LedBoard.ViewModels"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+	  d:DataContext="{d:DesignInstance Type={x:Type vm:ShellViewModel}, IsDesignTimeCreatable=False}"
+      Title="Resources">
+	<Page.Resources>
+		<c:FileSizeConverter x:Key="fileSizeConverter" />
+		<c:ExtensionIconConverter x:Key="extIconConverter" />
+		<c:ExtensionDescriptionConverter x:Key="extDescConverter" />
+		<c:NullToVisibilityConverter x:Key="nullToVisibilityConverter" NullVisibility="Collapsed" NotNullVisibility="Visible" />
+		<c:NullToVisibilityConverter x:Key="notNullToVisibilityConverter" NullVisibility="Visible" NotNullVisibility="Collapsed" />
+	</Page.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="3*" />
+			<ColumnDefinition Width="auto" />
+			<ColumnDefinition Width="1*" />
+		</Grid.ColumnDefinitions>
+		<Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{StaticResource MahApps.Brushes.Gray5}">
+			<StackPanel Orientation="Horizontal" Margin="2">
+				<Button Command="{Binding CleanupResourcesCommand}" Style="{StaticResource ToolbarImageButtonStyle}" cn:ControlHelpers.Icon="TrashSolid" Margin="2">Clean Up</Button>
+				<Button Command="{Binding DeleteResourceCommand}" Style="{StaticResource ToolbarImageButtonStyle}" cn:ControlHelpers.Icon="TimesSolid" Margin="2">Delete</Button>
+			</StackPanel>
+		</Border>
+		<ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Resources}" SelectedItem="{Binding SelectedResource}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+			<ListBox.ItemsPanel>
+				<ItemsPanelTemplate>
+					<WrapPanel Orientation="Horizontal" IsItemsHost="True" Margin="8" />
+				</ItemsPanelTemplate>
+			</ListBox.ItemsPanel>
+			<ListBox.ItemTemplate>
+				<DataTemplate DataType="{x:Type m:Resource}">
+					<Grid Margin="0,0,4,4">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="auto" />
+							<ColumnDefinition Width="300" />
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="auto" />
+							<RowDefinition Height="auto" />
+							<RowDefinition Height="auto" />
+						</Grid.RowDefinitions>
+						<Image Source="{Binding Path, Converter={StaticResource extIconConverter}}" Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Margin="4" Width="32" Height="32" VerticalAlignment="Top" />
+						<TextBlock Text="{Binding Name}" Grid.Column="1" Grid.Row="0" TextTrimming="CharacterEllipsis" FontWeight="Bold" />
+						<TextBlock Text="{Binding Filesize, Converter={StaticResource fileSizeConverter}}" Grid.Column="1" Grid.Row="1" />
+						<TextBlock Text="{Binding Path, Converter={StaticResource extDescConverter}}" Grid.Column="1" Grid.Row="2" />
+					</Grid>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+		<GridSplitter Grid.Row="1" Grid.Column="1" Width="5" VerticalAlignment="Stretch" ResizeDirection="Columns" />
+		<mah:MetroHeader Grid.Row="1" Grid.Column="2" Visibility="{Binding SelectedResource, Converter={StaticResource nullToVisibilityConverter}}"
+						 Header="{Binding SelectedResource.Name}"
+						 Background="{StaticResource MahApps.Brushes.Window.Background}"
+						 mah:HeaderedControlHelper.HeaderBackground="{StaticResource MahApps.Brushes.Gray7}"
+						 mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}"
+						 mah:HeaderedControlHelper.HeaderFontWeight="Bold"
+						 mah:HeaderedControlHelper.HeaderMargin="8">
+			<Grid>
+				<Grid.Resources>
+					<Style TargetType="Label" BasedOn="{StaticResource MahApps.Styles.Label}">
+						<Setter Property="FontWeight" Value="Bold" />
+						<Setter Property="HorizontalAlignment" Value="Right" />
+					</Style>
+					<Style TargetType="TextBlock" x:Key="fieldStyle" BasedOn="{StaticResource MahApps.Styles.TextBlock}">
+						<Setter Property="TextTrimming" Value="CharacterEllipsis" />
+						<Setter Property="VerticalAlignment" Value="Center" />
+						<Setter Property="Margin" Value="4,0,0,0" />
+					</Style>
+				</Grid.Resources>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+				</Grid.RowDefinitions>
+				<Image Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="16" Height="32" Width="32"
+					   Source="{Binding SelectedResource.Path, Converter={StaticResource extIconConverter}}"
+					   Visibility="{Binding SelectedResourceImage, Converter={StaticResource notNullToVisibilityConverter}}" />
+				<Image Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="16" MaxHeight="256" Width="256"
+					   Source="{Binding SelectedResourceImage}"
+					   Visibility="{Binding SelectedResourceImage, Converter={StaticResource nullToVisibilityConverter}}" />
+				<Label Grid.Column="0" Grid.Row="1">Type</Label>
+				<Label Grid.Column="0" Grid.Row="2">Size</Label>
+				<Label Grid.Column="0" Grid.Row="3">Signature</Label>
+				<Label Grid.Column="0" Grid.Row="4">Used</Label>
+				<TextBlock Grid.Column="1" Grid.Row="1" Style="{StaticResource fieldStyle}" Text="{Binding SelectedResource.Path, Converter={StaticResource extDescConverter}}" />
+				<TextBlock Grid.Column="1" Grid.Row="2" Style="{StaticResource fieldStyle}" Text="{Binding SelectedResource.Filesize, Converter={StaticResource fileSizeConverter}}" />
+				<TextBlock Grid.Column="1" Grid.Row="3" Style="{StaticResource fieldStyle}" Text="{Binding SelectedResource.Signature}" />
+				<TextBlock Grid.Column="1" Grid.Row="4" Style="{StaticResource fieldStyle}" Text="{Binding SelectedResourceUsage}" />
+			</Grid>
+		</mah:MetroHeader>
+		<TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding SelectedResource, Converter={StaticResource notNullToVisibilityConverter}}" FontWeight="Bold">No resource selected</TextBlock>
+	</Grid>
+</Page>

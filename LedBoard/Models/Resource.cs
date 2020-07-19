@@ -4,13 +4,24 @@ namespace LedBoard.Models
 {
 	public class Resource
 	{
-		public Resource(string name, Uri uri)
+		public Resource(Uri uri, string path, string name, long fileSize, string signature)
 		{
-			Name = name;
-			Uri = uri;
+			Uri = uri ?? throw new ArgumentNullException(nameof(uri));
+			Path = path ?? throw new ArgumentNullException(nameof(path));
+			Name = name ?? throw new ArgumentNullException(nameof(name));
+			Filesize = fileSize;
+			Signature = signature ?? throw new ArgumentNullException(nameof(signature));
 		}
 
-		public string Name { get; }
 		public Uri Uri { get; }
+		public string Path { get; }
+		public string Name { get; }
+		public long Filesize { get; }
+		public string Signature { get; }
+
+		public override string ToString() => Name;
+		public override bool Equals(object obj) => obj is Resource other && other.Uri == Uri;
+		public override int GetHashCode() => Uri.GetHashCode();
+
 	}
 }

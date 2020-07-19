@@ -18,6 +18,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace LedBoard.ViewModels
 {
@@ -38,6 +40,7 @@ namespace LedBoard.ViewModels
 			NavigateProjectEditorCommand = new DelegateCommand(() => Navigate("Views/ProjectPage.xaml"), () => Sequencer != null);
 			NavigateViewerCommand = new DelegateCommand(() => Navigate("Views/ViewerPage.xaml"), () => Sequencer != null);
 			NavigateExportCommand = new DelegateCommand(() => Navigate("Views/ExportPage.xaml"), () => Sequencer != null);
+			NavigateResourcesCommand = new DelegateCommand(() => Navigate("Views/ResourcesPage.xaml"), () => Sequencer != null);
 			NavigateSettingsCommand = new DelegateCommand(() => Navigate("Views/SettingsPage.xaml"));
 
 			NavigateNewProjectCommand = new DelegateCommand(OnNavigateNewProject);
@@ -56,8 +59,17 @@ namespace LedBoard.ViewModels
 			
 			ExportBrowseCommand = new DelegateCommand(OnExportBrowse, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero);
 			ExportRenderCommand = new DelegateCommand(OnExportRender, () => Sequencer != null && Sequencer.Sequence.Length > TimeSpan.Zero && ExportFormat != null && !string.IsNullOrWhiteSpace(ExportPath));
-			
+
+			DeleteResourceCommand = new DelegateCommand(OnDeleteResource, CanDeleteResource);
+			CleanupResourcesCommand = new DelegateCommand(OnCleanupResources);
+
+			Resources = new ObservableCollection<Resource>();
+
+			// Bind event handlers
 			Settings.Default.PropertyChanged += OnSettingsPropertyChanged;
+			_ResourcesService.ResourcesRefreshed += OnResourcesRefreshed;
+			_ResourcesService.ResourceAdded += OnResourceAdded;
+			_ResourcesService.ResourceRemoved += OnResourceRemoved;
 
 			// Get monitors for fullscreen
 			Monitors = new ObservableCollection<MonitorInfo>();
@@ -87,6 +99,7 @@ namespace LedBoard.ViewModels
 		public ICommand NavigateProjectEditorCommand { get; }
 		public ICommand NavigateViewerCommand { get; }
 		public ICommand NavigateExportCommand { get; }
+		public ICommand NavigateResourcesCommand { get; }
 		public ICommand NavigateSettingsCommand { get; }
 
 		#endregion
@@ -118,6 +131,13 @@ namespace LedBoard.ViewModels
 
 		#endregion
 
+		#region Resource Manager commands
+
+		public ICommand DeleteResourceCommand { get; }
+		public ICommand CleanupResourcesCommand { get; }
+
+		#endregion
+
 		#endregion
 
 		public event PropertyChangedEventHandler SequencePropertyChanged;
@@ -126,6 +146,7 @@ namespace LedBoard.ViewModels
 		public double MaxZoom => 1;
 
 		public ObservableCollection<MonitorInfo> Monitors { get; }
+		public ObservableCollection<Resource> Resources { get; }
 
 		#region Dependency properties
 
@@ -315,6 +336,72 @@ namespace LedBoard.ViewModels
 
 		#endregion
 
+		#region SelectedResource
+
+		public static readonly DependencyProperty SelectedResourceProperty = DependencyProperty.Register(nameof(SelectedResource), typeof(Resource), typeof(ShellViewModel), new PropertyMetadata(null, OnSelectedResourceChanged));
+
+		public Resource SelectedResource
+		{
+			get => (Resource)GetValue(SelectedResourceProperty);
+			set => SetValue(SelectedResourceProperty, value);
+		}
+
+		private static void OnSelectedResourceChanged(DependencyObject owner, DependencyPropertyChangedEventArgs e)
+		{
+			var vm = (ShellViewModel)owner;
+			CommandManager.InvalidateRequerySuggested();
+
+			vm.SelectedResourceImage = null;
+			vm.SelectedResourceUsage = null;
+
+			if (vm.SelectedResource != null)
+			{
+				// Determine resource usage
+				int usageCount = vm.Sequencer.Sequence.Steps.Count(entry => entry.Step.Resources.Contains(vm.SelectedResource.Uri.AbsoluteUri));
+				vm.SelectedResourceUsage = string.Format("{0} {1}", usageCount, usageCount == 1 ? "reference" : "references");
+
+				// Asynchronously load image (if needed)
+				var imagePath = vm.SelectedResource.Path;
+				Task.Run(() =>
+				{
+					BitmapFrame frame = null;
+					try
+					{
+						using (var fileStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+						{
+							frame = BitmapFrame.Create(fileStream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+						}
+					}
+					catch { } // Eat, don't display anything, the resource may not be an image
+					if (frame != null)
+					{
+						vm.Dispatcher.Invoke(() =>
+						{
+							vm.SelectedResourceImage = frame;
+						});
+					}
+				});
+			}
+		}
+
+		public static readonly DependencyProperty SelectedResourceImageProperty = DependencyProperty.Register(nameof(SelectedResourceImage), typeof(ImageSource), typeof(ShellViewModel), new PropertyMetadata(null));
+
+		public ImageSource SelectedResourceImage
+		{
+			get => (ImageSource)GetValue(SelectedResourceImageProperty);
+			set => SetValue(SelectedResourceImageProperty, value);
+		}
+
+		public static readonly DependencyProperty SelectedResourceUsageProperty = DependencyProperty.Register(nameof(SelectedResourceUsage), typeof(string), typeof(ShellViewModel), new PropertyMetadata(null));
+
+		public string SelectedResourceUsage
+		{
+			get => (string)GetValue(SelectedResourceUsageProperty);
+			set => SetValue(SelectedResourceUsageProperty, value);
+		}
+
+		#endregion
+
 		#endregion
 
 		#region Event handlers
@@ -458,43 +545,26 @@ namespace LedBoard.ViewModels
 				// Create project model
 				var project = sequencer.ExportProject();
 
+				// Gather required resources
+				var requiredResources = new Dictionary<string, IEnumerable<string>>();
+				foreach (var entry in sequencer.Sequence.Steps)
+				{
+					foreach (var uri in entry.Step.Resources.Where(uri => !string.IsNullOrWhiteSpace(uri)))
+					{
+						if (!requiredResources.ContainsKey(uri)) requiredResources.Add(uri, new List<string>());
+						(requiredResources[uri] as List<string>).Add(entry.Step.DisplayName);
+					}
+				}
+
 				// Asynchrounously save the project
 				await Task.Run(() =>
 				{
-					var resourceList = new List<ProjectResourceModel>();
-					var errorList = new List<string>();
-					foreach (var entry in sequencer.Sequence.Steps)
-					{
-						foreach (var resourceUri in entry.Step.Resources.Where(uri => !string.IsNullOrWhiteSpace(uri)))
-						{
-							if (_ResourcesService.TryGetResourceMeta(resourceUri, out long filesize, out string signature))
-							{
-								resourceList.Add(new ProjectResourceModel
-								{
-									Uri = resourceUri,
-									FileSize = filesize,
-									Signature = signature,
-								});
-							}
-							else
-							{
-								errorList.Add($"{entry.Step.DisplayName}: {resourceUri}");
-							}
-						}
-					}
-
+					// Save project, capturing resource errors
+					var errorList = new ProjectService(_ResourcesService).SaveProject(project, requiredResources, path).ToList();
 					if (errorList.Any())
 					{
 						// Resource processing failed
 						error = $"Some resources are invalid:\r\n\r\n{string.Join("\r\n", errorList)}";
-					}
-					else
-					{
-						// Store resource references in project
-						project.Resources = resourceList.ToArray();
-
-						// Save project
-						new ProjectService(_ResourcesService).SaveProject(project, path);
 					}
 				});
 			}
@@ -690,6 +760,72 @@ namespace LedBoard.ViewModels
 			Settings.Default.NewBoardWidth = Sequencer.Sequence.BoardWidth;
 			Settings.Default.NewBoardHeight = Sequencer.Sequence.BoardHeight;
 			Settings.Default.NewFrameRate = (int)Sequencer.Sequence.FrameDelay.TotalMilliseconds;
+		}
+
+		private void OnResourcesRefreshed(object sender, EventArgs e)
+		{
+			Dispatcher.Invoke(() =>
+			{
+				Resources.Clear();
+				foreach (var resource in _ResourcesService.Resources)
+				{
+					Resources.Add(resource);
+				}
+			});
+		}
+
+		private void OnResourceRemoved(object sender, ResourcesChangedEventArgs e)
+		{
+			Dispatcher.Invoke(() =>
+			{
+				Resources.Remove(e.Subject);
+				Sequencer.Sequence.IsDirty = true;
+			});
+		}
+
+		private void OnResourceAdded(object sender, ResourcesChangedEventArgs e)
+		{
+			Dispatcher.Invoke(() =>
+			{
+				Resources.Add(e.Subject);
+			});
+		}
+
+		private void OnDeleteResource()
+		{
+			if (!CanDeleteResource()) return;
+
+			var resource = SelectedResource;
+			_ResourcesService.DeleteResource(resource.Uri.AbsoluteUri);
+			SelectedResource = null;
+		}
+
+		private bool CanDeleteResource()
+		{
+			if (Sequencer == null || SelectedResource == null) return false;
+			var requiredResources = GetRequiredResources();
+			return !requiredResources.Contains(SelectedResource.Uri.AbsoluteUri);
+		}
+
+		private async void OnCleanupResources()
+		{
+			if (Sequencer == null) return;
+			var requiredResources = GetRequiredResources();
+
+			var controller = await _DialogService.ShowProgressDialogAsync("Please wait...", "Deleting unused resources...", false);
+			controller.SetIndeterminate();
+
+			await Task.Run(() =>
+			{
+				_ResourcesService.CleanupResources(requiredResources);
+			});
+
+			await controller.CloseAsync();
+		}
+
+		private ISet<string> GetRequiredResources()
+		{
+			return Sequencer.Sequence.Steps.SelectMany(entry => entry.Step.Resources.Where(uri => !string.IsNullOrWhiteSpace(uri))).ToHashSet();
 		}
 
 		#endregion

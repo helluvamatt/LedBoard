@@ -254,8 +254,8 @@
 											<RowDefinition Height="auto" />
 										</Grid.RowDefinitions>
 										<Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding Label}" />
-										<TextBox Grid.Row="1" Grid.Column="0" Text="{Binding FilePath}" />
-										<Button Grid.Row="1" Grid.Column="1" Command="{Binding PickFileCommand}">
+										<ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding CurrentResources}" SelectedItem="{Binding Resource}" DisplayMemberPath="Name" />
+										<Button Grid.Row="1" Grid.Column="1" Command="{Binding PickFileCommand}" ToolTip="Add new resource file...">
 											<ic:PackIconFontAwesome Width="14" Height="14" Kind="FolderOpenSolid" />
 										</Button>
 									</Grid>
