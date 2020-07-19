@@ -144,7 +144,7 @@ namespace LedBoard.Models
 
 		public void GetCurrentFrame(IBoard board)
 		{
-			Render(board, _CurrentEntry, _CurrentEntryIndex, _CurrentTime - _CurrentEntry.StartTime, Loop);
+			if (board != null && _CurrentEntry != null) Render(board, _CurrentEntry, _CurrentEntryIndex, _CurrentTime - _CurrentEntry.StartTime, Loop);
 		}
 
 		public void RenderFrameAt(IBoard board, TimeSpan ts, bool loop)

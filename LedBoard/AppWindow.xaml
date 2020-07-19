@@ -6,11 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
 	xmlns:ic="http://metro.mahapps.com/winfx/xaml/iconpacks"
-	xmlns:sys="clr-namespace:System;assembly=mscorlib"
-    xmlns:local="clr-namespace:LedBoard"
-	xmlns:controls="clr-namespace:LedBoard.Controls"
 	xmlns:c="clr-namespace:LedBoard.Converters"
-	xmlns:m="clr-namespace:LedBoard.Models"
 	xmlns:p="clr-namespace:LedBoard.Properties"
 	xmlns:vm="clr-namespace:LedBoard.ViewModels"
 	xmlns:v="clr-namespace:LedBoard.Views"
@@ -127,7 +123,7 @@
 							<Style TargetType="StatusBarItem" BasedOn="{StaticResource MahApps.Styles.StatusBarItem}">
 								<Setter Property="Content" Value="All changes saved" />
 								<Style.Triggers>
-									<DataTrigger Binding="{Binding IsDirty}" Value="True">
+									<DataTrigger Binding="{Binding Sequencer.Sequence.IsDirty}" Value="True">
 										<Setter Property="Content" Value="Project has unsaved changes" />
 									</DataTrigger>
 								</Style.Triggers>
