@@ -67,11 +67,14 @@
 		<GridSplitter Grid.Row="1" Grid.Column="1" Width="5" VerticalAlignment="Stretch" ResizeDirection="Columns" />
 		<mah:MetroHeader Grid.Row="1" Grid.Column="2" Visibility="{Binding SelectedResource, Converter={StaticResource nullToVisibilityConverter}}"
 						 Header="{Binding SelectedResource.Name}"
-						 Background="{StaticResource MahApps.Brushes.Window.Background}"
-						 mah:HeaderedControlHelper.HeaderBackground="{StaticResource MahApps.Brushes.Gray7}"
-						 mah:HeaderedControlHelper.HeaderFontSize="{StaticResource MahApps.Font.Size.Flyout.Header}"
-						 mah:HeaderedControlHelper.HeaderFontWeight="Bold"
-						 mah:HeaderedControlHelper.HeaderMargin="8">
+						 Background="{StaticResource MahApps.Brushes.Window.Background}">
+			<mah:MetroHeader.HeaderTemplate>
+				<DataTemplate DataType="{x:Type sys:String}">
+					<Border Padding="8" Background="{StaticResource MahApps.Brushes.Gray7}">
+						<TextBlock Text="{Binding}" FontSize="{StaticResource MahApps.Font.Size.Flyout.Header}" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
+					</Border>
+				</DataTemplate>
+			</mah:MetroHeader.HeaderTemplate>
 			<Grid>
 				<Grid.Resources>
 					<Style TargetType="Label" BasedOn="{StaticResource MahApps.Styles.Label}">
@@ -92,7 +95,6 @@
 					<ColumnDefinition Width="*" />
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
-					<RowDefinition Height="auto" />
 					<RowDefinition Height="auto" />
 					<RowDefinition Height="auto" />
 					<RowDefinition Height="auto" />
