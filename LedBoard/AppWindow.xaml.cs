@@ -30,6 +30,7 @@ namespace LedBoard
 	public partial class AppWindow : MetroWindow, IDialogService
 	{
 		private readonly ProjectResourcesService _ResourcesService;
+		private bool _SkipDirty = false;
 
 		public AppWindow()
 		{
@@ -38,6 +39,23 @@ namespace LedBoard
 			vm.SequencePropertyChanged += OnSequencePropertyChanged;
 			InitializeComponent();
 			DataContext = vm;
+		}
+
+		protected override void OnClosing(CancelEventArgs e)
+		{
+			if (DataContext is ICheckDirty checkDirty && checkDirty.IsDirty && !_SkipDirty)
+			{
+				e.Cancel = true;
+				checkDirty.HandleSessionEnd(OnClose);
+			}
+
+			base.OnClosing(e);
+		}
+
+		private void OnClose(bool force)
+		{
+			_SkipDirty = force;
+			Close();
 		}
 
 		private void OnFrameNavigated(object sender, NavigationEventArgs e)

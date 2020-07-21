@@ -834,10 +834,23 @@ namespace LedBoard.ViewModels
 
 		public bool IsDirty => Sequencer?.Sequence?.IsDirty ?? false;
 
-		public async void HandleSessionEnd()
+		public async void HandleSessionEnd(Action<bool> closeCallback = null)
 		{
-			bool? doSave = await _DialogService.ShowConfirmDialogCancelable("Save Project?", "You have unsaved changes to your project. Would you like to save?");
-			if ((!doSave.HasValue) || (doSave.Value && !await OnSaveProject())) return;
+			bool? result = await _DialogService.ShowConfirmDialogCancelable("Save Project?", "You have unsaved changes to your project. Would you like to save?");
+			if (result.HasValue)
+			{
+				if (result.Value)
+				{
+					if (await OnSaveProject())
+					{
+						closeCallback?.Invoke(true);
+					}
+				}
+				else
+				{
+					closeCallback?.Invoke(true);
+				}
+			}
 		}
 
 		#endregion

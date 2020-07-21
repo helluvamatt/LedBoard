@@ -1,8 +1,10 @@
-﻿namespace LedBoard
+﻿using System;
+
+namespace LedBoard
 {
 	public interface ICheckDirty
 	{
 		bool IsDirty { get; }
-		void HandleSessionEnd();
+		void HandleSessionEnd(Action<bool> closeCallback = null);
 	}
 }
